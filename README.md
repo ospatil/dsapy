@@ -1,5 +1,7 @@
 # Data Structures and Algorithms in Python
 
+Access online: <https://mybinder.org/v2/gh/ospatil/dsapy/HEAD>
+
 ## Prerequisites
 
 * **Python 3.12** - `pyenv install 3.12`
@@ -11,4 +13,5 @@ Set up python and install required dependencies: `make py-setup && make py-pip-a
 
 ## Run
 
-Run using: `jupyter notebook`
+Run using: `make run`
+
