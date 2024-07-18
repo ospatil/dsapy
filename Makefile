@@ -24,6 +24,6 @@ py-pip-install:
 py-pip-all: py-pip-compile py-pip-sync py-pip-install
 .PHONY: py-pip-all
 
-run:
-	jupyter notebook
+start:
+	jupyter notebook --config ./jupyter_notebook_config.py
 .PHONY: start
