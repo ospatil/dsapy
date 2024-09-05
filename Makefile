@@ -1,6 +1,6 @@
-# make sure you have pyenv installed and have run: pyenv install 3.12
+# make sure you have pyenv installed and have run: pyenv install 3.12.4
 py-setup:
-	pyenv local 3.12; \
+	pyenv local 3.12.4; \
 	python -m venv .venv; \
 	python -m pip install --upgrade pip; \
 	python -m pip install pip-tools; \
