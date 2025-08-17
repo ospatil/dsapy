@@ -13,4 +13,4 @@ Set up python and install required dependencies: `make py-setup && make py-pip-a
 
 ## Run
 
-Run using: `make run`
+Run using: `make start`
