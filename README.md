@@ -4,13 +4,41 @@
 
 ## Prerequisites
 
-* **Python 3.12** - `pyenv install 3.12.4`
-* **direnv** - sets up correct python virtual environment as soon as changed into the repo directory
+* **mise** - manages Python version and activates the virtual environment automatically
+* **uv** - package manager
 
 ## Setup
 
-Set up python and install required dependencies: `make py-setup && make py-pip-all`
+```bash
+uv sync
+```
+
+mise will activate the correct Python version and `.venv` automatically when you `cd` into the repo.
 
 ## Run
 
-Run using: `make start`
+```bash
+make start
+```
+
+## Upgrading
+
+### Python version
+
+1. Install and pin the new version: `mise use python@<version>` (updates `.mise.toml` automatically)
+2. Update `requires-python` in `pyproject.toml` if changing minor version
+3. Recreate the venv:
+
+   ```bash
+   rm -rf .venv
+   uv sync
+   ```
+
+### Dependencies
+
+```bash
+uv lock --upgrade   # upgrade all packages
+uv sync             # install upgraded packages into .venv
+```
+
+To upgrade a single package: `uv lock --upgrade-package <package> && uv sync`
