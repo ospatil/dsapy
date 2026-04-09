@@ -11,5 +11,6 @@ dev = [
     "black>=25.1.0",
     "bpython>=0.25",
     "jupyterlab>=4.4.6",
+    "nbstripout>=0.9.1",
     "ruff>=0.12.9",
 ]
