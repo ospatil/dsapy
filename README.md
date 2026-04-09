@@ -23,6 +23,16 @@ make start
 
 ## Upgrading
 
+### Diagrams
+
+Diagrams are authored as `.drawio` files in `docs/diagrams/` (sketch style) and exported to PNGs via the [draw.io](https://www.drawio.com/) desktop app.
+
+```bash
+make diagrams
+```
+
+To edit a diagram, open the `.drawio` file in draw.io, make changes, save, and re-run `make diagrams`.
+
 ### Python version
 
 1. Install and pin the new version: `mise use python@<version>` (updates `.mise.toml` automatically)

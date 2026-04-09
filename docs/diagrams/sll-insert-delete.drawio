@@ -1,0 +1,98 @@
+<mxfile>
+  <diagram name="SLL Insert/Delete" id="sll">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Title: Insert at front -->
+        <mxCell id="t1" value="Insert at front: insert_front(head, 5)" style="text;fontSize=14;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="5" width="350" height="25" as="geometry"/>
+        </mxCell>
+        <!-- Before -->
+        <mxCell id="t1b" value="Before:" style="text;fontSize=12;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="30" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="h1" value="head" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="55" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1a" value="1" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="120" y="55" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1b" value="2" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="210" y="55" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1c" value="∅" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="300" y="55" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="h1" target="n1a" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1b" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n1a" target="n1b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1c" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n1b" target="n1c" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <!-- After -->
+        <mxCell id="t1a" value="After:" style="text;fontSize=12;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="115" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="h2" value="head" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="140" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2new" value="5" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="140" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2a" value="1" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="210" y="140" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2b" value="2" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="140" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2c" value="∅" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="390" y="140" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="h2" target="n2new" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2b" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n2new" target="n2a" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2c" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n2a" target="n2b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2d" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n2b" target="n2c" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <!-- Separator -->
+        <mxCell id="sep1" value="" style="line;strokeWidth=1;strokeColor=#999;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="200" width="430" height="10" as="geometry"/>
+        </mxCell>
+        <!-- Title: Delete first -->
+        <mxCell id="t2" value="Delete first: delete_first(head)" style="text;fontSize=14;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="215" width="350" height="25" as="geometry"/>
+        </mxCell>
+        <!-- Before -->
+        <mxCell id="t2b" value="Before:" style="text;fontSize=12;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="240" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="h3" value="head" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="265" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3a" value="1" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="265" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3b" value="2" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="210" y="265" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3c" value="3" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="265" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="h3" target="n3a" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3b" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n3a" target="n3b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3c" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n3b" target="n3c" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <!-- After -->
+        <mxCell id="t2a" value="After:  head.next = head.next.next" style="text;fontSize=12;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="325" width="250" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="h4" value="head" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="350" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4b" value="2" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="120" y="350" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4c" value="3" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="210" y="350" width="50" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="h4" target="n4b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4b" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="n4b" target="n4c" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

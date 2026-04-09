@@ -1,0 +1,63 @@
+<mxfile>
+  <diagram name="Stack vs Queue" id="sq">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Stack LIFO -->
+        <mxCell id="t1" value="Stack (LIFO)" style="text;fontSize=14;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="5" width="120" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="3  ← top" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="35" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="30" y="70" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="30" y="105" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <!-- Push/Pop arrows -->
+        <mxCell id="spush" value="push →" style="text;fontSize=11;fontStyle=2;sketch=0;fontColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="135" y="30" width="55" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="spop" value="← pop" style="text;fontSize=11;fontStyle=2;sketch=0;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="135" y="50" width="55" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="snote" value="Same end for both&#xa;push and pop" style="text;fontSize=10;sketch=0;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="25" y="148" width="120" height="30" as="geometry"/>
+        </mxCell>
+        <!-- Queue FIFO -->
+        <mxCell id="t2" value="Queue (FIFO)" style="text;fontSize=14;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="230" y="5" width="120" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="q1" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="230" y="55" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="q2" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="290" y="55" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="q3" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="55" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <!-- Front/Rear labels -->
+        <mxCell id="qfront" value="front" style="text;fontSize=10;sketch=0;fontColor=#6c8ebf;align=center;" vertex="1" parent="1">
+          <mxGeometry x="230" y="95" width="60" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="qrear" value="rear" style="text;fontSize=10;sketch=0;fontColor=#82b366;align=center;" vertex="1" parent="1">
+          <mxGeometry x="350" y="95" width="60" height="15" as="geometry"/>
+        </mxCell>
+        <!-- Enqueue/Dequeue arrows -->
+        <mxCell id="qenq" value="enqueue →" style="text;fontSize=11;fontStyle=2;sketch=0;fontColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="410" y="62" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="qdeq" value="← dequeue" style="text;fontSize=11;fontStyle=2;sketch=0;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="155" y="62" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="qnote" value="Enter at rear,&#xa;exit at front" style="text;fontSize=10;sketch=0;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="290" y="118" width="100" height="30" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

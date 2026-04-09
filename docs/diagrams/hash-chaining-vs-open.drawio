@@ -1,0 +1,100 @@
+<mxfile>
+  <diagram name="Hash" id="hash">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Chaining -->
+        <mxCell id="t1" value="Chaining" style="text;fontSize=14;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="5" width="100" height="25" as="geometry"/>
+        </mxCell>
+        <!-- Buckets -->
+        <mxCell id="b0" value="0" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="10" y="35" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="10" y="70" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="10" y="105" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="10" y="140" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="10" y="175" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <!-- Chains -->
+        <mxCell id="c0a" value="7" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="35" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="c0b" value="14" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="130" y="35" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2a" value="2" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="105" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3a" value="10" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="140" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b" value="3" style="rounded=1;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="130" y="140" width="40" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="ce0a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="b0" target="c0a" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce0b" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="c0a" target="c0b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce2a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="b2" target="c2a" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce3a" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="b3" target="c3a" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ce3b" style="sketch=1;hachureGap=4;jiggle=2;exitX=1;entryX=0;" edge="1" source="c3a" target="c3b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="cn1" value="∅" style="text;fontSize=11;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="55" y="73" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="cn4" value="∅" style="text;fontSize=11;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="55" y="178" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <!-- Open Addressing (Linear Probing) -->
+        <mxCell id="t2" value="Open Addressing (Linear Probing)" style="text;fontSize=14;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="210" y="5" width="280" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="o0" value="7" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="210" y="35" width="55" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="o1" value="" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#f5f5f5;strokeColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="210" y="70" width="55" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="o2" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="210" y="105" width="55" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="o3" value="10" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="210" y="140" width="55" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="o4" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="210" y="175" width="55" height="35" as="geometry"/>
+        </mxCell>
+        <!-- Index labels -->
+        <mxCell id="oi0" value="[0]" style="text;fontSize=10;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="270" y="40" width="25" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="oi1" value="[1]" style="text;fontSize=10;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="270" y="75" width="25" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="oi2" value="[2]" style="text;fontSize=10;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="270" y="110" width="25" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="oi3" value="[3]" style="text;fontSize=10;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="270" y="145" width="25" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="oi4" value="[4]" style="text;fontSize=10;sketch=0;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="270" y="180" width="25" height="15" as="geometry"/>
+        </mxCell>
+        <!-- Probe annotation -->
+        <mxCell id="probe" value="3 hashes to [3]&#xa;→ occupied, probe [4]" style="text;fontSize=11;fontStyle=2;sketch=0;fontColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="170" width="150" height="30" as="geometry"/>
+        </mxCell>
+        <!-- h(key) = key % 7 -->
+        <mxCell id="hf" value="h(key) = key % 5" style="text;fontSize=12;sketch=0;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="220" width="200" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

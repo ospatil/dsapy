@@ -2,4 +2,7 @@
 start:
 	uv run jupyter lab --config ./config/jupyter_notebook_config.py
 
-.PHONY: start
+diagrams:
+	bash scripts/build-diagrams.sh
+
+.PHONY: start diagrams

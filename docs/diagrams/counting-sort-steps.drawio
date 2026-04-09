@@ -1,0 +1,123 @@
+<mxfile>
+  <diagram name="Counting Sort" id="cs">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="Counting Sort: [4, 2, 2, 8, 3, 3, 1]" style="text;fontSize=13;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="5" y="0" width="320" height="22" as="geometry"/>
+        </mxCell>
+        <!-- Step 1: Input -->
+        <mxCell id="s1t" value="Input:" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="5" y="28" width="45" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1a" value="4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1b" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="85" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1c" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="115" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1d" value="8" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="145" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1e" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="175" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1f" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="205" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1g" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="235" y="25" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <!-- Step 2: Count -->
+        <mxCell id="s2t" value="Count:" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="5" y="68" width="45" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2v0" value="0" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="55" y="65" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2v1" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="85" y="65" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2v2" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="115" y="65" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2v3" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="145" y="65" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2v4" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="175" y="65" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <!-- index labels -->
+        <mxCell id="ci0" value="[0]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="91" width="30" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ci1" value="[1]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
+          <mxGeometry x="85" y="91" width="30" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ci2" value="[2]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
+          <mxGeometry x="115" y="91" width="30" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ci3" value="[3]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
+          <mxGeometry x="145" y="91" width="30" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ci4" value="[4]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
+          <mxGeometry x="175" y="91" width="30" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2n" value="count[i] = how many times i appears" style="text;fontSize=10;sketch=0;fontColor=#d6b656;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="215" y="70" width="220" height="15" as="geometry"/>
+        </mxCell>
+        <!-- Step 3: Prefix sum -->
+        <mxCell id="s3t" value="Prefix:" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="5" y="115" width="45" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3v0" value="0" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="55" y="112" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3v1" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="85" y="112" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3v2" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="115" y="112" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3v3" value="5" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="145" y="112" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3v4" value="6" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="175" y="112" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3n" value="count[i] = elements &lt;= i (final positions)" style="text;fontSize=10;sketch=0;fontColor=#6c8ebf;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="215" y="117" width="250" height="15" as="geometry"/>
+        </mxCell>
+        <!-- Step 4: Output -->
+        <mxCell id="s4t" value="Output:" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="5" y="155" width="45" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4a" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="55" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4b" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="85" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4c" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="115" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4d" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="145" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4e" value="3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="175" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4f" value="4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="205" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4g" value="8" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="235" y="152" width="30" height="26" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,51 @@
+<mxfile>
+  <diagram name="Heap" id="heap">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n0" value="2" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="160" y="100" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="4" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="80" y="175" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="8" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="240" y="175" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="5" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="35" y="250" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="10" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="120" y="250" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n5" value="20" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="200" y="250" width="50" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ne1" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="n0" target="n1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ne2" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="n0" target="n2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ne3" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="n1" target="n3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ne4" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="n1" target="n4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ne5" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="n2" target="n5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a0" value="2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="45" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="110" y="35" width="45" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="8" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="155" y="35" width="45" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="5" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="200" y="35" width="45" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="10" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="245" y="35" width="45" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" value="20" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="290" y="35" width="45" height="35" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
