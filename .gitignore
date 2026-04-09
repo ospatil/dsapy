@@ -246,3 +246,4 @@ pip-selfcheck.json
 requirements-dev.txt
 requirements.txt
 latest.patch.gz.b64
+latest.patch
