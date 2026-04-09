@@ -1,0 +1,2 @@
+# No external dependencies needed - all notebooks use only standard Python libraries.
+# This file exists so Binder (repo2docker) can detect the repo as a Python project.
