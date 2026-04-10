@@ -11,7 +11,7 @@
 
 ```bash
 uv sync
-uv run nbstripout --install # auto-strip notebook outputs on commit
+bash scripts/setup.sh  # install nbstripout git filter
 ```
 
 mise will activate the correct Python version and `.venv` automatically when you `cd` into the repo.
