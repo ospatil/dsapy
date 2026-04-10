@@ -10,6 +10,7 @@ Understand how to measure algorithm performance before diving into data structur
 - [ ] [Common Loop Analysis](notebooks/analysis/02-common-loops.ipynb) -- linear, log, loglog patterns
 - [ ] [Recursion Analysis](notebooks/analysis/03-recursion.ipynb) -- recurrences, recursion tree method
 - [ ] [Space Complexity](notebooks/analysis/04-space-complexity.ipynb) -- auxiliary space, call stack
+- [ ] [Amortized Analysis](notebooks/analysis/05-amortized-analysis.ipynb) -- aggregate method, accounting method, dynamic array
 - [ ] [Stacks and Queues](notebooks/stacks-and-queues/stacks-and-queues.ipynb) -- stack, circular queue, balanced parentheses, `deque`
 
 ## Phase 2: Linear Data Structures
