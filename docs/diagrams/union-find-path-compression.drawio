@@ -1,0 +1,78 @@
+<mxfile>
+  <diagram name="Union-Find" id="uf">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="Union-Find: Path Compression" style="text;fontSize=13;fontStyle=1;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="60" y="0" width="280" height="22" as="geometry"/>
+        </mxCell>
+        <!-- Before: tall chain 4→3→2→1→0 -->
+        <mxCell id="tb" value="Before find(4):" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="10" y="28" width="120" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="b0" value="0" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="1" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="2" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="170" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="3" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="4" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="40" y="290" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="be1" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="b1" target="b0" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="be2" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="b2" target="b1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="be3" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="b3" target="b2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="be4" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="b4" target="b3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="blbl" value="root" style="text;fontSize=9;sketch=0;fontColor=#6c8ebf;align=center;" vertex="1" parent="1">
+          <mxGeometry x="82" y="58" width="30" height="14" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdepth" value="O(n) to find root" style="text;fontSize=9;fontStyle=2;sketch=0;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="10" y="332" width="110" height="14" as="geometry"/>
+        </mxCell>
+        <!-- Arrow -->
+        <mxCell id="arr" value="find(4)" style="text;fontSize=14;fontStyle=1;sketch=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="130" y="170" width="70" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrsym" value="→" style="text;fontSize=22;fontStyle=1;sketch=0;align=center;" vertex="1" parent="1">
+          <mxGeometry x="140" y="195" width="50" height="25" as="geometry"/>
+        </mxCell>
+        <!-- After: flat star 1,2,3,4 all point to 0 -->
+        <mxCell id="ta" value="After (path compressed):" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
+          <mxGeometry x="230" y="28" width="180" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="a0" value="0" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="295" y="50" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="1" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="220" y="140" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="2" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="275" y="140" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="3" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="330" y="140" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="4" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="385" y="140" width="42" height="38" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae1" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="a1" target="a0" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ae2" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="a2" target="a0" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ae3" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="a3" target="a0" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ae4" style="sketch=1;hachureGap=4;jiggle=2;" edge="1" source="a4" target="a0" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="albl" value="root" style="text;fontSize=9;sketch=0;fontColor=#6c8ebf;align=center;" vertex="1" parent="1">
+          <mxGeometry x="337" y="58" width="30" height="14" as="geometry"/>
+        </mxCell>
+        <mxCell id="adepth" value="O(1) future finds" style="text;fontSize=9;fontStyle=2;sketch=0;fontColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="270" y="185" width="110" height="14" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
