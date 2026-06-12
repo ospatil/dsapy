@@ -31,11 +31,11 @@ All substantive code lives in `notebooks/` organized by topic:
 - `hashing/` — Hash tables
 - `misc/` — Additional structures
 
-`docs/` contains Excalidraw/Draw.io diagrams for visual concepts. `scripts/convert_vscode_xml_ipynb.py` converts VSCode XML-style notebook cells to standard Jupyter JSON format.
+`docs/` contains Excalidraw/Draw.io diagrams for visual concepts. `scripts/build-diagrams.sh` exports the `.drawio` sources in `docs/diagrams/` to PNGs; `scripts/setup.sh` installs the nbstripout git filter after cloning.
 
 ## Conventions
 
-- **Python 3.12+** (pinned via `.mise.toml`, managed by mise)
+- **Python 3.14+** (pinned via `.mise.toml`, managed by mise)
 - **Indentation**: 4 spaces for Python, 2 spaces for other files (`.editorconfig`)
 - **Max line length**: 80 characters
 - **No production dependencies** — all algorithm implementations use the Python standard library only

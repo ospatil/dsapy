@@ -22,6 +22,16 @@ mise will activate the correct Python version and `.venv` automatically when you
 make start
 ```
 
+## Testing
+
+Each notebook embeds inline `assert`-based tests next to the implementations. To verify every notebook still runs and all assertions pass, execute them end-to-end:
+
+```bash
+make test
+```
+
+This runs each notebook with `jupyter execute`; a failing assertion raises and fails the run.
+
 ## Upgrading
 
 ### Diagrams

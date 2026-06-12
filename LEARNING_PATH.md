@@ -41,6 +41,7 @@ Hierarchical data structures.
 
 - [ ] [Binary Tree](notebooks/trees/binary-tree.ipynb) -- traversals (in/pre/post/level order), size, height
 - [ ] [Binary Search Tree](notebooks/trees/binary-search-tree.ipynb) -- search, insert, delete, floor, ceil, `bisect`
+- [ ] [AVL Tree](notebooks/trees/avl-tree.ipynb) -- self-balancing BST, rotations (LL/LR/RR/RL), balanced insert/delete
 - [ ] [Binary Heap](notebooks/misc/heap.ipynb) -- min heap, heap sort, build heap O(n) proof, `heapq`
 - [ ] [Trie (Prefix Tree)](notebooks/trees/trie.ipynb) -- insert, search, prefix search, autocomplete, delete
 
