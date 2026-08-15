@@ -6,6 +6,7 @@ A guided checklist through the notebooks in recommended order. Each phase builds
 
 Understand how to measure algorithm performance before diving into data structures.
 
+- [ ] [Complexity Quick Reference](notebooks/analysis/00-quick-reference.ipynb) -- field guide: case vs notation, code pattern → complexity, recursion trees, space, amortization
 - [ ] [Analysis of Algorithms -- Notation](notebooks/analysis/01-notation.ipynb) -- Big O, Ω, Θ
 - [ ] [Common Loop Analysis](notebooks/analysis/02-common-loops.ipynb) -- linear, log, loglog patterns
 - [ ] [Recursion Analysis](notebooks/analysis/03-recursion.ipynb) -- recurrences, recursion tree method
