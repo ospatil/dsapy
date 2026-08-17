@@ -43,15 +43,16 @@ Hierarchical data structures.
 - [ ] [Binary Tree](notebooks/trees/binary-tree.ipynb) -- traversals (in/pre/post/level order), size, height
 - [ ] [Binary Search Tree](notebooks/trees/binary-search-tree.ipynb) -- search, insert, delete, floor, ceil, `bisect`
 - [ ] [AVL Tree](notebooks/trees/avl-tree.ipynb) -- self-balancing BST, rotations (LL/LR/RR/RL), balanced insert/delete
-- [ ] [Binary Heap](notebooks/misc/heap.ipynb) -- min heap, heap sort, build heap O(n) proof, `heapq`
+- [ ] [Binary Heap](notebooks/trees/heap.ipynb) -- min heap, heap sort, build heap O(n) proof, `heapq`
 - [ ] [Trie (Prefix Tree)](notebooks/trees/trie.ipynb) -- insert, search, prefix search, autocomplete, delete
 
 ## Phase 6: Graphs
 
-- [ ] [Graph Basics](notebooks/graphs/graph-basics.ipynb) -- representations, BFS, DFS, connected components
-- [ ] [Cycle Detection](notebooks/graphs/graph-basics.ipynb) -- undirected (parent tracking), directed (3-color)
-- [ ] [Topological Sort](notebooks/graphs/graph-basics.ipynb) -- DFS-based, Kahn's algorithm
-- [ ] [Dijkstra's Algorithm](notebooks/graphs/graph-basics.ipynb) -- shortest path with min-heap
+- [ ] [Graph Basics](notebooks/graphs/graph-basics.ipynb) -- terminology, adjacency list vs matrix, `defaultdict`
+- [ ] [Graph Traversal](notebooks/graphs/graph-traversal.ipynb) -- BFS, DFS (recursive and iterative), disconnected graphs, connected components
+- [ ] [Cycle Detection](notebooks/graphs/cycle-detection.ipynb) -- undirected (parent tracking), directed (3-color)
+- [ ] [Topological Sort](notebooks/graphs/topological-sort.ipynb) -- DFS-based, Kahn's algorithm
+- [ ] [Dijkstra's Algorithm](notebooks/graphs/dijkstra.ipynb) -- shortest path with min-heap, path reconstruction
 - [ ] [Union-Find](notebooks/graphs/union-find.ipynb) -- disjoint sets, cycle detection, connected components
 
 ## Phase 7: Techniques & Patterns

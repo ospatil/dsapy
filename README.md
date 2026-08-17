@@ -36,13 +36,15 @@ This runs each notebook with `jupyter execute`; a failing assertion raises and f
 
 ### Diagrams
 
-Diagrams are authored as `.drawio` files in `docs/diagrams/` (sketch style) and exported to PNGs via the [draw.io](https://www.drawio.com/) desktop app.
+Diagrams are authored as `.drawio` files in `docs/diagrams/` (sketch style) and exported to PNGs in the matching `notebooks/<topic>/images/` folder via the [draw.io](https://www.drawio.com/) desktop app.
 
 ```bash
 make diagrams
 ```
 
-To edit a diagram, open the `.drawio` file in draw.io, make changes, save, and re-run `make diagrams`.
+To edit a diagram, open the `.drawio` file in draw.io, make changes, save, and re-run `make diagrams`. A single-page file exports to `<name>.png`; a multi-page file exports one PNG per page as `<name>-<page name>.png`. New diagrams need an entry in the `OUTPUT_MAP` in `scripts/build-diagrams.sh` naming their destination folder.
+
+`docs/diagrams/legacy/` holds three older `.excalidraw` sources (`analysis`, `bigo`, `min-heap`). They predate the draw.io pipeline and are exported by hand from [excalidraw.com](https://excalidraw.com/).
 
 ### Python version
 
