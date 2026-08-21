@@ -1,0 +1,7 @@
+# Notebooks are stored as Markdown; the .ipynb beside each .md is a local,
+# gitignored build artifact that Jupytext keeps in sync on save.
+formats = "md,ipynb"
+
+# Drop per-cell metadata so diffs stay pure prose and code. The notebook-level
+# kernelspec is kept deliberately: `make test` needs it to pick a kernel.
+cell_metadata_filter = "-all"

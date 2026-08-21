@@ -50,7 +50,7 @@
         </mxCell>
         <mxCell id="s2v4" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="175" y="65" width="30" height="26" as="geometry"/>
-        </mxCell>
+        </mxCell><mxCell id="s2v5" value="0" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="205" y="65" width="30" height="26" as="geometry"/></mxCell><mxCell id="s2v6" value="0" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="235" y="65" width="30" height="26" as="geometry"/></mxCell><mxCell id="s2v7" value="0" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="265" y="65" width="30" height="26" as="geometry"/></mxCell><mxCell id="s2v8" value="1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="295" y="65" width="30" height="26" as="geometry"/></mxCell>
         <!-- index labels -->
         <mxCell id="ci0" value="[0]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
           <mxGeometry x="55" y="91" width="30" height="12" as="geometry"/>
@@ -66,9 +66,9 @@
         </mxCell>
         <mxCell id="ci4" value="[4]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1">
           <mxGeometry x="175" y="91" width="30" height="12" as="geometry"/>
-        </mxCell>
+        </mxCell><mxCell id="ci5" value="[5]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1"><mxGeometry x="205" y="91" width="30" height="12" as="geometry"/></mxCell><mxCell id="ci6" value="[6]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1"><mxGeometry x="235" y="91" width="30" height="12" as="geometry"/></mxCell><mxCell id="ci7" value="[7]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1"><mxGeometry x="265" y="91" width="30" height="12" as="geometry"/></mxCell><mxCell id="ci8" value="[8]" style="text;fontSize=9;sketch=0;fontColor=#999;align=center;" vertex="1" parent="1"><mxGeometry x="295" y="91" width="30" height="12" as="geometry"/></mxCell>
         <mxCell id="s2n" value="count[i] = how many times i appears" style="text;fontSize=10;sketch=0;fontColor=#d6b656;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="215" y="70" width="220" height="15" as="geometry"/>
+          <mxGeometry x="335" y="70" width="220" height="15" as="geometry"/>
         </mxCell>
         <!-- Step 3: Prefix sum -->
         <mxCell id="s3t" value="Prefix:" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
@@ -88,10 +88,10 @@
         </mxCell>
         <mxCell id="s3v4" value="6" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="175" y="112" width="30" height="26" as="geometry"/>
-        </mxCell>
+        </mxCell><mxCell id="s3v5" value="6" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="205" y="112" width="30" height="26" as="geometry"/></mxCell><mxCell id="s3v6" value="6" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="235" y="112" width="30" height="26" as="geometry"/></mxCell><mxCell id="s3v7" value="6" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="265" y="112" width="30" height="26" as="geometry"/></mxCell><mxCell id="s3v8" value="7" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="295" y="112" width="30" height="26" as="geometry"/></mxCell>
         <mxCell id="s3n" value="count[i] = elements &lt;= i (final positions)" style="text;fontSize=10;sketch=0;fontColor=#6c8ebf;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="215" y="117" width="250" height="15" as="geometry"/>
-        </mxCell>
+          <mxGeometry x="335" y="117" width="250" height="15" as="geometry"/>
+        </mxCell><mxCell id="kdep" value="n = 7 but k = 8, so count spans 0..8 - the cost is O(n + k), not O(n)" style="text;fontSize=10;sketch=0;fontColor=#999;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="55" y="185" width="420" height="15" as="geometry"/></mxCell>
         <!-- Step 4: Output -->
         <mxCell id="s4t" value="Output:" style="text;fontSize=11;fontStyle=2;sketch=0;" vertex="1" parent="1">
           <mxGeometry x="5" y="155" width="45" height="18" as="geometry"/>

@@ -1,0 +1,201 @@
+<mxfile>
+  <diagram name="single" id="avl-single">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="t" value="Right rotation: fixes a left-left imbalance" style="text;whiteSpace=wrap;sketch=0;fontSize=14;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="0" width="400" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- BEFORE -->
+        <mxCell id="bl" value="Before: y is left heavy" style="text;fontSize=11;sketch=0;fontStyle=2;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="30" width="220" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="by" value="y" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="120" y="55" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="bx" value="x" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="60" y="130" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="bt3" value="T3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="180" y="132" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="bt1" value="T1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="10" y="205" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="bt2" value="T2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="100" y="205" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="be1" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="by" target="bx" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="be2" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="by" target="bt3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="be3" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="bx" target="bt1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="be4" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;strokeColor=#d6b656;" edge="1" source="bx" target="bt2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ARROW -->
+        <mxCell id="arr" value="rotate_right(y)" style="sketch=1;hachureGap=4;jiggle=2;endArrow=block;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="245" y="150" as="sourcePoint"/>
+            <mxPoint x="330" y="150" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- AFTER -->
+        <mxCell id="al" value="After: x is the subtree root" style="text;fontSize=11;sketch=0;fontStyle=2;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="350" y="30" width="220" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="ax" value="x" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="440" y="55" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="at1" value="T1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="380" y="132" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ay" value="y" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="500" y="130" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="at2" value="T2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="460" y="205" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="at3" value="T3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=12;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="550" y="205" width="40" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae1" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="ax" target="at1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ae2" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="ax" target="ay" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ae3" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;strokeColor=#d6b656;" edge="1" source="ay" target="at2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ae4" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="ay" target="at3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="note" value="Only T2 changes parent: it was x's right child, it becomes y's left child.&#10;Ordering is untouched, because T1 &lt; x &lt; T2 &lt; y &lt; T3 reads the same both times.&#10;A left rotation is the exact mirror of this." style="text;whiteSpace=wrap;fontSize=11;sketch=0;align=left;fontColor=#d6b656;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="20" y="265" width="580" height="52" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram name="double" id="avl-double">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="t" value="Left-Right: one rotation turns it into Left-Left, the next fixes it" style="text;whiteSpace=wrap;sketch=0;fontSize=14;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="0" width="560" height="22" as="geometry"/>
+        </mxCell>
+
+        <!-- STATE 1 -->
+        <mxCell id="s1l" value="z left heavy, but its left child x is RIGHT heavy" style="text;whiteSpace=wrap;fontSize=11;sketch=0;fontStyle=2;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="30" width="230" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="z1" value="z" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="110" y="65" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="x1" value="x" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="135" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="t41" value="T4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="165" y="137" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t11" value="T1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="5" y="207" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="y1" value="y" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="95" y="205" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="t21" value="T2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="65" y="272" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t31" value="T3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="135" y="272" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="z1" target="x1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="z1" target="t41" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e13" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="x1" target="t11" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e14" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="x1" target="y1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e15" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="y1" target="t21" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e16" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="y1" target="t31" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="ar1" value="rotate_left(x)" style="sketch=1;hachureGap=4;jiggle=2;endArrow=block;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="215" y="165" as="sourcePoint"/>
+            <mxPoint x="295" y="165" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- STATE 2 -->
+        <mxCell id="s2l" value="now a plain Left-Left: z and its left child y both lean left" style="text;whiteSpace=wrap;fontSize=11;sketch=0;fontStyle=2;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="300" y="30" width="230" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="z2" value="z" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="390" y="65" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="y2" value="y" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="330" y="135" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="t42" value="T4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="445" y="137" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="x2" value="x" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="270" y="205" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="t32" value="T3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="385" y="207" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t12" value="T1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="240" y="272" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t22" value="T2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="310" y="272" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="e21" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="z2" target="y2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e22" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="z2" target="t42" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e23" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="y2" target="x2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e24" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="y2" target="t32" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e25" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="x2" target="t12" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e26" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="x2" target="t22" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="ar2" value="rotate_right(z)" style="sketch=1;hachureGap=4;jiggle=2;endArrow=block;endFill=1;fontSize=11;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="495" y="165" as="sourcePoint"/>
+            <mxPoint x="575" y="165" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- STATE 3 -->
+        <mxCell id="s3l" value="balanced: y rises, x and z become its children" style="text;whiteSpace=wrap;fontSize=11;sketch=0;fontStyle=2;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="580" y="30" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="y3" value="y" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="670" y="65" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="x3" value="x" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="610" y="140" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="z3" value="z" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="730" y="140" width="42" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="t13" value="T1" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="580" y="212" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t23" value="T2" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="645" y="212" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t33" value="T3" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="705" y="212" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="t43" value="T4" style="rounded=0;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="770" y="212" width="36" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="e31" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="y3" target="x3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e32" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="y3" target="z3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e33" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="x3" target="t13" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e34" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="x3" target="t23" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e35" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="z3" target="t33" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e36" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="z3" target="t43" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="note" value="Track the four subtrees and the whole thing stops being magic: T1 T2 T3 T4 sit in that order left to right in every state, so no rotation can break the search order. The middle node y is the one that ends up on top, which is why a single rotation cannot fix this shape - y is not a child of z, so rotating z alone would only move the imbalance." style="text;whiteSpace=wrap;fontSize=11;sketch=0;align=left;fontColor=#d6b656;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="20" y="325" width="790" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

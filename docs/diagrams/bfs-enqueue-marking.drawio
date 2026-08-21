@@ -1,0 +1,82 @@
+<mxfile>
+  <diagram name="BFS marking" id="bfs-marking">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="t" value="Why BFS marks a vertex when it is enqueued, not when it is dequeued" style="text;whiteSpace=wrap;sketch=0;fontSize=14;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="0" width="620" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub" value="Vertex 2 is reachable from both 0 and 1. That is the only shape where the two choices differ." style="text;whiteSpace=wrap;sketch=0;fontSize=11;fontStyle=2;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="20" y="22" width="620" height="16" as="geometry"/>
+        </mxCell>
+
+        <!-- graph -->
+        <mxCell id="g0" value="0" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="1" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="20" y="145" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="2" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="140" y="145" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="g3" value="3" style="ellipse;whiteSpace=wrap;sketch=1;hachureGap=4;jiggle=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="20" y="230" width="44" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="ge1" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="g0" target="g1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ge2" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;strokeColor=#d6b656;" edge="1" source="g0" target="g2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ge3" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;strokeColor=#d6b656;" edge="1" source="g1" target="g2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ge4" style="sketch=1;hachureGap=4;jiggle=2;endArrow=none;" edge="1" source="g1" target="g3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- RIGHT: mark on enqueue -->
+        <mxCell id="okh" value="Mark on enqueue (correct)" style="text;whiteSpace=wrap;sketch=0;fontSize=12;fontStyle=1;align=left;fontColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="250" y="55" width="240" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="ok1" value="visit 0   queue [1, 2]      1 and 2 marked now" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="78" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="ok2" value="visit 1   queue [2, 3]      2 is marked, skipped" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="95" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="ok3" value="visit 2   queue [3]" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="112" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="ok4" value="visit 3   queue []" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="129" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="okr" value="order 0 1 2 3   -   every vertex once" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontColor=#82b366;fontStyle=1;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="149" width="420" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- WRONG: mark on dequeue -->
+        <mxCell id="bdh" value="Mark on dequeue (wrong)" style="text;whiteSpace=wrap;sketch=0;fontSize=12;fontStyle=1;align=left;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="250" y="185" width="240" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="bd1" value="visit 0   queue [1, 2]      nothing marked yet" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="208" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="bd2" value="visit 1   queue [2, 2, 3]   2 queued a second time" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="250" y="225" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="bd3" value="visit 2   queue [2, 3]      marked only now" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="242" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="bd4" value="visit 2   queue [3]         the copy comes back out" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;fontColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="250" y="259" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="bd5" value="visit 3   queue []" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="276" width="420" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="bdr" value="order 0 1 2 2 3   -   2 emitted twice" style="text;whiteSpace=wrap;sketch=0;fontSize=11;align=left;fontColor=#b85450;fontStyle=1;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="250" y="296" width="420" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="note" value="The queue is a promise, not a record of the past. Marking on enqueue means &quot;this vertex is already spoken for&quot;; marking on dequeue only records what has already been handled, which leaves a gap in which a second neighbour can queue the same vertex again." style="text;whiteSpace=wrap;fontSize=11;sketch=0;align=left;fontColor=#d6b656;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="20" y="325" width="590" height="45" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

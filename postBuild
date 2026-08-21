@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Run by Binder (repo2docker) after dependencies are installed.
+#
+# Notebooks are stored as Markdown and the paired .ipynb files are gitignored,
+# so a fresh checkout has none. Generate them here, otherwise a Binder session
+# shows only .md files that JupyterLab opens in the text editor.
+set -euo pipefail
+
+jupytext --sync $(find notebooks -name '*.md' -not -path '*checkpoint*')

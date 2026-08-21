@@ -243,5 +243,12 @@ pip-selfcheck.json
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
 
-latest.patch.gz.b64
-latest.patch
+# Patch-transport artifacts. Wildcards, not exact names: `git add -A` sweeping one
+# of these into the commit doubles the size of the very patch being generated.
+*.patch
+*.patch.gz.b64
+*.tar.xz.b64
+
+# Notebooks are authored as Markdown (see jupytext.toml). Jupytext keeps a paired
+# .ipynb beside each .md for JupyterLab to open; it is a local build artifact.
+notebooks/**/*.ipynb

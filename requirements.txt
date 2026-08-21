@@ -1,2 +1,6 @@
-# No external dependencies needed - all notebooks use only standard Python libraries.
-# This file exists so Binder (repo2docker) can detect the repo as a Python project.
+# The notebooks themselves need nothing beyond the standard library.
+#
+# Jupytext is required because the notebooks are stored as Markdown and the
+# paired .ipynb files are gitignored, so a fresh checkout (including Binder)
+# has to generate them. postBuild does that at image build time.
+jupytext==1.19.5

@@ -3,8 +3,12 @@
 # Requires the draw.io desktop app (override its path with DRAWIO=...).
 #
 # Single-page sources export to <name>.png. Multi-page sources export one PNG
-# per page, named <name>-<page name>.png -- e.g. page "recursion1" of
+# per page, named <name>-<page name>.png - e.g. page "recursion1" of
 # recursion.drawio becomes recursion-recursion1.png.
+#
+# A source with no OUTPUT_MAP entry is deliberately not exported: the diagram was
+# judged not to earn its place in a notebook. The source is kept in case it is
+# worth redrawing later.
 #
 # docs/diagrams/legacy/ holds the older .excalidraw sources. They predate this
 # script and are exported by hand from excalidraw.com.
@@ -22,16 +26,15 @@ fi
 
 declare -A OUTPUT_MAP
 OUTPUT_MAP=(
-  ["sll-insert-delete"]="notebooks/linked-lists/images"
   ["circular-linked-list"]="notebooks/linked-lists/images"
   ["bst-delete"]="notebooks/trees/images"
   ["heap-array-tree"]="notebooks/trees/images"
+  ["avl-rotations"]="notebooks/trees/images"
   ["trie"]="notebooks/trees/images"
   ["hash-chaining-vs-open"]="notebooks/hashing/images"
   ["bfs-vs-dfs"]="notebooks/graphs/images"
+  ["bfs-enqueue-marking"]="notebooks/graphs/images"
   ["union-find-path-compression"]="notebooks/graphs/images"
-  ["stack-vs-queue"]="notebooks/stacks-and-queues/images"
-  ["binary-search-narrowing"]="notebooks/searching/images"
   ["merge-sort-divide-merge"]="notebooks/sorting/images"
   ["counting-sort-steps"]="notebooks/sorting/images"
   ["sliding-window"]="notebooks/techniques/images"
