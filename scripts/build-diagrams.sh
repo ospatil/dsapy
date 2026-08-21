@@ -4,6 +4,12 @@
 # DRAWIO=...). Multi-page export uses --page-index, which became 1-based in
 # v27.0.2; older versions need the 0-based index and will fail here.
 #
+# Incremental: a source whose outputs are all newer than it is skipped. Each page
+# costs 10-20 seconds of Electron startup, so a run with nothing to do finishes
+# instantly instead of taking minutes. Use FORCE=1 to rebuild everything, which
+# is only needed when deliberately re-exporting the whole set (see the version
+# note in .github/copilot-instructions.md).
+#
 # Single-page sources export to <name>.png. Multi-page sources export one PNG
 # per page, named <name>-<page name>.png - e.g. page "recursion1" of
 # recursion.drawio becomes recursion-recursion1.png.
@@ -53,6 +59,22 @@ export_page() {
   "$DRAWIO" "${args[@]}" --output "$dest" "$src"
 }
 
+# True when every listed output exists and is at least as new as the source, i.e.
+# there is nothing to do. Launching draw.io costs 10-20 seconds per page, so
+# skipping unchanged diagrams is the difference between a no-op and several
+# minutes. It also stops a full rebuild rewriting every PNG whenever the draw.io
+# version differs, which produces byte changes with no content change.
+up_to_date() {
+  local src="$1"
+  shift
+  local out
+  for out in "$@"; do
+    [ -f "$out" ] || return 1
+    [ "$out" -nt "$src" ] || return 1
+  done
+  return 0
+}
+
 for name in "${!OUTPUT_MAP[@]}"; do
   src="$DIAGRAMS_DIR/$name.drawio"
   dest_dir="${OUTPUT_MAP[$name]}"
@@ -72,9 +94,19 @@ for name in "${!OUTPUT_MAP[@]}"; do
 
   if [ "${#pages[@]}" -le 1 ]; then
     dest="$dest_dir/$name.png"
+    if [ -z "${FORCE:-}" ] && up_to_date "$src" "$dest"; then
+      echo "SKIP  $name (up to date)"
+      continue
+    fi
     echo "BUILD $src -> $dest"
     export_page "$src" "$dest"
   else
+    dests=()
+    for p in "${pages[@]}"; do dests+=("$dest_dir/$name-$p.png"); done
+    if [ -z "${FORCE:-}" ] && up_to_date "$src" "${dests[@]}"; then
+      echo "SKIP  $name (${#pages[@]} pages, up to date)"
+      continue
+    fi
     for i in "${!pages[@]}"; do
       dest="$dest_dir/$name-${pages[$i]}.png"
       echo "BUILD $src [page ${pages[$i]}] -> $dest"

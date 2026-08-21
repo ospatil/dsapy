@@ -203,28 +203,29 @@ keep it and let the diagram cover the case that needs the detail.
   the picture.
 - No em or en dashes in labels, matching the prose convention.
 
-### Export output is version-specific
+### Export output is version-specific, so the export is incremental
 
-PNG bytes depend on the draw.io version, so the same source exported by two
-different versions produces two different files with identical content. Pin the
-version rather than treating one machine as authoritative:
+PNG bytes depend on the draw.io version: the same source exported by two
+different versions gives two different files with identical content. A full
+rebuild across a version change therefore rewrites every diagram for no reason,
+and each page costs 10-20 seconds of Electron startup, so a full rebuild is also
+several minutes.
 
-**draw.io 31.3.1** is what this repo's PNGs are exported with. Any machine on
-that version reproduces the same bytes, which is why the images can be
-regenerated with `make diagrams` after a checkout instead of being shipped as
-several megabytes of binary patch.
+`scripts/build-diagrams.sh` skips any source whose outputs are already newer than
+it. Consequences worth knowing:
 
-Two consequences worth knowing:
-
-- Running `make diagrams` on a machine with a *different* version rewrites every
-  output with no content change, and the next export on a matching machine
-  rewrites them all back. If you upgrade, upgrade everywhere, and re-export in a
-  single commit of its own.
+- **A diagram you did not touch is never re-exported**, so its bytes stay
+  whatever version produced them. The committed PNGs are deliberately a mix of
+  versions. They are visually consistent and the content is correct; uniformity
+  is not worth megabytes of churn.
+- **Editing a source rebuilds only that source**, using whatever draw.io you have.
+- `FORCE=1 bash scripts/build-diagrams.sh` rebuilds everything. Only do that when
+  you actually want a whole-set re-export, and commit it on its own.
 - `--page-index` became **1-based** in v27.0.2 and was 0-based before, so
   multi-page sources fail loudly ("pages are numbered from 1") on older builds.
-  `scripts/build-diagrams.sh` passes 1-based indices and therefore requires
-  v27.0.2 or newer. An off-by-one here silently writes the wrong page into each
-  file, so check a multi-page export by eye after touching that code.
+  The script passes 1-based indices and needs v27.0.2 or newer. An off-by-one
+  here silently writes the wrong page into each file, so check a multi-page
+  export by eye after touching that code.
 
 ### Three failure modes, all of which fail quietly
 
