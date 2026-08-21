@@ -47,6 +47,21 @@ The reason for all of this is that these notebooks are mostly prose, and prose b
 that diffs and merges. As a side effect the notebooks render readably on GitHub, and there is no
 need for `nbstripout`, since Markdown carries no outputs.
 
+## Coming back cold
+
+[RECALL.md](RECALL.md) collects every mental-model card on one page with the answers hidden
+behind expanders. Read a topic, rebuild the idea from memory, then expand and compare - the gap
+tells you which notebook to open. Re-reading is a weak way to hold on to something months later;
+retrieving it first is a strong one, which is why the cards exist twice: in the notebook to orient
+you, and here to test you.
+
+```bash
+make recall   # regenerate RECALL.md after editing a card
+```
+
+The page is generated from the notebooks, so the cards have one home. `make test` fails if it goes
+stale.
+
 ## Testing
 
 Each notebook embeds inline `assert`-based tests next to the implementations. To verify every
@@ -122,6 +137,8 @@ python3 -c "import xml.dom.minidom,sys; xml.dom.minidom.parse(sys.argv[1])" docs
 ```
 
 `.github/copilot-instructions.md` carries the full conventions: house style, palette, and the failure modes worth knowing.
+
+PNG bytes depend on the draw.io version, so the version is pinned rather than the machine: these diagrams are exported with **draw.io 31.3.1**, and any machine on that version reproduces the same bytes. That is what lets the images be regenerated with `make diagrams` after a checkout instead of travelling as megabytes of binary patch. Note that `--page-index` became 1-based in v27.0.2, so the export script requires that version or newer.
 
 `docs/diagrams/legacy/` holds three older `.excalidraw` sources. Two are in use (`bigo` → `big-o.png`, `min-heap`); `analysis` is retained but no longer referenced. They predate the draw.io pipeline and are exported by hand from [excalidraw.com](https://excalidraw.com/).
 

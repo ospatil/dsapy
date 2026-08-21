@@ -16,11 +16,16 @@ point for a reader. `main.py` and `scratchpad.py` are throwaway placeholders.
 ```bash
 make start          # launch JupyterLab (opens in Chrome incognito via config/)
 make sync           # regenerate the paired .ipynb after a fresh clone
+make recall         # rebuild RECALL.md from the notebooks' mental-model cards
 make test           # execute every notebook end-to-end; inline asserts fail the run
 make diagrams       # export docs/diagrams/*.drawio to notebooks/*/images/*.png
 uv run black .      # format
 uv run ruff check . # lint
 ```
+
+`RECALL.md` is generated from the cards by `scripts/build-recall.py` and must not
+be hand-edited; `make test` runs the script in `--check` mode and fails if a card
+changed without the page being rebuilt.
 
 **Package manager is `uv`**, not pip; dependencies are locked in `uv.lock`. Add
 dev packages with `uv add --dev <package>`. Python is pinned by `.mise.toml` and
@@ -197,6 +202,29 @@ keep it and let the diagram cover the case that needs the detail.
 - Close with a caption in amber italic stating the takeaway, not a restatement of
   the picture.
 - No em or en dashes in labels, matching the prose convention.
+
+### Export output is version-specific
+
+PNG bytes depend on the draw.io version, so the same source exported by two
+different versions produces two different files with identical content. Pin the
+version rather than treating one machine as authoritative:
+
+**draw.io 31.3.1** is what this repo's PNGs are exported with. Any machine on
+that version reproduces the same bytes, which is why the images can be
+regenerated with `make diagrams` after a checkout instead of being shipped as
+several megabytes of binary patch.
+
+Two consequences worth knowing:
+
+- Running `make diagrams` on a machine with a *different* version rewrites every
+  output with no content change, and the next export on a matching machine
+  rewrites them all back. If you upgrade, upgrade everywhere, and re-export in a
+  single commit of its own.
+- `--page-index` became **1-based** in v27.0.2 and was 0-based before, so
+  multi-page sources fail loudly ("pages are numbered from 1") on older builds.
+  `scripts/build-diagrams.sh` passes 1-based indices and therefore requires
+  v27.0.2 or newer. An off-by-one here silently writes the wrong page into each
+  file, so check a multi-page export by eye after touching that code.
 
 ### Three failure modes, all of which fail quietly
 

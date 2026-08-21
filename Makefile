@@ -6,6 +6,10 @@ start:
 sync:
 	@uv run jupytext --sync $$(find notebooks -name '*.md' -not -path '*checkpoint*')
 
+# Rebuild RECALL.md from the mental-model cards in the notebooks.
+recall:
+	@python3 scripts/build-recall.py
+
 diagrams:
 	bash scripts/build-diagrams.sh
 
@@ -21,6 +25,7 @@ test:
 		fi; \
 	done; \
 	rm -rf "$$tmp"; \
+	python3 scripts/build-recall.py --check || fail=1; \
 	exit $$fail
 
-.PHONY: start sync diagrams test
+.PHONY: start sync recall diagrams test

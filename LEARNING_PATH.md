@@ -2,6 +2,9 @@
 
 A guided checklist through the notebooks in recommended order. Each phase builds on the previous one.
 
+Coming back after a long gap? Start with [RECALL.md](RECALL.md) instead - the same topics in the
+same order, as questions rather than lessons.
+
 ## Phase 1: Foundations
 
 Understand how to measure algorithm performance before diving into data structures.

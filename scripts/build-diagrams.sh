@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Exports the .drawio sources in docs/diagrams/ to PNGs under notebooks/*/images/.
-# Requires the draw.io desktop app (override its path with DRAWIO=...).
+# Requires the draw.io desktop app, v27.0.2 or newer (override its path with
+# DRAWIO=...). Multi-page export uses --page-index, which became 1-based in
+# v27.0.2; older versions need the 0-based index and will fail here.
 #
 # Single-page sources export to <name>.png. Multi-page sources export one PNG
 # per page, named <name>-<page name>.png - e.g. page "recursion1" of
@@ -76,7 +78,9 @@ for name in "${!OUTPUT_MAP[@]}"; do
     for i in "${!pages[@]}"; do
       dest="$dest_dir/$name-${pages[$i]}.png"
       echo "BUILD $src [page ${pages[$i]}] -> $dest"
-      export_page "$src" "$dest" "$i"
+      # --page-index is 1-based from draw.io v27.0.2 onward; it was 0-based
+      # before, and passing 0 now fails with "pages are numbered from 1".
+      export_page "$src" "$dest" "$((i + 1))"
     done
   fi
 done
