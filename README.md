@@ -139,7 +139,7 @@ A `.drawio` file is mxGraph XML, so a diagram can be written or edited as text a
 python3 -c "import xml.dom.minidom,sys; xml.dom.minidom.parse(sys.argv[1])" docs/diagrams/<name>.drawio
 ```
 
-`skills/diagrams/SKILL.md` carries the full conventions: house style, palette, and the failure modes worth knowing. `AGENTS.md` carries the rest of the repo's conventions, and `HANDOFF.md` the state of work in flight plus the decisions behind the setup.
+`skills/diagrams/SKILL.md` carries the full conventions: house style, palette, and the failure modes worth knowing. `AGENTS.md` carries the rest of the repo's conventions, and `HANDOFF.md` the reasoning behind the setup plus whatever is still open.
 
 `make diagrams` is incremental: a source whose PNGs are already newer than it is skipped, so a run with nothing to do finishes instantly rather than taking minutes (each page costs 10-20 seconds of app startup). Use `FORCE=1 bash scripts/build-diagrams.sh` for a deliberate whole-set rebuild. PNG bytes depend on the draw.io version, so unchanged diagrams keep whatever version produced them and the committed set is a deliberate mix - visually consistent, and cheaper than re-exporting everything on each upgrade. Note that `--page-index` became 1-based in v27.0.2, so the script requires that version or newer.
 

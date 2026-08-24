@@ -10,9 +10,10 @@ there is no second version to keep in sync. `CLAUDE.md` points at this file
 and `.kiro/skills/diagrams/` both point at the canonical skill. Edit the real
 file - `AGENTS.md` or `skills/diagrams/SKILL.md` - never a link.
 
-`HANDOFF.md` carries what this file does not: the state of work in flight, and
-the decisions and traps behind the way the repo is set up. Read it before
-starting work, and update its "Current state" section when work lands.
+`HANDOFF.md` carries what this file does not: why the repo is set up the way it
+is, the traps behind it, and whatever is still open. Read it before starting
+work, and add to it when you make a decision worth not re-litigating. It is not a
+status page - `git log`, `git status` and `make test` cover that.
 
 ## Project
 

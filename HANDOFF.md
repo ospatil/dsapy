@@ -1,45 +1,27 @@
 # Handoff
 
-Where the work stands and why it was done that way, for picking it up cold in a
-new session - in Kiro CLI, Claude Code, or any other agent. `AGENTS.md` carries
-the repo's *conventions*; this file carries the *history and state* that the
-conventions don't explain.
+Why the repo is set up the way it is, for picking it up cold in a new session -
+in Kiro CLI, Claude Code, or any other agent. `AGENTS.md` carries the
+*conventions*; this file carries the *reasoning* behind them, plus whatever is
+still open.
 
-Two kinds of content live here, and they age differently:
+Deliberately not a status page. Branch position, commit lists, diffstats and test
+results belong to `git log`, `git status` and `make test`, which report them
+accurately for free - restating them here only produces a file that lies, and it
+did exactly that twice in one afternoon. What those commands cannot tell you is
+intent: what was decided, what was ruled out and why, what is still undecided.
+That is everything below.
 
-- **Current state** goes stale the moment work lands. Rewrite or delete it when
-  you commit; a wrong state section is worse than none.
-- **Decisions and traps** are durable. They explain why the repo looks the way it
-  does, and they are the reason this file is in version control rather than being
-  scratch. Add to them; don't trim them.
+## Open threads
 
-## Current state
-
-Last updated 2026-08-24.
-
-Branch `main`, one commit ahead of `origin/main` at the time of writing plus the
-two below. **Not pushed yet.**
-
-Landed in two commits:
-
-1. **Mental-model cards for four analysis notebooks**, plus the stricter recall
-   gate. `01-notation`, `02-common-loops`, `03-recursion` and
-   `04-space-complexity` had no card; only `05-amortized-analysis` did.
-   `scripts/build-recall.py --check` now fails on a notebook with no card, not
-   just on a stale page.
-2. **A vendor-neutral agent setup.** `.github/copilot-instructions.md` became
-   `AGENTS.md`, the diagram conventions moved to `skills/diagrams/SKILL.md`, and
-   per-tool symlinks bridge both to Kiro and Claude Code. This commit also
-   carries the gate wording in `AGENTS.md` and `README.md`, because those two
-   files contain edits from both pieces of work and hunk-level splitting was not
-   worth the churn.
-
-Verified before committing: `make test` passes 30/30 notebooks with
-`RECALL.md is current (33 cards)`, exit 0. `ruff check .` clean. Loading of
-`AGENTS.md` and the diagrams skill confirmed live in both Kiro and Claude Code.
-The patch round trip reconstructs the tree byte-identically.
-
-Next: push, then rewrite this section.
+- **Pin black's target version, or don't.** `black --check` warns that Python
+  3.14 cannot parse code formatted for 3.15, because `requires-python` is
+  `>=3.14` while black assumes a newer target. Setting
+  `target-version = ["py314"]` in `pyproject.toml` silences it. Left alone so far
+  because black only touches the four `.py` files, none of which are lesson
+  content.
+- **`config/jupyter_notebook_config.py` is unformatted.** It is the one file
+  `black` would rewrite. Reformatting it is safe but nobody has needed to.
 
 ## Decisions and traps
 
