@@ -11,6 +11,7 @@ Generated, never hand-edited - the notebooks stay the single source.
 
 Usage: make recall          rebuild the page
        make test            runs this with --check and fails if the page is stale
+                            or if a notebook carries no card (see EXEMPT)
 """
 
 import glob
@@ -29,6 +30,16 @@ HEADING = re.compile(r"^# +(.*?)\s*$")
 # A link inside a card is relative to the notebook's own folder. RECALL.md sits
 # at the repo root, so those have to be rewritten or they 404 on GitHub.
 RELATIVE_LINK = re.compile(r"\]\((?!https?:|#|/)([^)]+)\)")
+
+# Every notebook is expected to open with a card. A notebook holding none used to
+# be skipped in silence, which let the convention rot unnoticed - so absence is
+# now an error under --check, and the deliberate exceptions are listed here.
+EXEMPT = {
+    # A condensed field guide over notebooks 01-05 rather than a lesson of its
+    # own. Its one idea is "name the complexity of unfamiliar code on sight",
+    # which is the page itself; a card would restate all of it.
+    "notebooks/analysis/00-quick-reference.md",
+}
 
 
 def read(path):
@@ -118,11 +129,14 @@ def render():
 
     out = HEADER.split("\n")
     total = 0
+    missing = []
     for path in ordered + unlisted:
         if not os.path.exists(path):
             continue
         cards = list(extract_cards(path))
         if not cards:
+            if path not in EXEMPT:
+                missing.append(path)
             continue
         out.append(f"## [{os.path.basename(path)[:-3]}]({path})")
         out.append("")
@@ -135,14 +149,28 @@ def render():
             out.append("</details>")
             out.append("")
             total += 1
-    return "\n".join(out).rstrip() + "\n", total
+    return "\n".join(out).rstrip() + "\n", total, missing
+
+
+def report_missing(missing):
+    print(
+        "error: no mental-model card in:\n"
+        + "".join(f"  {path}\n" for path in missing)
+        + "Every notebook opens with a card (see README). Add one, or add the\n"
+        "path to EXEMPT in this script if the notebook genuinely warrants none.",
+        file=sys.stderr,
+    )
 
 
 def main():
     os.chdir(ROOT)
-    text, total = render()
+    text, total, missing = render()
 
     if "--check" in sys.argv:
+        failed = False
+        if missing:
+            report_missing(missing)
+            failed = True
         current = read(OUT) if os.path.exists(OUT) else ""
         if current != text:
             print(
@@ -150,9 +178,14 @@ def main():
                 "Run `make recall`.",
                 file=sys.stderr,
             )
+            failed = True
+        if failed:
             return 1
         print(f"RECALL.md is current ({total} cards)")
         return 0
+
+    if missing:
+        report_missing(missing)
 
     with open(OUT, "w") as fh:
         fh.write(text)

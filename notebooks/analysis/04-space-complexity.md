@@ -16,6 +16,21 @@ jupyter:
 <!-- #region -->
 # Space Complexity
 
+> **Mental model.** Split the total from the extra. Space for the input and the output is
+> forced on you - taking an array of $n$ items costs $\Theta(n)$ no matter how cleverly you
+> write the function - so the only figure that reflects a decision *you* made is the
+> **auxiliary** space stacked on top. For a recursive function that extra is the call stack,
+> and the stack only ever holds one path from the root down to the call executing right now.
+> Siblings are never on it at the same time. So auxiliary space is the recursion tree's
+> **height**, not its number of nodes.
+>
+> **Load-bearing:** height rather than node count, and the gap between them is enormous.
+> `fib(n)` makes about $2^n$ calls yet never has more than $n$ frames alive, because
+> `fib(n-2)` does not begin until `fib(n-1)` has finished and left the stack entirely. Miss
+> that and you price this at $\Theta(2^n)$ memory instead of $\Theta(n)$. The same rule shows
+> where space goes when the shape changes: filling a table keeps every value alive at once for
+> $\Theta(n)$ auxiliary space, while carrying only the last two values needs $\Theta(1)$.
+
 It can be defined as: Order of growth of memory space in terms of input size.
 
 Let's consider some examples:

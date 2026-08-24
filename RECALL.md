@@ -9,6 +9,97 @@ and it tells you which notebook to open.
 
 Generated from the notebooks by `make recall` - edit the cards there, not here.
 
+## [01-notation](notebooks/analysis/01-notation.md)
+
+<details>
+<summary><strong>Analysis of algorithms</strong></summary>
+
+> **Mental model.** Throw away everything a faster machine could change, and keep what it
+> cannot. Constants and lower-order terms shift with the CPU, the language and the compiler;
+> the growth rate survives all three, so the growth rate is the only part that describes the
+> *algorithm* rather than the machine it ran on. The two shortcuts - drop lower-order terms,
+> drop leading constants - are not conventions to memorise, they are exactly what the limit
+> $\lim_{n \to \infty} g(n)/f(n)$ leaves standing. Keep one further pair apart: a **case**
+> (best, average, worst) picks which *input* you feed the algorithm, while a **notation** (O,
+> Ω, Θ) picks how *tightly* you bound the function that input produced. They are independent
+> choices, so any case can be stated in any notation.
+>
+> **Load-bearing:** the crossover always exists. No values of $c_1, c_2, c_3$ can keep
+> $c_2n + c_3$ ahead of $c_1$ forever - that guarantee is the entire licence to discard
+> constants, and every simplification here rests on it. It also marks the limit of the whole
+> method: the crossover between two real programs can sit at an $n$ larger than any input you
+> will ever run, and for those inputs the faster-growing algorithm is the one to ship.
+
+</details>
+
+## [02-common-loops](notebooks/analysis/02-common-loops.md)
+
+<details>
+<summary><strong>Analysis of Common Loops</strong></summary>
+
+> **Mental model.** The body does not set the cost; what the loop does to its *counter* does.
+> Every case below answers one question: how many times can this step be applied before the
+> counter reaches $n$? That is just the step run backwards. Adding $c$ each time needs $n/c$
+> steps, so linear. Multiplying by $c$ needs $\log_c n$, because undoing a multiplication is a
+> logarithm. Raising to the power $c$ needs $\log \log n$, because you undo it twice. The base
+> of the log never matters, since changing base only multiplies by a constant.
+>
+> **Load-bearing:** you may multiply the costs of nested loops only when the inner count does
+> not depend on the outer counter. `for j in range(n)` inside `for i in range(n)` really is
+> $n \times n$, but `for j in range(i)` is not - the inner count changes on every pass, so the
+> levels have to be *added*, and $1 + 2 + \dots + n$ is where the $n^2/2$ triangle in
+> [01](notebooks/analysis/01-notation.md) came from. Both land on $\Theta(n^2)$ here, which is the trap: multiply
+> a bound that secretly depends on $i$ and you are right by luck, then wrong the moment the
+> inner loop is logarithmic or the outer range is not $n$.
+
+</details>
+
+## [03-recursion](notebooks/analysis/03-recursion.md)
+
+<details>
+<summary><strong>Analysis of Recursion</strong></summary>
+
+> **Mental model.** Don't solve the recurrence algebraically - draw the tree and read two
+> numbers off it. How many **levels**, which is set by how the argument shrinks ($n/2$ gives
+> $\log n$ levels, $n - 1$ gives $n$), and how the work **changes from one level to the next**.
+> The total is the sum down the levels, and which level dominates that sum decides the answer.
+> Stay flat, $Cn$ at every level, and it is work × height: $\Theta(n \log n)$. Grow by a
+> constant factor and the *bottom* level swamps everything above it, so $2T(n/2) + C$ is
+> $\Theta(n)$ and $2T(n-1) + C$ is $\Theta(2^n)$. Shrink by a constant factor and the *root*
+> dominates instead, so $T(n/4) + T(n/2) + Cn$ collapses to $n$ however many levels follow.
+>
+> **Load-bearing:** the geometric sum, not the height. $2T(n/2) + Cn$ and $2T(n/2) + C$ have
+> the same shape and the same $\log n$ height, and differ only in the root's work, yet one is
+> $\Theta(n \log n)$ and the other $\Theta(n)$. Reach for "height × work at the root" instead
+> of summing the levels and you cannot tell them apart. The second load-bearing piece is what
+> licenses the shortcut on a lopsided tree: you round it up to a full one, which prices work
+> that is not actually there, and that is precisely why an incomplete tree yields $O$ and never
+> $\Theta$.
+
+</details>
+
+## [04-space-complexity](notebooks/analysis/04-space-complexity.md)
+
+<details>
+<summary><strong>Space Complexity</strong></summary>
+
+> **Mental model.** Split the total from the extra. Space for the input and the output is
+> forced on you - taking an array of $n$ items costs $\Theta(n)$ no matter how cleverly you
+> write the function - so the only figure that reflects a decision *you* made is the
+> **auxiliary** space stacked on top. For a recursive function that extra is the call stack,
+> and the stack only ever holds one path from the root down to the call executing right now.
+> Siblings are never on it at the same time. So auxiliary space is the recursion tree's
+> **height**, not its number of nodes.
+>
+> **Load-bearing:** height rather than node count, and the gap between them is enormous.
+> `fib(n)` makes about $2^n$ calls yet never has more than $n$ frames alive, because
+> `fib(n-2)` does not begin until `fib(n-1)` has finished and left the stack entirely. Miss
+> that and you price this at $\Theta(2^n)$ memory instead of $\Theta(n)$. The same rule shows
+> where space goes when the shape changes: filling a table keeps every value alive at once for
+> $\Theta(n)$ auxiliary space, while carrying only the last two values needs $\Theta(1)$.
+
+</details>
+
 ## [05-amortized-analysis](notebooks/analysis/05-amortized-analysis.md)
 
 <details>

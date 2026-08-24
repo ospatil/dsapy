@@ -16,6 +16,23 @@ jupyter:
 <!-- #region -->
 # Analysis of Recursion
 
+> **Mental model.** Don't solve the recurrence algebraically - draw the tree and read two
+> numbers off it. How many **levels**, which is set by how the argument shrinks ($n/2$ gives
+> $\log n$ levels, $n - 1$ gives $n$), and how the work **changes from one level to the next**.
+> The total is the sum down the levels, and which level dominates that sum decides the answer.
+> Stay flat, $Cn$ at every level, and it is work × height: $\Theta(n \log n)$. Grow by a
+> constant factor and the *bottom* level swamps everything above it, so $2T(n/2) + C$ is
+> $\Theta(n)$ and $2T(n-1) + C$ is $\Theta(2^n)$. Shrink by a constant factor and the *root*
+> dominates instead, so $T(n/4) + T(n/2) + Cn$ collapses to $n$ however many levels follow.
+>
+> **Load-bearing:** the geometric sum, not the height. $2T(n/2) + Cn$ and $2T(n/2) + C$ have
+> the same shape and the same $\log n$ height, and differ only in the root's work, yet one is
+> $\Theta(n \log n)$ and the other $\Theta(n)$. Reach for "height × work at the root" instead
+> of summing the levels and you cannot tell them apart. The second load-bearing piece is what
+> licenses the shortcut on a lopsided tree: you round it up to a full one, which prices work
+> that is not actually there, and that is precisely why an incomplete tree yields $O$ and never
+> $\Theta$.
+
 Let's go through some examples to get a hang of how to derive time taken $T(n)$ for recursive functions.
 
 ## Examples

@@ -16,6 +16,21 @@ jupyter:
 <!-- #region -->
 # Analysis of Common Loops
 
+> **Mental model.** The body does not set the cost; what the loop does to its *counter* does.
+> Every case below answers one question: how many times can this step be applied before the
+> counter reaches $n$? That is just the step run backwards. Adding $c$ each time needs $n/c$
+> steps, so linear. Multiplying by $c$ needs $\log_c n$, because undoing a multiplication is a
+> logarithm. Raising to the power $c$ needs $\log \log n$, because you undo it twice. The base
+> of the log never matters, since changing base only multiplies by a constant.
+>
+> **Load-bearing:** you may multiply the costs of nested loops only when the inner count does
+> not depend on the outer counter. `for j in range(n)` inside `for i in range(n)` really is
+> $n \times n$, but `for j in range(i)` is not - the inner count changes on every pass, so the
+> levels have to be *added*, and $1 + 2 + \dots + n$ is where the $n^2/2$ triangle in
+> [01](01-notation.md) came from. Both land on $\Theta(n^2)$ here, which is the trap: multiply
+> a bound that secretly depends on $i$ and you are right by luck, then wrong the moment the
+> inner loop is logarithmic or the outer range is not $n$.
+
 ## Increasing counter
 
 **Python**

@@ -16,6 +16,22 @@ jupyter:
 <!-- #region -->
 # Analysis of algorithms
 
+> **Mental model.** Throw away everything a faster machine could change, and keep what it
+> cannot. Constants and lower-order terms shift with the CPU, the language and the compiler;
+> the growth rate survives all three, so the growth rate is the only part that describes the
+> *algorithm* rather than the machine it ran on. The two shortcuts - drop lower-order terms,
+> drop leading constants - are not conventions to memorise, they are exactly what the limit
+> $\lim_{n \to \infty} g(n)/f(n)$ leaves standing. Keep one further pair apart: a **case**
+> (best, average, worst) picks which *input* you feed the algorithm, while a **notation** (O,
+> Ω, Θ) picks how *tightly* you bound the function that input produced. They are independent
+> choices, so any case can be stated in any notation.
+>
+> **Load-bearing:** the crossover always exists. No values of $c_1, c_2, c_3$ can keep
+> $c_2n + c_3$ ahead of $c_1$ forever - that guarantee is the entire licence to discard
+> constants, and every simplification here rests on it. It also marks the limit of the whole
+> method: the crossover between two real programs can sit at an $n$ larger than any input you
+> will ever run, and for those inputs the faster-growing algorithm is the one to ship.
+
 Consider the example: Given number $n$, write a function to find sum of first $n$ natural numbers.
 
 The constants $c_1, c_2, ...$ used below stand for the real machine-level cost of the operations involved - an addition, a comparison, a loop increment. We never learn their values, and that is deliberate: they depend on the CPU, the language and the compiler, so keeping them symbolic lets us compare algorithms without benchmarking them.

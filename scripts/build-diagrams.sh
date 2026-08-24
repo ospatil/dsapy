@@ -8,7 +8,7 @@
 # costs 10-20 seconds of Electron startup, so a run with nothing to do finishes
 # instantly instead of taking minutes. Use FORCE=1 to rebuild everything, which
 # is only needed when deliberately re-exporting the whole set (see the version
-# note in .github/copilot-instructions.md).
+# note in skills/diagrams/SKILL.md).
 #
 # Single-page sources export to <name>.png. Multi-page sources export one PNG
 # per page, named <name>-<page name>.png - e.g. page "recursion1" of
