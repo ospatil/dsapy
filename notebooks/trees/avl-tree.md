@@ -27,6 +27,45 @@ balance_factor(node) = height(left subtree) - height(right subtree)
 
 A node is *balanced* when its balance factor is `-1`, `0`, or `+1`. If an insert or delete pushes any node's balance factor to `+2` or `-2`, we restore the invariant with **rotations**.
 
+### Why "differ by at most 1" forces `O(log n)`
+
+The rule is local - it talks about one node at a time - so it is not obvious that it says
+anything about the height of the whole tree. Turn the question around: instead of asking how
+tall a tree with `n` nodes can be, ask **how few nodes a tree of height `h` can have.** If even
+the skinniest legal tree needs a lot of nodes, then a tree with `n` nodes cannot be tall.
+
+Call that minimum `N(h)`. To make a tree of height `h` as sparse as possible, give the root the
+shortest legal pair of subtrees: one of height `h-1` (something has to reach the full height)
+and one of height `h-2` (the smallest the rule permits alongside it). Each of those is itself as
+sparse as possible, so
+
+```
+N(h) = 1 + N(h-1) + N(h-2)          N(1) = 1, N(2) = 2
+```
+
+which is the Fibonacci recurrence wearing a different hat - in fact `N(h) = F(h+2) - 1`:
+
+| h | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|----|
+| N(h) | 1 | 2 | 4 | 7 | 12 | 20 | 33 | 54 | 88 | 143 |
+
+The point is the *rate*: each row is roughly 1.6 times the one before it, because Fibonacci
+numbers grow like $\varphi^h$ where $\varphi \approx 1.618$. So the minimum node count grows
+exponentially in the height, and reading that backwards, the height can only grow
+logarithmically in the node count:
+
+$$h \leqslant \log_{\varphi}(n+1) \approx 1.44 \log_2 (n+1)$$
+
+An AVL tree is therefore never worse than about 44% taller than a perfectly balanced one. That
+is the whole promise: `O(h)` becomes `O(log n)` not by keeping the tree perfect, but by making
+lopsidedness expensive in nodes.
+
+**What the "1" is load-bearing for.** Allow a difference of 2 and the recurrence becomes
+`N(h) = 1 + N(h-1) + N(h-3)`, which grows more slowly, so the same node count permits a taller
+tree - still logarithmic, but with a worse constant. Allow *any* difference and there is no
+recurrence left: `N(h) = h` is legal, a chain, and the height is `O(n)`. The bound comes from
+the number being finite, and the constant comes from it being small.
+
 | Operation | Time | Aux space |
 |-----------|------|-----------|
 | Search | `O(log n)` | `O(log n)` recursion / `O(1)` iterative |

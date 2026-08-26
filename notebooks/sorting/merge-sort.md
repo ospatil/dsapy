@@ -90,7 +90,7 @@ def merge_lists(a, b):
     m, n = len(a), len(b)
     i = j = 0
     while i < m and j < n:
-        if a[i] < b[j]:
+        if a[i] <= b[j]:  # <= not <, so equal elements keep their order
             res.append(a[i])
             i += 1
         else:
@@ -124,15 +124,20 @@ write cursor `k`.
 `left[i] <= right[j]` (rather than `<`) is what keeps the merge stable: on a tie the
 element from the left half goes first, preserving the original order.
 
-This copying is also the reason merge sort is not in-place - it is the O(n) auxiliary
-space in the complexity table.
+Only the *left* run strictly needs copying. The right run is consumed from `mid + 1` onwards,
+and the write position never overtakes it: each step advances the write by one and the right
+index by at most one, starting a full left-run's length behind. So the right half is always
+read before it could be overwritten. Copying both runs is the version worth remembering
+because it is obviously correct; copying only the left halves the extra space, and real
+implementations often do exactly that.
 
 **Time:** Θ(high - low) &nbsp; **Space:** Θ(high - low)
 
 ```python
 def merge(a, low, mid, high):
     """
-    Merge two sorted subarrays in-place
+    Merge two sorted subarrays of `a` back into `a[low...high]`,
+    working from copies because it cannot write where it is still reading.
     Left subarray: a[low...mid]
     Right subarray: a[mid+1...high]
     """

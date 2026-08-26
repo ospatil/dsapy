@@ -47,21 +47,33 @@ greater than it. Report -1 where no such element exists.
 
 `[4, 5, 2, 25]` → `[5, 25, 25, -1]`
 
-Scanning right to left, the stack holds exactly the elements that could still be somebody's
-answer. When a new element arrives, everything on the stack smaller than or equal to it is
-now useless - any element further left would meet the new, larger element first - so those
-get popped and thrown away for good. Whatever survives on top is the answer.
+**Why scan right to left?** The answer for a position always lies to its *right*. Walk the
+array backwards and you have already seen every element that could possibly be an answer
+before you need it, so the work becomes bookkeeping: keep the useful ones, throw the rest
+away.
+
+What the stack is for, then:
+
+- **It holds only positions still waiting for an answer**, with values decreasing as you go
+  up. So the top is the smallest thing still in play.
+- **The top is the answer** for an arriving element, once everything not bigger than it has
+  been removed - it is the nearest survivor, and nearest is what the problem asks for.
+- **Removing is safe because those elements are unreachable, not just unhelpful.** An
+  arriving element that is at least as big is also *nearer*, so anything further left meets
+  the arriving element first and can never see past it. "At least as big" includes equal,
+  because an answer has to be strictly greater.
 
 ```
-arr = [4, 5, 2, 25]        stack holds indices; shown as values
+arr = [4, 5, 2, 25]     stack holds positions, printed as values, top on the right
 
-i=3 (25)  stack empty            → result[3] = -1     push 25   [25]
-i=2 (2)   top 25 > 2             → result[2] = 25     push 2    [25, 2]
-i=1 (5)   top 2 <= 5 → pop
-          top 25 > 5             → result[1] = 25     push 5    [25, 5]
-i=0 (4)   top 5 > 4              → result[0] = 5      push 4    [25, 5, 4]
+i=3  arr[3]=25   stack empty       -> result[3] = -1    push 25   [25]
+i=2  arr[2]=2    top 25 >  2       -> result[2] = 25    push 2    [25, 2]
+i=1  arr[1]=5    top  2 <= 5       -> pop it, gone for good       [25]
+                 top 25 >  5       -> result[1] = 25    push 5    [25, 5]
+i=0  arr[0]=4    top  5 >  4       -> result[0] = 5     push 4    [25, 5, 4]
 
 result: [5, 25, 25, -1]
+stack:  [25, 5, 4]      still decreasing upward, as it was the whole way
 ```
 
 The inner loop looks like it should make this quadratic, but count the work across the whole
@@ -133,8 +145,8 @@ smaller than it. Report -1 where no such element exists.
 `[4, 8, 5, 2, 25]` → `[2, 5, 2, -1, -1]`
 
 The mirror image: the same scan with the comparison reversed. An arriving element now
-discards tops that are greater than or equal to it, so the survivors *increase* from the top
-down instead of decreasing.
+discards tops that are greater than or equal to it, so the survivors *increase* as you go up
+instead of decreasing, and the top is the largest thing still in play.
 
 That symmetry is the useful takeaway - "nearest larger" and "nearest smaller" are the same
 algorithm with the comparison flipped, and scanning left to right instead of right to left
@@ -180,16 +192,24 @@ positions. Days still waiting when the scan ends never found a warmer day and ke
 
 ```
 temps = [73, 74, 75, 71, 69, 72, 76, 73]
+                                          stack holds indices, top on the right
+                                          the answer is a distance, so it is i - j
 
-i=1 (74)  74 > 73 → pop 0, result[0] = 1 - 0 = 1
-i=2 (75)  75 > 74 → pop 1, result[1] = 1
-i=3 (71)  push
-i=4 (69)  push
-i=5 (72)  72 > 69 → pop 4, result[4] = 1
-          72 > 71 → pop 3, result[3] = 2
-i=6 (76)  76 > 72 → pop 5, result[5] = 1
-          76 > 75 → pop 2, result[2] = 6 - 2 = 4
-i=7 (73)  push       indices 6 and 7 never pop → 0
+i=0 (73)  push 0                                        stack [0]
+i=1 (74)  74 > 73 -> pop 0, result[0] = 1-0 = 1          stack []
+          push 1                                        stack [1]
+i=2 (75)  75 > 74 -> pop 1, result[1] = 2-1 = 1          stack []
+          push 2                                        stack [2]
+i=3 (71)  push 3                                        stack [2, 3]
+i=4 (69)  push 4                                        stack [2, 3, 4]
+i=5 (72)  72 > 69 -> pop 4, result[4] = 5-4 = 1          stack [2, 3]
+          72 > 71 -> pop 3, result[3] = 5-3 = 2          stack [2]
+          push 5                                        stack [2, 5]
+i=6 (76)  76 > 72 -> pop 5, result[5] = 6-5 = 1          stack [2]
+          76 > 75 -> pop 2, result[2] = 6-2 = 4          stack []
+          push 6                                        stack [6]
+i=7 (73)  push 7                                        stack [6, 7]
+                    6 and 7 are never popped, so they keep result 0
 
 result: [1, 1, 4, 2, 1, 1, 0, 0]
 ```
@@ -236,17 +256,30 @@ and the width runs between its left boundary - the bar now exposed underneath - 
 shorter bar that stopped it.
 
 ```
-heights = [2, 1, 5, 6, 2, 3] + [0]      sentinel appended
+heights = [2, 1, 5, 6, 2, 3] + [0]    the trailing 0 is a sentinel, not real data
+                                      stack holds indices, top on the right
+                                      `3:6` means index 3, whose bar is 6 tall
 
-i=1 h=1   pop 2  → width 1, area 2
-i=4 h=2   pop 6  → width 4-2-1 = 1, area 6
-          pop 5  → width 4-1-1 = 2, area 10   ← best
-i=6 h=0   pop 3  → width 1, area 3
-          pop 2  → width 6-1-1 = 4, area 8
-          pop 1  → stack empty → width 6, area 6
+i=0  h=2   push                                        stack: 0:2
+i=1  h=1   pop 0:2   width 1          area 2           stack: empty
+           push                                        stack: 1:1
+i=2  h=5   push                                        stack: 1:1  2:5
+i=3  h=6   push                                        stack: 1:1  2:5  3:6
+i=4  h=2   pop 3:6   width 4-2-1 = 1  area 6           stack: 1:1  2:5
+           pop 2:5   width 4-1-1 = 2  area 10  <- best stack: 1:1
+           push                                        stack: 1:1  4:2
+i=5  h=3   push                                        stack: 1:1  4:2  5:3
+i=6  h=0   pop 5:3   width 6-4-1 = 1  area 3           stack: 1:1  4:2
+           pop 4:2   width 6-1-1 = 4  area 8           stack: 1:1
+           pop 1:1   width 6          area 6           stack: empty
 
-max area: 10   (height 5 spanning bars 5 and 6)
+max area: 10, from the bar of height 5 spanning indices 2 and 3
 ```
+
+The width is index arithmetic, which is why it reads oddly next to the heights: `i` is the
+shorter bar that stopped us, `stack[-1]` is the bar now exposed on the left, and the rectangle
+fits strictly between the two - hence the `- 1`. When the stack empties there is nothing
+shorter to the left at all, so the width is the whole span up to `i`.
 
 Two details that are easy to get wrong:
 

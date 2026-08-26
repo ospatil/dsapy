@@ -50,16 +50,22 @@ We'll use the **dynamic array** (Python's `list.append()`) as our running exampl
 
 # The Problem: Dynamic Array Append
 
-A dynamic array starts with capacity 1. When full, it allocates a new array of **double** the size and copies everything over.
+A dynamic array starts with capacity 1. When an append finds the array already full, it
+allocates a new array of **double** the size, copies everything over, and then writes. That
+"already full, so grow first" order matters for the bookkeeping below: the copy is charged to
+the append that *arrives* at a full array, not to the one that filled it.
 
-| Append # | Array state | Cost |
-|----------|-------------|------|
-| 1 | `[1]` capacity 1 -> full, copy to capacity 2 | 1 + 1 = 2 |
-| 2 | `[1,2]` capacity 2 -> full, copy to capacity 4 | 1 + 2 = 3 |
-| 3 | `[1,2,3]` capacity 4 | 1 |
-| 4 | `[1,2,3,4]` capacity 4 -> full, copy to capacity 8 | 1 + 4 = 5 |
-| 5-8 | fill capacity 8 | 1 each |
-| 9 | capacity 8 -> full, copy to capacity 16 | 1 + 8 = 9 |
+| Append # | What happens | Cost |
+|----------|--------------|------|
+| 1 | room in capacity 1; write | 1 |
+| 2 | full at 1 -> copy 1, capacity 2, then write | 1 + 1 = 2 |
+| 3 | full at 2 -> copy 2, capacity 4, then write | 1 + 2 = 3 |
+| 4 | room in capacity 4; write | 1 |
+| 5 | full at 4 -> copy 4, capacity 8, then write | 1 + 4 = 5 |
+| 6-8 | room in capacity 8; write | 1 each |
+| 9 | full at 8 -> copy 8, capacity 16, then write | 1 + 8 = 9 |
+
+So the expensive appends land at 2, 3, 5, 9, 17 - one past each power of two.
 
 **Worst-case per operation:** O(n) - when we have to copy everything.
 
@@ -211,21 +217,22 @@ The numbers matter less than the shape: the balance climbs while appends are che
 resize drains almost all of it, and it climbs again.
 
 | Append # | Actual cost | Charge | Bank change | Bank balance |
-|----------|-------------|--------|-------------|-------------|
-| 1 | 2 (assign + copy 1) | 3 | +1 | 1 |
-| 2 | 3 (assign + copy 2) | 3 | 0 | 1 |
-| 3 | 1 | 3 | +2 | 3 |
-| 4 | 5 (assign + copy 4) | 3 | -2 | 1 |
-| 5 | 1 | 3 | +2 | 3 |
+|----------|-------------|--------|-------------|--------------|
+| 1 | 1 | 3 | +2 | 2 |
+| 2 | 2 (assign + copy 1) | 3 | +1 | 3 |
+| 3 | 3 (assign + copy 2) | 3 | 0 | 3 |
+| 4 | 1 | 3 | +2 | 5 |
+| 5 | 5 (assign + copy 4) | 3 | -2 | 3 |
 | 6 | 1 | 3 | +2 | 5 |
 | 7 | 1 | 3 | +2 | 7 |
-| 8 | 9 (assign + copy 8) | 3 | -6 | 1 |
+| 8 | 1 | 3 | +2 | 9 |
+| 9 | 9 (assign + copy 8) | 3 | -6 | 3 |
 
 The balance never goes negative, and that is the entire proof. A negative balance would mean
 some real cost was paid with money that had never been collected, so the flat price would be a
 lie. Staying at or above zero means the real total never exceeded what was charged. Notice the
-balance drops to 1 right after each resize and is built back up by the cheap appends before the
-next one, which is the pre-paying made visible.
+balance is drained back to a small floor by each resize and built up again by the cheap appends
+before the next one, which is the pre-paying made visible.
 
 **Amortized cost = $3 = O(1)**
 

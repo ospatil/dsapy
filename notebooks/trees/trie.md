@@ -64,9 +64,8 @@ insert 'app', 'apple', 'bat'
 Shared prefixes are stored once - `'app'` and `'apple'` walk the same three nodes, which is
 where the space saving and the prefix queries both come from.
 
-The `'$'` marker is the crucial bit: reaching a node means the path *exists*, not that it is
-a **word**. `'app'` is a real word here and `'ap'` is not, yet both are nodes on the way to
-`'apple'`. So the three lookups differ only in their final test:
+The marker's consequence is that all three lookups walk the characters identically and differ
+only in what they ask at the end:
 
 | Function | After walking the characters |
 |---|---|

@@ -127,6 +127,12 @@ Let's see how the call stack looks like for `fib(4)` execution:
 
 As we can see, the maximum number of active stack frames is $4$ i.e. height of tree.
 
+That gap is worth pausing on: `fib(n)` makes about $2^n$ calls, yet only $n$ frames are ever
+alive at once. The reason is that siblings never coexist - `fib(n-2)` does not start until
+`fib(n-1)` has finished and left the stack entirely. Time counts every call ever made; space
+counts only the ones alive simultaneously, which is one root-to-current path. So the tree's
+*node count* sets the time and its *height* sets the space.
+
 Therefore aux space = $\Theta(n)$.
 
 > The simple rule to find out the aux space for recursion: **it's always equal to the height of the recursion tree**.
@@ -139,11 +145,11 @@ Consider the following non-recursive implementation for fibonacci:
 
 ```python
 def fib2(n):
-    f = [None for _ in range(n)]
+    f = [None for _ in range(n + 1)]
     f[0], f[1] = 0, 1
-    for i in range(2, n):
+    for i in range(2, n + 1):
         f[i] = f[i-1] + f[i-2]
-    return f[n-1]
+    return f[n]
 ```
 
 Space complexity: $\Theta(n)$.
@@ -169,6 +175,10 @@ def fib3(n):
 ```
 
 Here is variable tracing looks like for above implementation for $n = 4$:
+
+The `print` runs *after* the swap, so on each line `c` was computed from the **previous**
+line's `a` and `b`. Read down the `c` column and it is the Fibonacci sequence; do not try to
+check `c = a + b` within a single line.
 
 > `a=0, b=1, c=0`\
   `i=2; c=1, a=1, b=1`\

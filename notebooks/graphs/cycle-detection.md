@@ -86,11 +86,13 @@ test_has_cycle_undirected()
 
 ## Directed graph: three colors
 
-Parent tracking does not transfer. In a directed graph a visited neighbour may be
-perfectly fine - the diamond `0→1, 0→2, 1→3, 2→3` reaches 3 twice and has no cycle.
+Parent tracking does not transfer, because in a directed graph the thing it protects against
+is not the problem. The question has to change shape: "have I seen this vertex?" is about
+*history*, and history cannot tell a cycle from a shortcut. "Is this vertex on the path I am
+standing on right now?" is about the *present*, and only that distinguishes them.
 
-What matters is whether that neighbour is still **on the current path**. Three states
-capture it:
+That is why one bit is not enough. A vertex needs three states, because it can be in three
+genuinely different situations relative to the current walk:
 
 | Color | Meaning |
 |---|---|

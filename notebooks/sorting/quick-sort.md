@@ -143,13 +143,15 @@ One pass, one extra index, no auxiliary array. Take the last element as pivot an
 array divided into three regions:
 
 ```
-| <= pivot | > pivot | unprocessed |
-           i         j
+| < pivot | >= pivot | unprocessed | pivot |
+         i          j                    h
 ```
 
 `i` marks the end of the "small" region and `j` scans forward. Every time `j` finds an
 element smaller than the pivot, the small region grows by one and the newcomer is swapped
-into it. When the scan ends, swapping the pivot into `i + 1` puts it exactly between the
+into it. The test is strict (`a[j] < pivot`), so elements *equal* to the pivot stay in the
+right-hand region - which is what keeps an all-equal array from piling everything on one
+side. The pivot itself waits at `h`, outside the scanned range, until the end. When the scan ends, swapping the pivot into `i + 1` puts it exactly between the
 two regions - its final sorted position.
 
 Returning the pivot's true index is what lets `qsort_lomuto` recurse on `[l, p-1]` and
@@ -212,17 +214,19 @@ When the pointers cross, the array is partitioned.
 
 ```
 a = [7, 8, 6, 12, 10, 3]   pivot = 7 (the first element)
+                           `|` marks the returned boundary, NOT the pivot's position
+                           (in the Lomuto trace above the same bar meant the opposite)
 
 after partitioning:   [3, 6 | 8, 12, 10, 7]   returns j = 1
                             ^ boundary        the pivot value 7 ended up at index 5
 ```
 
 The catch, and the reason `qsort_hoare` differs from `qsort_lomuto`: the returned index is
-a **boundary, not the pivot's position**. Everything left of the boundary is <= the pivot
-and everything right of it is >=, but the pivot value itself is free to be anywhere - here
-it finished on the right side. So the recursion has to be `[l, p]` and `[p+1, h]` -
-including `p` - rather than excluding it. Using Lomuto's `[l, p-1]` here would drop an
-element.
+a **boundary, not the pivot's position**. `j` is the *last index of the left part*, so
+`a[l..j]` are all <= the pivot and `a[j+1..h]` all >=, but the pivot value itself is free to
+be anywhere - here it finished on the right side. So the recursion has to be `[l, p]` and
+`[p+1, h]` - including `p` - rather than excluding it. Using Lomuto's `[l, p-1]` here would
+drop an element.
 
 Fewer swaps and better constants than Lomuto, which is why library implementations tend to
 prefer it.
@@ -292,11 +296,12 @@ array is sorted.
 
 ```
 qsort_lomuto([8, 4, 7, 9, 3, 10, 5])
+                      `|` marks where the pivot finished, in its final place
 
-partition around 5    → [4, 3, 5 | 9, 8, 10, 7]   pivot lands at index 2
-  left  [4, 3]        → partition around 3 → [3, 4]
-  right [9, 8, 10, 7] → partition around 7 → [7 | 8, 10, 9]
-                        then [8, 10, 9]    → partition around 9 → [8, 9, 10]
+partition around 5    -> [4, 3, 5 | 9, 8, 10, 7]   pivot lands at index 2
+  left  [4, 3]        -> partition around 3 -> [3, 4]
+  right [9, 8, 10, 7] -> partition around 7 -> [7 | 8, 10, 9]
+                        then [8, 10, 9]    -> partition around 9 -> [8, 9, 10]
 
 result: [3, 4, 5, 7, 8, 9, 10]
 ```

@@ -88,7 +88,7 @@ def test_insert_front():
     insert_front(head, 2)
     insert_front(head, 3)
     assert to_list(head) == [3, 2, 1]
-    # prev links point back: 3 -> dummy, 2 -> 3, 1 -> 2
+    # prev pointers run the other way: 3.prev is dummy, 2.prev is 3, 1.prev is 2
     assert head.next.prev is head
     assert head.next.next.prev is head.next
 
@@ -220,6 +220,73 @@ def test_delete_end():
 
 
 test_delete_end()
+```
+
+### Delete a node you already hold
+
+This is the operation the second pointer exists for, and the only row in the table at the top
+where the two list types differ by more than a constant.
+
+In a singly linked list, deleting a node you are holding is awkward for one reason: you need
+the node *before* it to redirect, and from the node itself there is no way back. So you walk
+from the head to find the predecessor, and an O(1)-looking operation costs O(n). The `prev`
+pointer removes the search entirely - the predecessor is one dereference away.
+
+Be precise about the claim, though. It is the *unlink* that is O(1). Locating the node in the
+first place is still a walk, so `delete_node` only pays off when something else already handed
+you the reference - which is exactly the situation an LRU cache is in, holding a dict from key
+to node so the list never has to be searched at all.
+
+Two details. The tail has nobody behind it, so the backward repair has to be guarded, the same
+shape of guard as `delete_front`. And the removed node's own pointers are cleared afterwards:
+nothing in the list still references it, but the caller's variable does, and leaving it wired
+to its old neighbours means a stale reference can still walk into a list it is no longer part
+of.
+
+**Time:** O(1) &nbsp; **Space:** O(1)
+
+```python
+def delete_node(node):
+    """Unlink a node you already hold a reference to. Time: O(1)"""
+    if node is None or node.prev is None:
+        return  # nothing to do, or this is the dummy head, which never leaves
+    node.prev.next = node.next
+    if node.next:  # a tail has nobody behind it to repair
+        node.next.prev = node.prev
+    node.prev = node.next = None  # so a stale reference cannot walk the old list
+
+
+def test_delete_node():
+    head = ListNode(-1)
+    for v in (1, 2, 3, 4):
+        insert_end(head, v)
+
+    middle = head.next.next  # the node holding 2
+    delete_node(middle)
+    assert to_list(head) == [1, 3, 4]
+    assert head.next.next.val == 3
+    assert head.next.next.prev is head.next  # backward direction repaired too
+    assert middle.prev is None and middle.next is None  # detached
+
+    tail = head.next.next.next  # the node holding 4
+    delete_node(tail)
+    assert to_list(head) == [1, 3]
+    assert head.next.next.next is None
+
+    delete_node(head.next)  # the first real node; the dummy takes over
+    assert to_list(head) == [3]
+    assert head.next.prev is head
+
+    delete_node(head.next)  # down to empty
+    assert to_list(head) == []
+
+    # handed the dummy, or nothing at all: a no-op, not a crash
+    delete_node(head)
+    delete_node(None)
+    assert to_list(head) == []
+
+
+test_delete_node()
 ```
 
 ### Reverse

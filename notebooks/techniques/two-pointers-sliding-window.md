@@ -138,6 +138,12 @@ test_remove_dups()
 
 # Container With Most Water
 
+**Problem:** each number is the height of a vertical line standing on the x-axis. Pick two
+lines; together with the axis they hold water. The amount is limited by the *shorter* of the
+two, so it is `min(left, right) × distance between them`. Find the maximum.
+
+`[1, 8, 6, 2, 5, 4, 8, 3, 7]` → `49` (the 8 at index 1 and the 7 at index 8: `min(8,7) × 7`)
+
 Area is `min(left, right) × width`, and starting at the two ends maximizes the width. Every
 move inward *loses* width, so a move is only worth making if it can raise the `min`.
 

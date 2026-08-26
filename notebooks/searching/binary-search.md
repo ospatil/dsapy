@@ -208,13 +208,27 @@ point can only be in one of them. Identify the sorted half with a single compari
 (`arr[lo] <= arr[mid]`), then check whether the target falls inside its known range. If it
 does, search there; otherwise the answer can only be in the other half.
 
-```
-find 1 in [4, 5, 6, 7, 0, 1, 2]
+Why that one comparison settles it: rotation takes a sorted run and moves a chunk from the
+front to the back, so there is exactly one place where a value drops instead of rising. If
+`arr[lo] <= arr[mid]`, no drop happened between `lo` and `mid`, so that side is a clean
+ascending run and its contents are exactly the values from `arr[lo]` to `arr[mid]`. If the
+comparison fails, the drop is in there, which puts the clean run on the other side. Either
+way one side becomes a range you can test a value against in constant time - which is the
+thing plain binary search gets for free and rotation takes away.
 
-lo=0 hi=6  mid=3  arr[3]=7    arr[0]=4 <= 7, so left half [4..7] is sorted
-                              is 1 in [4, 7)? no → go right, lo=4
+(The comparison assumes distinct values. With duplicates, `arr[lo] == arr[mid]` tells you
+nothing about which side holds the drop, and the worst case degrades to O(n).)
+
+```
+find 1 in [4, 5, 6, 7, 0, 1, 2]      ranges below are VALUE ranges, not index ranges
+
+lo=0 hi=6  mid=3  arr[3]=7    arr[0]=4 <= 7, so the left half holds values 4..7, sorted
+                              is the target 1 in 4..7 (7 excluded)? no -> go right, lo=4
 lo=4 hi=6  mid=5  arr[5]=1    found at index 5
 ```
+
+The value/index confusion is easy here because this array's values happen to look like
+indices. `lo`, `hi` and `mid` are always indices; `4..7` is a span of values.
 
 So the extra work versus plain binary search is one comparison per step to decide which
 half is the trustworthy one - the complexity is unchanged.

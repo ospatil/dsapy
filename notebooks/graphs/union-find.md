@@ -31,6 +31,9 @@ function, but the number it returns is the only part that matters. See
 
 ## Key Optimizations
 
+Both of these talk about trees, so read them against the representation set out in the card
+below: each set is a tree of parent pointers, and the root of that tree *is* the set's name.
+
 1. **Union by rank** - attach the shorter tree under the taller one → keeps trees flat
 2. **Path compression** - during `find`, point every node directly to the root → flattens on access
 

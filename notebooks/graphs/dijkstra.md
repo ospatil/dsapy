@@ -44,9 +44,12 @@ The rows worth reading below are the ones where nothing happens. A vertex gets p
 no distance improves, because a cheaper route there was already found.
 
 ```
-0 --4-- 1 --8-- 2        pop 0  (d=0)   dist 1←4, 3←8
-|       |       |        pop 1  (d=4)   dist 2←12, 4←6
-8       2       7        pop 4  (d=6)   3 stays 8 (6+7=13 is worse), 5←15
+graph on the left, edge weights on the connectors
+`dist 1<-4` means dist[1] becomes 4; pops come out in heap order, nearest first
+
+0 --4-- 1 --8-- 2        pop 0  (d=0)   dist 1<-4, 3<-8
+|       |       |        pop 1  (d=4)   dist 2<-12, 4<-6
+8       2       7        pop 4  (d=6)   3 stays 8 (6+7=13 is worse), 5<-15
 |       |       |        pop 3  (d=8)   nothing improves
 3 --7-- 4 --9-- 5        pop 2  (d=12)  5 stays 15 (12+7=19 is worse)
                          pop 5  (d=15)

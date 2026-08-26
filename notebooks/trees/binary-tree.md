@@ -403,12 +403,15 @@ the same way, as a spine of its own.
 The stack's shape is the point, so it is worth watching:
 
 ```
+stack shown bottom to top, top on the right
+"emit" means append the value to the output list
+
 push spine        stack [10, 20]
-pop 20  → emit    stack [10]        no right child
-pop 10  → emit    stack []          right = 30 → push spine [30, 40]
-pop 40  → emit    stack [30]
-pop 30  → emit    stack []          right = 50 → push [50]
-pop 50  → emit    stack []          done
+pop 20  -> emit   stack [10]        no right child
+pop 10  -> emit   stack []          right = 30 -> push spine [30, 40]
+pop 40  -> emit   stack [30]
+pop 30  -> emit   stack []          right = 50 -> push [50]
+pop 50  -> emit   stack []          done
 ```
 
 Only one spine is ever on the stack, and a spine cannot be longer than the tree is tall.

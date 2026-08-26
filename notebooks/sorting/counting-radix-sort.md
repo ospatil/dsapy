@@ -57,11 +57,14 @@ Because the input is walked **backwards**. After the prefix sums, `count[x] - 1`
 rightmost, the second-to-last just before it, and so on - relative order survives.
 
 ```
-arr = [4, 2, 2, 8, 3, 3, 1]      the prefix sums put the 3s at indices 3 and 4
+arr = [4, 2, 2, 8, 3, 3, 1]
+
+after the prefix sums, count[3] = 5, which reads as "5 elements are <= 3",
+so the last 3 belongs at index 4 - one before 5
 
 walking backwards:
-  3 → count[3] 5→4 → output[4] = 3      the *later* 3 takes the higher slot
-  3 → count[3] 4→3 → output[3] = 3      the earlier 3 lands just before it
+  see 3    count[3]: 5 -> 4    output[4] = 3    the *later* 3 takes the higher slot
+  see 3    count[3]: 4 -> 3    output[3] = 3    the earlier 3 lands just before it
 ```
 
 Iterating forwards instead would reverse equal elements - and radix sort, which leans on

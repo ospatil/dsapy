@@ -152,7 +152,9 @@ for (let i = n; i > 1; i /= c) {
 
 - Example: \
   For `n = 32` and `c = 2`, it will be executed `5` times `32, 16, 8, 4, 2`. \
-  For `n = 33` and `c = 2`, it will be executed `6` times `33, 16, 8, 4, 2`.
+  For `n = 33` and `c = 2`, it will be executed `5` times `33, 16, 8, 4, 2`.
+  Unlike the multiplying loop, 32 and 33 cost the same here: dividing 33 lands on 16 straight
+  away, so the extra element buys no extra step.
 - Time complexity for this loop is $\Theta(\log n)$.
 
 ## Counter raised to some power in each iteration
@@ -309,4 +311,27 @@ function fun(n) {
 </details>
 
 - The time complexity is $\Theta(n^2)$.
+
+## When multiplying is allowed
+
+Both nested sections above multiply the two loops, and both are right to - but only because the
+inner count does not depend on the outer counter. `while j < n` and `for j in range(n)` run the
+same number of times whichever pass of `i` we are on, so "outer $\times$ inner" is just adding
+the same number $n$ times.
+
+Make the inner bound depend on `i` and the multiplication stops being valid:
+
+```python
+for i in range(n):
+    for j in range(i):        # not n - it grows with i
+        # some constant work
+```
+
+The passes now cost $0, 1, 2, \dots, n-1$, so the total is $\frac{n(n-1)}{2}$. That is still
+$\Theta(n^2)$, and *that* is the trap: multiplying gives $n \times n = n^2$ and lands on the
+right answer by luck, so the mistake goes unnoticed. Make the inner loop logarithmic in `i`, or
+the outer range something other than $n$, and the two methods part company.
+
+The rule: **add the passes** whenever the inner count moves, and multiply only when it is
+genuinely fixed.
 <!-- #endregion -->

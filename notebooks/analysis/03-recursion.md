@@ -143,6 +143,27 @@ Once the value of $T(n)$ is written recursively, we can use **Recursion Tree Met
 
   1. Write non-recursive part as root of tree and recursive parts as children.
   2. Keep expanding children until a pattern emerges.
+  3. Add up the levels.
+
+Step 3 is where the answer actually comes from, and only two numbers matter:
+
+- **How many levels**, set by how the argument shrinks. Halving gives $\log_2 n$ levels;
+  subtracting 1 gives $n$.
+- **The ratio $r$ between one level's total work and the level above it.**
+
+That ratio decides which level dominates the sum, and therefore the answer:
+
+| Ratio | What dominates | Total |
+|-------|----------------|-------|
+| $r = 1$ | nothing - every level costs the same | work per level $\times$ number of levels |
+| $r > 1$ | the **bottom** level; it alone is a constant fraction of the whole sum | $\Theta(\text{work at the last level})$ |
+| $r < 1$ | the **root**; the levels below shrink geometrically to a constant multiple of it | $\Theta(\text{work at the root})$ |
+
+Every example below is one of those three cases, so it is worth spotting $r$ before doing any
+algebra. Watch for it: $r$ is not the branching factor on its own. Two children each doing
+half the work gives $r = 1$, two children each doing the same work as their parent gives
+$r = 2$, and that difference is the whole difference between $\Theta(n \log n)$ and
+$\Theta(n)$.
 
 ### Example 1
 

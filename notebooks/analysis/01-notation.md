@@ -108,7 +108,9 @@ Some solutions (Python):
 
 > It's a measure of the order of growth of an algorithm in terms of its input size.
 
-We measure growth instead of absolute time because absolute time isn't a property of the algorithm - it shifts with hardware, language and compiler. The order of growth survives all of those. A quadratic algorithm stays quadratic on a faster machine; it merely takes a larger input to become unusable.
+Why growth and not seconds is argued in the card above. What follows is the payoff: once you
+accept it, comparing two algorithms stops needing a machine at all, and becomes arithmetic on
+the constants.
 
 Let's compare the growth of solutions 1 and 2.
 

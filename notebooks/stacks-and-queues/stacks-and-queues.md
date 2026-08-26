@@ -187,20 +187,20 @@ the brackets interleave rather than nest. The `pairs` dict maps each closer to t
 requires, which turns matching into a single lookup.
 
 ```
-'({[]})'          stack after each char
+'({[]})'          stack shown bottom to top, top on the right
 
-(     [ (             push
-{     [ (, {          push
-[     [ (, {, [       push
-]     [ (, {          top was [ → matches, pop
-}     [ (             top was { → matches, pop
-)     [ ]             top was ( → matches, pop
-end   empty → balanced
+(     (               push
+{     ( {             push
+[     ( { [           push
+]     ( {             top was [ - matches ] - pop
+}     (               top was { - matches } - pop
+)     empty           top was ( - matches ) - pop
+end   empty -> balanced
 
 '([)]'
-(     [ (
-[     [ (, [
-)     top is [ , but ) needs ( → mismatch → False
+(     (
+[     ( [
+)     top is [ but ) needs ( -> mismatch -> False
 ```
 
 Two failure modes, and both need checking: a closer that meets the wrong top (or an empty

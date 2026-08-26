@@ -92,9 +92,13 @@ test_is_topological()
 
 ### DFS-based topological sort
 
-The key observation: in a DFS, a vertex is *finished* only after everything reachable
-from it is finished. So if you append each vertex at the moment it finishes, you build
-the order backwards - reverse it and every vertex precedes its descendants.
+Kahn's version needs a count of incoming edges, which means a pass over the whole graph before
+it can start. DFS needs no such preparation, because the recursion already computes the thing
+the ordering wants: the moment a vertex *finishes* is the moment everything below it is done.
+The order is a by-product of the walk rather than something maintained alongside it.
+
+The catch is that a by-product arrives backwards - descendants finish first - so the finish
+order has to be reversed before it reads as a topological order.
 
 ```
 DAG:  2→3, 3→1, 4→0, 4→1, 5→0, 5→2

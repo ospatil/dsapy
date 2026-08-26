@@ -54,7 +54,12 @@ def to_list(head):
     return ls
 ```
 
-We'll use a dummy head for all the functions.
+We'll use a **dummy head** for all the functions: a node that holds no real data and never
+moves, sitting in front of the first real node. Its value is irrelevant - the code below uses
+`-1` - because nothing ever reads it; only its `next` pointer matters. It exists so that
+"insert at the front" and "delete the first node" are ordinary pointer updates instead of
+special cases, since there is always a node in front of the one being changed. That is also why
+`to_list` starts at `head.next` rather than `head`.
 
 > **Procedural vs class-based:** The functions below take a `head` node and operate on it directly - a procedural style closer to how you'd write it in an interview or in C. These can also be organized as a `LinkedList` class with methods like `insert_front()`, `delete()`, etc. The class approach is the conventional OOP teaching style but the underlying logic is identical.
 
@@ -396,9 +401,12 @@ test_reverse_using_stack()
 At every moment during the walk, the list is in two pieces:
 
 ```
-   reversed prefix          untouched suffix
-prev -> ... -> None       curr -> ... -> None
+   reversed prefix                 untouched suffix
+prev -> ... -> old head -> None    curr -> ... -> None
 ```
+
+The arrows all mean `next`. In the reversed prefix they now run backwards through the original
+order, which is why following them from `prev` ends at the node that used to be the head.
 
 `prev` is not "the previous node" - it is **the head of the part already reversed**, and
 `curr` is the head of the part not yet touched. Every line of the loop follows from that

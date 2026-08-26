@@ -52,7 +52,10 @@ Graph is a pair of sets G = {V, E}
 
 - **Walk:** Sequence of vertices following edges (repetition allowed)
 - **Path:** Walk with no vertex repetition
-- **Cyclic:** Walk that begins and ends with same vertex
+- **Cycle:** Walk that returns to its starting vertex without reusing an edge. In an
+  undirected graph that needs at least three distinct vertices, since stepping along one edge
+  and straight back would reuse it. In a directed graph two vertices are enough, because
+  `u→v` and `v→u` are different edges.
 - **DAG:** Directed Acyclic Graph
 - **Weighted Graph:** Edges have weights assigned
 
