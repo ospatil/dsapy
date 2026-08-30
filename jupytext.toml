@@ -1,6 +1,8 @@
-# Notebooks are stored as Markdown; the .ipynb beside each .md is a local,
-# gitignored build artifact that Jupytext keeps in sync on save.
-formats = "md,ipynb"
+# Notebooks are stored as Markdown; the .ipynb and .py beside each .md are
+# local, gitignored build artifacts that Jupytext keeps in sync on save. The
+# py:percent file exists so VS Code can run/debug a notebook as a plain script;
+# edits made there flow back into the .md on the next sync.
+formats = "md,ipynb,py:percent"
 
 # Drop per-cell metadata so diffs stay pure prose and code. The notebook-level
 # kernelspec is kept deliberately: `make test` needs it to pick a kernel.

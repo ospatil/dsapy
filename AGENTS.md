@@ -19,18 +19,21 @@ status page - `git log`, `git status` and `make test` cover that.
 
 **dsapy** is an educational Data Structures & Algorithms repository. Every
 implementation lives in a Jupyter Notebook under `notebooks/`, organized by
-topic. Notebooks are **authored as Markdown** and paired to `.ipynb` by
-[Jupytext](https://jupytext.readthedocs.io/) (see `jupytext.toml`): the `.md` is
-the source of truth and the only file git tracks, the `.ipynb` is a gitignored
-local build artifact that JupyterLab opens. Editing either updates the pair on
-save. `LEARNING_PATH.md` orders all notebooks into seven phases and is the entry
+topic. Notebooks are **authored as Markdown** and paired to `.ipynb` and
+`.py` (py:percent) by [Jupytext](https://jupytext.readthedocs.io/) (see
+`jupytext.toml`): the `.md` is the source of truth and the only file git
+tracks; the `.ipynb` (which JupyterLab opens) and the `.py` (a plain script VS
+Code can run and debug directly - prose travels as `# %% [markdown]` comments)
+are gitignored local build artifacts. Editing any of the three updates the
+others on save or `make sync`.
+`LEARNING_PATH.md` orders all notebooks into seven phases and is the entry
 point for a reader. `main.py` and `scratchpad.py` are throwaway placeholders.
 
 ## Commands
 
 ```bash
 make start          # launch JupyterLab (opens in Chrome incognito via config/)
-make sync           # regenerate the paired .ipynb after a fresh clone
+make sync           # regenerate the paired .ipynb and .py after a fresh clone
 make recall         # rebuild RECALL.md from the notebooks' mental-model cards
 make test           # execute every notebook end-to-end; inline asserts fail the run
 make diagrams       # export docs/diagrams/*.drawio to notebooks/*/images/*.png
@@ -41,7 +44,10 @@ uv run ruff check .   # lint
 **Do not swap `black` for `ruff format`.** Ruff formats Python inside Markdown
 fenced blocks, so `ruff format .` rewrites all the notebooks and flattens the
 aligned trailing comments (`# 𝛳(log n)`, `# T(n/2)`) that the lessons rely on.
-Black only touches `.py`, which is why it is still here.
+Black only touches `.py`, which is why it is still here. For the same reason
+`pyproject.toml` excludes `notebooks/` from both black and ruff: the paired
+`.py` files sync back into the `.md` on save, so formatting them would flatten
+those comments through the back door.
 
 `RECALL.md` is generated from the cards by `scripts/build-recall.py` and must not
 be hand-edited; `make test` runs the script in `--check` mode and fails if a card

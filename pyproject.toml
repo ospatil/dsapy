@@ -6,6 +6,15 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
 
+# The paired notebooks/**/*.py files are generated from the .md sources (see
+# jupytext.toml). Formatting or linting them would round-trip into the Markdown
+# on the next sync and flatten the aligned trailing comments the lessons rely on.
+[tool.black]
+extend-exclude = "notebooks/"
+
+[tool.ruff]
+extend-exclude = ["notebooks"]
+
 [dependency-groups]
 dev = [
     "black>=25.1.0",

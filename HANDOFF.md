@@ -116,6 +116,32 @@ under 200 lines per `CLAUDE.md` and warns that longer files reduce adherence - t
 original 243 exceeded it, and the diagram detail only matters while drawing.
 Confirmed in both tools that the skill costs only its summary line until invoked.
 
+### The `.py` pairing exists for VS Code; a split-source design was rejected
+
+Each notebook is paired to a third format, `py:percent`, so VS Code can run and
+debug a lesson as a plain script (breakpoints need a real `.py` on disk). The
+`.py` is a gitignored build artifact like the `.ipynb`, and it is a *complete
+mirror* of the notebook - prose rides along as `# %% [markdown]` comments - not
+a code-only extract. Edits made in the `.py` sync back into the `.md`.
+
+Two alternatives were considered and dropped, for reasons worth not
+re-litigating:
+
+- **True split-source** (prose only in `.md`, code only in `.py`, a custom
+  stitcher building the `.ipynb`): rejected because the `.md` on GitHub would
+  show include-directives where code belongs, the build becomes one-way (a
+  JupyterLab edit is silently clobbered by the next stitch), and it means owning
+  ~150 lines of stitch/split tooling forever versus one line of jupytext.toml.
+- **Migrating to marimo**: its two headline wins (git-friendly source, script
+  runnability) were already covered, prose would become `mo.md()` strings which
+  breaks `build-recall.py` and the markdown-first authoring, and its reactive
+  no-redefinition rule fights lesson-style naive-then-fixed progressions.
+
+The trap this pairing creates: **black and ruff must keep excluding
+`notebooks/`** (`pyproject.toml`). The paired `.py` files sync back into the
+`.md`, so formatting them flattens the aligned trailing comments through the
+back door - the same failure mode as `ruff format`, one hop removed.
+
 ### `ruff format` would rewrite every notebook
 
 See the warning in `AGENTS.md` under Commands - that copy is authoritative. Short
