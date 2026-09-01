@@ -34,6 +34,15 @@ That is everything below.
   content.
 - **`config/jupyter_notebook_config.py` is unformatted.** It is the one file
   `black` would rewrite. Reformatting it is safe but nobody has needed to.
+- **Practice mode is specced but not built.** `docs/practice-mode.md` carries the
+  design: a generator that strips the implementation bodies out of the notebooks and
+  keeps the 118 `test_*` functions as the grader, plus a ledger deciding what to drill
+  today. Written up rather than built because the two rules that make it correct are
+  not guessable - strip targets resolve by name across the whole notebook (a per-cell
+  rule hands you the AVL rotations already written), and the test-helper allowlist is
+  keyed by `(notebook, function)` because `build_heap`, `make_set` and `is_balanced`
+  are lessons, not scaffolding, while `build_adj` is a lesson in one notebook and
+  plumbing in another. Deferred siblings and their reasons are in the same file.
 
 ## Decisions and traps
 
@@ -56,20 +65,6 @@ are worth not re-litigating.
 If it is ever revisited, the design worth building is frame capture from the real execution via
 `sys.settrace` (line number plus locals), which removes the hand-copy and makes the drift check
 total. Anything less duplicates the algorithm and will eventually lie about it.
-
-### A trace must state the conventions it depends on
-
-Every ASCII trace is a little notation, and readers arrive without it. State which end of a
-stack is the top, whether a column holds indices or values, and what each arrow and bar means -
-and use one symbol for one meaning. Real defects found by ignoring this: `[ ]` serving as both
-stack delimiter and data in the bracket trace, `|` meaning the pivot's final position in one
-quick-sort trace and a boundary the pivot is *not* at in the next, arrows meaning `next`
-everywhere except one comment where they meant `prev`, and value ranges written like index
-ranges in an array whose values look like indices.
-
-Verify a trace by executing the algorithm and comparing, never by re-reading it. Doing that
-turned up two tables in `05-amortized-analysis` charging the resize to the wrong append, and
-`fib2` returning `F(n-1)` while its neighbours returned `F(n)`.
 
 ### Lexical similarity cannot find prose that restates a card
 
@@ -94,27 +89,16 @@ field guide over notebooks 01-05, so its one idea *is* the page.
 
 ### Why the agent setup is symlinks rather than copies
 
-The conventions doc lived at `.github/copilot-instructions.md`, where the word
-"Copilot" appeared exactly once in 243 lines - the H1. Nothing in it was
-vendor-specific, but Kiro never loaded it (Kiro reads `AGENTS.md`, `README.md`,
-`.kiro/steering/`, `.kiro/skills/`), so the most detailed statement of the
-repo's conventions was invisible to the tool being used.
-
-```
-AGENTS.md                          always-loaded conventions (real file)
-CLAUDE.md                       -> AGENTS.md
-skills/diagrams/SKILL.md           on-demand diagram skill (real file)
-.claude/skills/diagrams/SKILL.md -> ../../../skills/diagrams/SKILL.md
-.kiro/skills/diagrams/SKILL.md   -> ../../../skills/diagrams/SKILL.md
-```
-
-**Edit the real file, never a link.** Claude Code reads `CLAUDE.md` and not
-`AGENTS.md`, and the symlink is the bridge Anthropic's own docs recommend. Skills
-use identical `SKILL.md` + `name`/`description` frontmatter in both tools, so only
-the directory differs. The diagram section is split out because Anthropic targets
-under 200 lines per `CLAUDE.md` and warns that longer files reduce adherence - the
-original 243 exceeded it, and the diagram detail only matters while drawing.
-Confirmed in both tools that the skill costs only its summary line until invoked.
+The layout and the "edit the real file, never a link" rule live in `AGENTS.md`.
+What that does not say is *why*: the conventions doc used to be
+`.github/copilot-instructions.md`, where "Copilot" appeared exactly once in 243
+lines - the H1. Nothing in it was vendor-specific, but Kiro never loaded it (Kiro
+reads `AGENTS.md`, `README.md`, `.kiro/steering/`, `.kiro/skills/`), so the most
+detailed statement of the repo's conventions was invisible to the tool being
+used. The diagram section is split into a skill for a second reason: Anthropic
+targets under 200 lines per `CLAUDE.md` and warns that longer files reduce
+adherence, and the diagram detail only matters while drawing. Confirmed in both
+tools that a skill costs only its summary line until invoked.
 
 ### The `.py` pairing exists for VS Code; a split-source design was rejected
 
@@ -141,12 +125,6 @@ The trap this pairing creates: **black and ruff must keep excluding
 `notebooks/`** (`pyproject.toml`). The paired `.py` files sync back into the
 `.md`, so formatting them flattens the aligned trailing comments through the
 back door - the same failure mode as `ruff format`, one hop removed.
-
-### `ruff format` would rewrite every notebook
-
-See the warning in `AGENTS.md` under Commands - that copy is authoritative. Short
-version: it formats Python inside Markdown fenced blocks, so it flattens the
-aligned trailing comments the lessons depend on. `black` is deliberate.
 
 ### Patches travel as gzipped base64, not raw `.patch`
 
@@ -180,23 +158,3 @@ Rules learned the hard way:
   14.2 MB after gzip. The same change shipped as `tar -cf - <dir> | xz -9 |
   base64` was 787 KB. Only worth it when most images changed; for a handful, the
   diff is smaller.
-
-### Three `.drawio` sources have no `OUTPUT_MAP` entry on purpose
-
-`binary-search-narrowing`, `sll-insert-delete`, `stack-vs-queue`. Their PNGs were
-deleted in `7e84752`, the same commit that introduced `OUTPUT_MAP`, and
-`skills/diagrams/SKILL.md` codifies the practice: a source judged not to earn its
-place keeps its file but loses its entry, so it can be revived later. Not an
-unfinished loose end - don't "fix" it by re-adding them.
-
-### `6fd5ad3 upgrade deps` upgraded nothing
-
-Every changed line in `uv.lock` is a `dist =`/`wheels =` entry gaining an
-`upload-time` field, plus `revision = 2 -> 3`. It is a lockfile format migration
-with zero version changes, so it carries no dependency drift and needs no
-retesting.
-
-### `.ipynb_checkpoints/` directories are harmless
-
-They exist under `trees/`, `stacks-and-queues/` and `linked-lists/`. Gitignored,
-and excluded from `make sync`, `make test` and the recall build. Local noise only.

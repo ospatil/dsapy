@@ -175,3 +175,11 @@ stack growing and shrinking, stale heap entries) - not for a loop that
 increments a counter. Keep concepts in the prose and leave code comments for
 local mechanics, since an insight in a trailing comment is invisible when
 skimming.
+
+An ASCII trace is a little notation, and readers arrive without it. State which
+end of a stack is the top, whether a column holds indices or values, and what
+each arrow and bar means - and use one symbol for one meaning, since `[ ]` as
+both stack delimiter and data, or `|` as the pivot's position in one trace and a
+boundary it is *not* at in the next, has caused real defects here. **Verify a
+trace by executing the algorithm and comparing, never by re-reading it.** That is
+what caught two amortized-analysis tables charging a resize to the wrong append.

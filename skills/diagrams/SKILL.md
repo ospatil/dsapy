@@ -31,6 +31,11 @@ Weak diagrams are not free even once drawn: they train the reader to scroll past
 images. A source judged not to earn its place keeps its file but loses its
 `OUTPUT_MAP` entry, so it can be revived or redrawn later.
 
+Three sources sit that way today - `binary-search-narrowing`, `sll-insert-delete`
+and `stack-vs-queue`, whose PNGs were deleted in `7e84752`. Their missing
+`OUTPUT_MAP` entries are deliberate, not an unfinished loose end; don't "fix"
+them by re-adding.
+
 Never degrade a working diagram to bolt on a new point - add a separate source.
 Putting a diamond graph into `bfs-vs-dfs` to show the enqueue-marking trap would
 have destroyed the visit-order contrast the diagram exists for, because BFS and
