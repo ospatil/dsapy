@@ -104,6 +104,24 @@ Conventions used here:
 
 **Time:** O(1) for all three helpers
 
+**Recipe**
+
+1. A `Node` is the BST node plus a stored **`height`**, starting at `1` for a new
+   leaf.
+2. `height(node)` is a free function that returns `0` for `None`. **Wrap it
+   rather than reading `node.height` directly, because half the calls are on
+   children that may not exist and the `None` case has to answer `0` rather than
+   raise.**
+3. `update_height(node)` is `1 + max(height(left), height(right))`, the same
+   formula as the plain binary tree, read from the children's stored values
+   instead of recomputing.
+4. `balance_factor(node)` is `height(left) - height(right)`, and `0` for `None`.
+5. **Left minus right, and keep that direction fixed everywhere.** A positive
+   factor means left-heavy for the rest of the notebook; flipping it in one place
+   makes the rotation cases pick the wrong fix.
+6. **Height is stored, not computed on demand.** Recomputing would make every
+   check O(n) and destroy the O(log n) the structure exists for.
+
 ```python
 class Node:
     def __init__(self, data):
@@ -148,6 +166,21 @@ A rotation is a local, `O(1)` rearrangement of a few pointers that changes the s
 ```
 
 The exact mirror. After either rotation we recompute the heights of the two nodes that moved, **bottom-up** (the lower node first).
+
+**Recipe**
+
+1. `rotate_right(y)`: name `x = y.left`, the child that is about to move up, and
+   `t2 = x.right`, the only subtree that has to change parents.
+2. Rewire: `x.right = y`, then `y.left = t2`.
+3. **`t2` is the entire subtlety.** It sits between `x` and `y` in sorted order,
+   so when `x` rises above `y` it has to be re-hung on `y`'s left. Every other
+   subtree keeps its parent.
+4. **Update heights `y` first, then `x`.** `y` is now the lower node, and `x`'s
+   new height is computed from `y`'s, so the wrong order leaves `x` with a stale
+   value.
+5. Return `x`, the new subtree root, for the caller to assign back.
+6. `rotate_left` is the mirror image: swap every `left` for `right`. Write one and
+   flip it rather than deriving both.
 
 ```python
 def rotate_right(y):
@@ -199,6 +232,23 @@ The LR and RL cases are "double rotations": a first rotation on the child reduce
 Why one rotation cannot do it: the node that has to end up on top is `y`, the *grandchild*, and a single rotation around `z` can only lift `z`'s own child. Rotating `z` alone would move the imbalance to the other side rather than remove it. The first rotation exists purely to make `y` a child of `z`, and then the familiar single rotation applies.
 
 `T1 < T2 < T3 < T4` left to right in all three states, which is why neither step can break the search order.
+
+**Recipe**
+
+1. `update_height(node)` first, then read `bf = balance_factor(node)`. **Height
+   before balance factor, or the factor is computed from stale numbers.**
+2. `bf > 1` is left-heavy. Look at **the left child's** balance factor: negative
+   means the child leans right, so this is Left-Right.
+3. Left-Right: `rotate_left(node.left)` first, which turns it into Left-Left, then
+   `rotate_right(node)`.
+4. `bf < -1` mirrors it: check the right child, `rotate_right(node.right)` for
+   Right-Left, then `rotate_left(node)`.
+5. **There are only two real cases, not four.** LR and RL are converted into LL
+   and RR by one rotation on the child, so the second rotation is shared. That is
+   why the code has two `if`s rather than four branches.
+6. Otherwise return `node` untouched.
+7. **A balance factor never exceeds 2 in magnitude here**, because the tree was
+   valid before the single insert or delete that disturbed it.
 
 ```python
 def rebalance(node):
@@ -257,6 +307,19 @@ after 30        10                    bf(10) = 0 - 2 = -2 → right heavy,
 `root.left = insert(root.left, data)`. Dropping that assignment silently discards rotations.
 
 **Time:** O(log n) &nbsp; **Space:** O(log n) recursion stack
+
+**Recipe**
+
+1. An ordinary BST insert: `None` returns a new node, duplicates return `root`,
+   otherwise recurse into a side and **assign the result back**.
+2. Then `return rebalance(root)` instead of `return root`.
+3. **That one substitution is the whole difference from the BST.** The recursion
+   already unwinds through every ancestor of the new leaf, so rebalancing on the
+   way out visits exactly the nodes whose heights could have changed.
+4. **`rebalance` returns a possibly different node**, which is why the caller's
+   `root.left = insert(...)` matters even more here than in a plain BST: a
+   rotation genuinely swaps which node sits at the top of the subtree.
+5. One insert needs at most one rotation, so the total is still O(log n).
 
 ```python
 def insert(root, data):
@@ -342,6 +405,17 @@ test_rotation_rl()
 
 A small helper that recursively verifies every node satisfies `|balance_factor| <= 1`. We use it in the tests below to assert the tree stays balanced no matter the insertion order.
 
+**Recipe**
+
+1. Empty subtree is balanced.
+2. `abs(balance_factor(node)) > 1`, return `False`.
+3. Otherwise recurse into both children and require both.
+4. **Check every node, not just the root.** A root with equal-height subtrees can
+   sit above a badly skewed one, so a root-only check passes trees that are not
+   AVL.
+5. Pair it with the inorder-is-sorted check. Together they cover both invariants,
+   ordering and balance, and a rotation bug usually breaks exactly one of them.
+
 ```python
 def is_avl_balanced(node):
     """True if every node in the subtree has balance factor in {-1, 0, 1}."""
@@ -383,6 +457,22 @@ test_sequential_inserts_stay_log_height()
 # Delete
 
 Like BST delete (three cases: leaf, one child, two children - replacing with the inorder successor), but every ancestor calls `rebalance` as the recursion unwinds. A deletion can require rebalancing at multiple levels, but each fix is still `O(1)` and the total stays `O(log n)`.
+
+**Recipe**
+
+1. `min_node` walks `left` to the end. No recursion needed.
+2. `delete` is the BST delete verbatim: recurse and assign back, handle zero and
+   one child by returning the other side, and for two children copy the inorder
+   successor's data then delete the successor from the right subtree.
+3. Then `return rebalance(root)` in place of `return root`, exactly as `insert`
+   did.
+4. **The early `return root.right` and `return root.left` deliberately skip
+   `rebalance`.** Those return a child, not this node, and the parent's own
+   `rebalance` on the way up handles the change.
+5. **Delete can need O(log n) rotations, where insert needs at most one.** A
+   deletion can shorten a subtree, and that shortening propagates, so every
+   ancestor may need fixing. That is why the rebalance sits on the unwind path
+   rather than being applied once.
 
 ```python
 def min_node(node):
