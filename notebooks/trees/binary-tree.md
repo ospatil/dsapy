@@ -528,6 +528,21 @@ because a tree has no cycles and no shared nodes. See the
 **Time:** Θ(n) &nbsp; **Space:** O(w) where w is the widest level - up to n/2 for a
 complete tree
 
+**Recipe**
+
+1. Empty tree, return.
+2. A `deque` holding just `root`, and `popleft` in the loop.
+3. **`popleft`, not `pop`, is the entire difference between this and
+   `preorder_iter`.** Same loop, same pushes; a queue makes it breadth-first and
+   a stack makes it depth-first.
+4. Use `collections.deque`, not a list. `list.pop(0)` is O(n) because every
+   remaining element shifts down, quietly making the traversal quadratic.
+5. Push left then right, and note there is no reversal trick here: a queue comes
+   out in the order it went in.
+6. Space is O(w) for the widest level, not O(h). For a balanced tree the bottom
+   level holds about half the nodes, so this is the one traversal that can cost
+   O(n) space where the others cost O(log n).
+
 ```python
 from collections import deque
 
