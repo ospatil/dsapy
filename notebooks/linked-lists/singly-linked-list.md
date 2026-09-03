@@ -75,7 +75,7 @@ Order matters: overwrite `head.next` first and the rest of the list is lost.
 
 **Recipe**
 
-1. Make the node.
+1. Create the node: `new = ListNode(val)`.
 2. `new.next = head.next` **first**, then `head.next = new`.
 3. **That order is the whole cell.** Assign `head.next = new` first and
    `head.next` no longer names the old first node, so the next line points `new`
@@ -191,7 +191,8 @@ The `head.next is None` guard covers the empty list, where `curr.next.next` woul
 2. Start `curr` at the dummy.
 3. Walk while **`curr.next.next`** is truthy, so `curr` stops on the
    *second-to-last* node. Deleting from a singly linked list means editing the
-   pointer that aims at the victim, and only the node before it holds that.
+   pointer that points at the node being removed, and only the node before it
+   holds that pointer.
 4. `curr.next = None`.
 5. A one-element list works because `curr` stays on the dummy and the dummy's
    `next` is what gets cleared.
@@ -335,7 +336,7 @@ count lines up with the caller's positions.
 2. Walk while `curr`, returning `pos` on a match.
 3. Advance `pos` and `curr` together. They must move as a pair or the returned
    position is off by the number of times they disagreed.
-4. Ran off the end, return `-1`.
+4. The loop ended without a match, so return `-1`.
 
 ```python
 # Return the position of val if found else return -1. Position is 1 based.
@@ -450,8 +451,9 @@ same "push onto the front" motion, with the list's own pointers doing the stack'
 
 1. Walk the list pushing every **value** onto a list used as a stack.
 2. Reset `curr` to the dummy.
-3. Pop until empty, and for each value hang a **brand new `ListNode`** off
-   `curr`, then step onto it.
+3. Pop until the stack is empty, and for each popped value create a node and
+   link it on: `curr.next = ListNode(stack.pop())`, then advance
+   `curr = curr.next`.
 4. **This rebuilds rather than rewires.** Every original node is discarded and
    replaced, so any reference a caller held into the old list now points at
    nodes that are no longer in it. The two versions below reverse the same list
@@ -529,7 +531,7 @@ reversed prefix. So `prev` is the new head, and the last line hooks the dummy on
 5. Advance the pair, `prev = curr` then `curr = next`. **In that order. Assign
    `curr` first and `prev = curr` copies the new value, losing the prefix.**
 6. Loop ends with `curr is None`, so the suffix is empty and `prev` is the head
-   of the whole reversed list. Hook it on: `head.next = prev`.
+   of the whole reversed list. Attach it to the dummy: `head.next = prev`.
 
 ```python
 def reverse(head):
@@ -576,8 +578,8 @@ Python keeps every call alive even when that call is the last thing the function
 3. `curr.next = prev` moves one node across the boundary.
 4. Recurse with `(curr, next)`, the new prefix head and the new suffix head, and
    return what it returns unchanged. Nothing happens on the way back up.
-5. The outer function starts the walk past the dummy and hooks the result back
-   on: `head.next = reverse_recursive_util(None, head.next)`.
+5. The outer function starts the walk past the dummy and assigns the returned
+   head back: `head.next = reverse_recursive_util(None, head.next)`.
 
 ```python
 def reverse_recursive(head):

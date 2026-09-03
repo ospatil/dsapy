@@ -97,7 +97,7 @@ Four versions of one function, each removing a cost the previous one paid.
    variables instead of the array. `a, b = b, a + b` updates both at once;
    sequential assignment would feed the new `a` into `b`.
 5. **The path is always the same:** write the honest recursion, cache it, turn
-   the cache into a table, then throw away the parts of the table nobody reads.
+   the cache into a table, then discard the parts of the table nothing reads.
    Steps 3 and 4 are optional; step 1 is not.
 
 ```python

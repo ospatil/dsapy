@@ -170,7 +170,7 @@ Two independent optimisations, and each is a couple of lines.
    re-pointed straight at the root, so the next `find` on any of them is one
    hop.** The line both returns the answer and flattens the path.
 3. **Union by rank**: attach the shorter tree under the taller. Equal ranks are
-   the only case where the winner's rank goes up by one.
+   the only case where the new root's rank increases by one.
 4. **Attaching the taller under the shorter is what makes trees deep.** Both
    orderings are correct; only one keeps `find` fast.
 5. `union` returns `False` when the roots already match, which is what makes the

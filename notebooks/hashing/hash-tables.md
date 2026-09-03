@@ -387,14 +387,14 @@ slot.
    is a plain list of ints, so `[-1] * cap` is safe here in a way `[[]] * cap`
    was not.
 2. `hash(x)` is `x % cap`.
-3. `insert`: bail if full, bail if `search(x)` already finds it, since this is a
-   set.
+3. `insert`: return early if the table is full, and again if `search(x)` already
+   finds `x`, since this is a set.
 4. Probe from `hash(x)` while the slot is **neither `-1` nor `-2`**, stepping `i
    = (i + 1) % cap`.
 5. **Insert treats a tombstone as free and reuses it; search must not.** That
    asymmetry between the two methods is the entire point of having two sentinels
-   rather than one, and it is the thing to get right cold.
-6. Write `x`, bump `size`.
+   rather than one, and it is the part to get right cold.
+6. Write `x` into the slot and increment `size`.
 
 ```python
 class OpenAddressHash:
@@ -442,8 +442,8 @@ The `i == h` check is what stops a full table from spinning forever.
 **Recipe**
 
 1. Start at `h = hash(x)` and probe forward.
-2. Continue while `t[i] != -1`. **Only a truly empty slot ends the search. A
-   tombstone must be probed straight past.**
+2. Continue while `t[i] != -1`. **Only an empty slot ends the search; the probe
+   must continue past a tombstone.**
 3. **This is the load-bearing line of the whole scheme.** A deleted entry sitting
    in the middle of a probe chain is the only thing keeping the rest of that chain
    reachable. Write `-1` on delete instead of `-2` and the search stops in the

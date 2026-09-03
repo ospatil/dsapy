@@ -70,7 +70,7 @@ error instead of returning garbage or an `IndexError` from deep inside.
 
 1. Back the stack with a plain `list`.
 2. `push` is `append`, `pop` is `list.pop()`, `peek` is `items[-1]`.
-3. **Everything hangs on using the *end* of the list.** Python's list is a
+3. **Everything depends on using the *end* of the list.** Python's list is a
    dynamic array: appending and popping at the end are amortized O(1), while the
    same operations at index `0` are O(n) because every other element shifts. A
    stack built on `insert(0, x)` and `pop(0)` is correct and quadratic.
@@ -151,9 +151,9 @@ pointing at the same slot, so a lone pair of indices could not tell them apart.
    1`.
 4. `dequeue`: raise if empty, read `arr[front]`, advance `front = (front + 1) %
    cap`, then `size -= 1`.
-5. **The `% cap` on every move is what makes it circular.** Indices walk off the
-   end and wrap to the front, so the array is reused in place and nothing ever
-   shifts. That is what buys O(1) dequeue over a plain list.
+5. **The `% cap` on every move is what makes it circular.** An index that runs
+   past the end wraps to the front, so the array is reused in place and nothing
+   ever shifts. That is what buys O(1) dequeue over a plain list.
 
 ```python
 class Queue:
@@ -238,7 +238,7 @@ stack), and leftover openers at the end - which is why the return value is
 **Recipe**
 
 1. Map **closer to opener**, `{')': '(', ']': '[', '}': '{'}`. That direction is
-   deliberate: you look things up when you meet a closer.
+   deliberate: the lookup happens when a closer is read.
 2. Opener: push it.
 3. Closer: fail if the stack is empty, or if the top is not `pairs[ch]`.
    Otherwise pop.

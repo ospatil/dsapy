@@ -93,7 +93,7 @@ and Hoare schemes that follow do the same job in place, with a single pass.
 4. Pass three: `a[:] = temp` to copy back. **`a[:] =` rather than `a = `, or the
    caller sees no change at all.**
 5. **This is stable**, since both passes preserve the original relative order,
-   and that is the one thing it has over the two schemes below.
+   and that is its one advantage over the two schemes below.
 6. **The cost is O(n) extra space and three passes**, which is exactly what
    Lomuto and Hoare remove by swapping in place. Nobody uses this in a real
    quicksort; it is here to make the in-place versions look like a repair rather

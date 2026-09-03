@@ -173,8 +173,8 @@ The exact mirror. After either rotation we recompute the heights of the two node
    `t2 = x.right`, the only subtree that has to change parents.
 2. Rewire: `x.right = y`, then `y.left = t2`.
 3. **`t2` is the entire subtlety.** It sits between `x` and `y` in sorted order,
-   so when `x` rises above `y` it has to be re-hung on `y`'s left. Every other
-   subtree keeps its parent.
+   so when `x` rises above `y` it has to be reattached as `y`'s left child.
+   Every other subtree keeps its parent.
 4. **Update heights `y` first, then `x`.** `y` is now the lower node, and `x`'s
    new height is computed from `y`'s, so the wrong order leaves `x` with a stale
    value.

@@ -60,7 +60,7 @@ other route, and two routes to the same vertex close a cycle.
    component is missed.
 6. **Return values have to be propagated deliberately.** `dfs(v, u)` is wrapped
    in an `if` rather than called bare, since a `True` found deep in the recursion
-   is otherwise thrown away.
+   is otherwise discarded.
 
 ```python
 def has_cycle_undirected(adj):

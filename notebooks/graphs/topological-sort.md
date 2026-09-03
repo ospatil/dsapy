@@ -186,7 +186,7 @@ in-degree above zero forever, so a result shorter than V proves a cycle exists.
 
 1. Count `in_degree` for every vertex by walking all edges once. **Count
    arrivals, `in_degree[v] += 1` for each edge `u -> v`, not departures.**
-2. Seed the queue with every vertex of in-degree `0`: the things with no
+2. Seed the queue with every vertex of in-degree `0`: the vertices with no
    prerequisites.
 3. Pop `u`, append it to the order, then for each neighbour `v` decrement
    `in_degree[v]` and enqueue it **only when it reaches exactly `0`**.

@@ -208,12 +208,14 @@ is arranged to hand it that situation.
 1. Precondition: both children already head valid heaps, and only `i` may be out
    of place. **Nothing here repairs a scrambled array. Every caller is arranged
    to hand `heapify` exactly this situation.**
-2. `smallest = i`, so "the node is already fine" is the default answer.
+2. `smallest = i`, so "the node is already in the right place" is the default
+   answer.
 3. Left child: if `lt < n` and `arr[lt] < arr[smallest]`, set `smallest = lt`.
    The bounds test comes first, since a leaf has no children to read.
 4. Right child: the same test against `arr[smallest]`. **Against `arr[smallest]`,
-   not `arr[i]`. That comparison is the whole reason the winner is the smaller of
-   the two children rather than either one that beats the parent.**
+   not `arr[i]`. That comparison is the whole reason `smallest` ends up holding
+   the smaller of the two children rather than whichever one happened to beat
+   the parent last.**
 5. `smallest == i` means the node is where it belongs and everything under it was
    already valid, so stop. Otherwise swap and recurse on `smallest`, the slot the
    node just moved into.
@@ -289,12 +291,12 @@ already sat above, including the child it just displaced.
 
 1. `arr.append(x)` and start at `i = len(arr) - 1`. **Appending is the only O(1)
    place to add, and the array must stay a complete tree, so the new element has
-   exactly one legal home.**
+   exactly one legal position.**
 2. Sift up: while `i > 0 and arr[parent(i)] > arr[i]`, swap with the parent and
    set `i = parent(i)`.
 3. **`i > 0` has to be tested first.** At the root `parent(0)` is `-1`, and
-   Python happily reads `arr[-1]`, so a missing guard compares against the last
-   element of the array instead of crashing.
+   Python reads `arr[-1]` without error, so a missing guard compares against the
+   last element of the array instead of raising.
 4. Stop as soon as the parent is not larger. Everything above is already ordered,
    so one satisfied comparison ends it.
 5. Only one path is touched, root to leaf, hence O(log n).
@@ -387,8 +389,9 @@ An empty heap returns `math.inf` as a sentinel rather than raising.
 4. Call `heapify(0)`. The new root is very likely wrong, but both its subtrees
    are untouched and still valid, which is exactly `heapify`'s precondition.
 5. Return the saved value.
-6. **Steps 3 and 4 together are the pattern: swap the victim to the end, shrink,
-   then sift down.** `delete` and `heap_sort` are both built out of it.
+6. **Steps 3 and 4 together are the pattern: swap the element being removed to
+   the end, shrink, then sift down.** `delete` and `heap_sort` are both built
+   out of it.
 
 ```python
 def extract_min(self):
@@ -670,11 +673,11 @@ Max-heap versions of the same code, plus the sort they enable.
 3. `heap_sort`: build a max heap, then for `i` from `n - 1` down to `1`, swap
    `arr[0]` with `arr[i]` and call `max_heapify(arr, i, 0)`.
 4. **A max heap for an ascending sort.** The largest element is at the root, and
-   the swap parks it at the far end where it belongs, so the sorted region grows
-   backwards from the right.
+   the swap moves it to the last unsorted index, which is its final position, so
+   the sorted region grows backwards from the right.
 5. **Pass `i`, not `n`, to `max_heapify` after the swap.** `i` is the new,
-   shorter heap length, and it excludes the element just placed. Pass `n` and the
-   sifting drags finished elements back in.
+   shorter heap length, and it excludes the element just placed. Pass `n` and
+   sifting pulls already-placed elements back into the heap.
 6. Stop at `i = 1`; a heap of one is already sorted.
 7. In place, so O(1) extra space, which is what heapsort buys over merge sort.
 

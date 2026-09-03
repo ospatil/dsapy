@@ -79,7 +79,7 @@ this subroutine being stable, would silently produce wrong answers.
 4. Turn the tally into a prefix sum, `count[i] += count[i - 1]` from `1` upward.
    **`count[i]` now means "how many elements are `<= i`", which is the same thing
    as "one past the last slot where an `i` belongs".** This reinterpretation is
-   the whole trick.
+   the whole idea.
 5. Walk the input **in reverse**, and for each `x`: decrement `count[x]` first,
    then write `x` at that index.
 6. **Decrement before writing**, because the prefix sum points one past the slot.

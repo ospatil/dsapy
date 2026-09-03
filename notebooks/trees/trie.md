@@ -257,9 +257,9 @@ The interesting part is not removing the word but deciding which nodes may go.
    decision travels back up.
 2. At `i == len(word)`: no `'$'` means the word was never there, return `False`.
    Otherwise `del node['$']` and return `len(node) == 0`.
-3. **That length test is the safety check.** The node is only removable if
-   nothing hangs off it. Delete `apple` while `app` exists and the `p` node still
-   has children, so the chain stops there.
+3. **That length test is the safety check.** The node is only removable if it
+   has no remaining children. Delete `apple` while `app` exists and the `p`
+   node still has children, so the chain stops there.
 4. On the way back up, if the child reported removable, `del node[ch]`, then
    return `len(node) == 0 and '$' not in node`.
 5. **Both halves of that condition are needed.** A node with no children may

@@ -186,7 +186,7 @@ explanation.
 2. Reassign `root` itself as the cursor rather than keeping a separate variable.
 3. Loop while `root is not None`, returning `True` on a match and stepping into
    the correct child otherwise.
-4. Fell out of the loop, `False`.
+4. The loop ended without a match, so return `False`.
 5. **Space drops from O(h) to O(1).** Nothing has to happen on the way back up,
    which is exactly the condition for a recursion to flatten like this.
 
@@ -289,7 +289,7 @@ becomes the root.
 2. **That trailing pointer is what replaces the return-and-reassign above.** The
    loop exits when `curr` is `None`, and `None` cannot tell you where it came
    from, so the parent has to be remembered as you pass it.
-3. Bail out returning `root` if the key is already present.
+3. If the key is already present, return `root` unchanged.
 4. Loop ends with `parent` on the future parent. **`parent is None` means the
    tree was empty, so the new node is the root** and must be returned instead.
 5. Otherwise compare against `parent.data` once more to pick the side, and attach.
@@ -469,7 +469,7 @@ If the walk never goes right, nothing in the tree is ≤ `val` and the result is
 **Recipe**
 
 1. `res = None`, meaning "no candidate yet".
-2. Walk down. Exact match, return that node immediately; nothing beats it.
+2. Walk down. Exact match, return that node immediately; nothing is closer.
 3. `root.data > val`: this node is too big to be the answer, so go left **without
    recording anything**.
 4. `root.data < val`: **this node is a valid candidate, so record it in `res`, and
@@ -477,7 +477,8 @@ If the walk never goes right, nothing in the tree is ≤ `val` and the result is
 5. **The asymmetry between steps 3 and 4 is the whole algorithm.** You record on
    the side that is still legal and stay silent on the side that is not. Record on
    both and you get the last node visited rather than the floor.
-6. Fell off the bottom, return `res`, which holds the closest legal value seen.
+6. The walk ran off the bottom of the tree, so return `res`, which holds the
+   closest legal value seen.
 
 ```python
 def floor(root, val):
@@ -521,7 +522,7 @@ tree" - the BST counterpart of `bisect_right(a, x) - 1` and `bisect_left(a, x)`.
 
 1. `floor` with every comparison and direction mirrored.
 2. Too small (`root.data < val`): go right, record nothing.
-3. Big enough: **record `res`, then go left** hunting for something tighter.
+3. Big enough: **record `res`, then go left** looking for a closer value.
 4. **Write it by mirroring, not from scratch.** The pair is one algorithm, and the
    only question is which side is the legal one to remember. Getting that backwards
    returns a value on the wrong side of `val`, which still looks like a plausible

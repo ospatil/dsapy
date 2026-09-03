@@ -67,7 +67,7 @@ log₂n. Twenty steps cover a million elements, thirty cover a billion.
 5. **The `+ 1` and `- 1` are what guarantee termination.** `mid` has just been
    compared and ruled out, so leaving it in the range makes a two-element step
    loop forever.
-6. Fell out of the loop: return `-1`.
+6. The loop ended without a match: return `-1`.
 
 ```python
 def binary_search(arr, target):

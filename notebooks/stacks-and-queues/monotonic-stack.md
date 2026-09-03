@@ -131,7 +131,7 @@ could revisit a position, "popped at most once" fails and the bound reverts to O
    *greater*, so it can never be anyone's answer and must go too.**
 5. Whatever survives on top is the nearest greater element; read it into
    `result[i]`. Empty stack means nothing greater lies to the right.
-6. Push `i`. **One push per element is the entire complexity argument: a thing
+6. Push `i`. **One push per element is the entire complexity argument: an index
    can only be popped once, so the inner `while` totals O(n) across the whole
    run even though any single pass may pop many.**
 

@@ -111,9 +111,9 @@ each edge twice is also why the degrees sum to 2·|E|, which the test checks.
    aliases a single list into every slot and makes every vertex share one
    neighbour list.**
 2. `add_edge` appends **both ways**, `adj[u].append(v)` and `adj[v].append(u)`.
-3. **An undirected edge is two directed entries.** There is no such thing as a
-   single undirected link in this representation, and writing only one direction
-   gives a graph that traverses correctly from one end and not the other.
+3. **An undirected edge is two directed entries.** This representation has no
+   single undirected link, and writing only one direction gives a graph that
+   traverses correctly from one end and not the other.
 4. For a directed graph, delete the second append. That is the only change.
 5. Space is O(V + E), and listing a vertex's neighbours is O(degree).
 

@@ -60,10 +60,10 @@ is already sorted, so there is no point continuing.
 **Recipe**
 
 1. Outer pass `i` from `0` to `n - 2`. After pass `i` the largest `i + 1`
-   elements are parked at the end for good.
-2. Inner loop `j` over `range(n - i - 1)`. **The `- i` is the point of the whole
-   thing: the tail is already final, so re-scanning it is the difference between
-   this and a pure quadratic.**
+   elements are in their final positions at the end.
+2. Inner loop `j` over `range(n - i - 1)`. **The `- i` is the whole point: the
+   tail is already final, so skipping it is the difference between this and a
+   pure quadratic.**
 3. Compare neighbours, `l[j] > l[j + 1]`, and swap.
 4. Set `swapped = True` inside the `if`, and reset it at the top of every outer
    pass.
@@ -181,7 +181,7 @@ uses insertion sort on small runs.
 4. **`j >= 0` has to come first in the `and`.** Python does not raise on `l[-1]`,
    it wraps to the last element, so a missing guard corrupts data quietly
    instead of crashing.
-5. Drop `x` into `l[j + 1]`. **`j + 1`, because the loop exits one slot past
+5. Write `x` into `l[j + 1]`. **`j + 1`, because the loop exits one slot past
    where `x` belongs, having stepped `j` back once too far.**
 
 ```python

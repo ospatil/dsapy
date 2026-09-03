@@ -76,10 +76,10 @@ O(n), but O(n) space rather than O(1).
 3. Sum too small: `lo += 1`. Too large: `hi -= 1`.
 4. **Why discarding is safe, which is the only hard part.** If the sum is too
    small, `arr[lo]` paired with the largest remaining value is still too small,
-   so `arr[lo]` cannot work with *anything* left and the whole row goes. That
-   argument needs the array sorted; on unsorted input this is wrong, not just
-   slow.
-5. Pointers met without a hit, return `(-1, -1)`.
+   so `arr[lo]` cannot pair with *anything* left and every pair using it can be
+   discarded. That argument needs the array sorted; on unsorted input this is
+   wrong, not just slow.
+5. The pointers met without a match, so return `(-1, -1)`.
 
 ```python
 def two_sum_sorted(arr, target):
@@ -189,10 +189,10 @@ whatever survived.
 2. Area is `min(heights[lo], heights[hi]) * (hi - lo)`. The shorter wall sets the
    depth; the gap sets the width.
 3. **Always move the shorter side in.** That is the entire algorithm.
-4. **Why throwing away the shorter wall is safe:** any pair using it must have a
+4. **Why discarding the shorter wall is safe:** any pair using it must have a
    width smaller than the current one, and a depth still capped by that same
    short wall. So every remaining pair involving it is strictly worse than the
-   one just measured, and the whole row can go.
+   one just measured, and all of them can be discarded.
 5. Moving the taller side instead would discard pairs that might beat the current
    best, which is why the comparison decides the move.
 

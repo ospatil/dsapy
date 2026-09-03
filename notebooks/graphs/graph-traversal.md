@@ -216,7 +216,7 @@ does, that is one more component.
 
 1. Identical loop to `bfs_disconnected`, but count instead of collecting.
 2. `count += 1` **once per restart**, not once per vertex.
-3. **The number of times the outer loop has to kick off a fresh traversal is the
+3. **The number of times the outer loop has to start a fresh traversal is the
    number of components.** That is the entire algorithm; the traversal itself is
    only there to mark off everything reachable so it is not counted again.
 
@@ -345,7 +345,7 @@ you walk it.
 **Recipe**
 
 1. The same shared-`visited` outer loop as the BFS pair.
-2. `count_components_dfs` passes a throwaway `[]` for the order, since only the
+2. `count_components_dfs` passes an unused `[]` for the order, since only the
    restart count matters.
 3. **BFS or DFS makes no difference to the answer here.** Components are about
    reachability, and both traversals reach exactly the same set. Pick either.
