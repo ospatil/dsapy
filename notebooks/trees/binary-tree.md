@@ -142,6 +142,17 @@ one child.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h) - one call-stack frame per level
 
+**Recipe**
+
+1. `if root:` and nothing else. **An empty subtree is the base case, and doing
+   nothing is the correct answer for it, so no explicit `return` is needed.**
+2. Recurse left, append `root.data`, recurse right.
+3. **The three traversals differ only in where the append sits among these three
+   lines.** Learn the position, not three separate algorithms: append in the
+   middle is inorder, first is preorder, last is postorder.
+4. The list is passed in and mutated rather than returned, so the recursion has
+   nothing to combine on the way back.
+
 ```python
 def inorder(root, ls):
     """
@@ -176,6 +187,13 @@ the identical tree back. Inorder cannot do this - its output starts with `20`, a
 nothing in the sequence tells you which node was the root.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
+
+**Recipe**
+
+1. Same skeleton, append **before** both recursive calls.
+2. Root first means the parent is emitted before anything beneath it, which is
+   what makes preorder the right choice for copying a tree or writing it out to
+   be rebuilt.
 
 ```python
 def preorder(root, ls):
@@ -213,6 +231,16 @@ work to do after the last recursive call returns.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
 
+**Recipe**
+
+1. Same skeleton, append **after** both recursive calls.
+2. Children are finished before the parent, which is what you need when a node's
+   work depends on its subtrees: freeing, deleting, or evaluating an expression
+   tree.
+3. **This is the one that is not tail-recursive.** In the other two the last
+   statement is a call that could in principle be replaced by a jump; here real
+   work waits behind both calls, so a frame per level is genuinely required.
+
 ```python
 def postorder(root, ls):
     """
@@ -248,6 +276,15 @@ need no case of their own. The value that leaves a combiner unchanged is called 
 
 **Time:** Θ(n) - every node must be visited &nbsp; **Space:** Θ(h)
 
+**Recipe**
+
+1. Empty tree, return `0`.
+2. Otherwise `1 + size(left) + size(right)`.
+3. **The shape to notice: every whole-tree question is this same two-line
+   pattern.** Pick the value for the empty tree, then say how a node combines its
+   own contribution with its children's answers. `size`, `get_max` and `height`
+   below are the same function with different choices for those two blanks.
+
 ```python
 def size(root):
     """
@@ -281,6 +318,17 @@ Add the ordering rule and you can skip - in a BST the maximum is simply the righ
 node, O(h).
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
+
+**Recipe**
+
+1. Empty tree returns `-math.inf`.
+2. Otherwise `max(root.data, get_max(left), get_max(right))`.
+3. **`-inf` is chosen so it loses every `max` comparison.** That is what lets the
+   empty case take part in the same expression as every other case instead of
+   needing its own branch. Returning `0` or `None` here breaks on negative values
+   or raises.
+4. This visits every node, O(n). Only a BST can do better, which is the point of
+   the next notebook.
 
 ```python
 import math
@@ -317,6 +365,14 @@ BST solves: give the keys an order and one comparison throws half the tree away.
 [binary search tree notebook](binary-search-tree.md).
 
 **Time:** O(n) &nbsp; **Space:** Θ(h)
+
+**Recipe**
+
+1. Empty, `False`. Match, `True`.
+2. Otherwise `search(left) or search(right)`.
+3. **`or` short-circuits**, so a hit in the left subtree skips the right one
+   entirely. That is the early exit, and it costs nothing to write.
+4. Still O(n) worst case: with no ordering to exploit, the key could be anywhere.
 
 ```python
 def search(root, data):
@@ -357,6 +413,15 @@ empty = 0) or count *edges* (single node = 0, empty = -1). This notebook counts 
 the three-level test tree has height 3 and an empty tree has height 0.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
+
+**Recipe**
+
+1. Empty tree, return `0`. **Pick a convention and write it down.** This notebook
+   counts *nodes* on the longest path, so an empty tree is `0` and a single node
+   is `1`. Counting *edges* instead makes those `-1` and `0`, and mixing the two
+   is the usual source of off-by-one bugs in every balance calculation later.
+2. Otherwise `1 + max(height(left), height(right))`.
+3. **`max`, not `+`.** Height is the longest single path, not a total.
 
 ```python
 def height(root):
@@ -419,6 +484,22 @@ That is why this costs the same memory as the recursion it replaces.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h) - the stack holds at most one spine
 
+**Recipe**
+
+The recursion's call stack, written out by hand.
+
+1. Empty tree, return.
+2. Push `root` and every `left` child from it, walking down to the leftmost node.
+   **Push on the way down without emitting anything: these are nodes whose left
+   subtrees are not yet finished.**
+3. Then loop while the stack is non-empty. Pop `curr` and emit it. **A node
+   coming off the stack has had its entire left subtree emitted already, which is
+   what makes the pop the right moment.**
+4. Move to `curr.right` and run the same "push all the way left" walk from there.
+5. **Step 2 and step 4 are the same loop, and it has to appear twice.** Every
+   time you move to a right child you are starting a fresh subtree, and its left
+   spine has to go on the stack before anything else can be emitted.
+
 ```python
 def inorder_iter(root):
     """
@@ -469,6 +550,19 @@ at once rather than a single path.
 
 **Time:** Θ(n) &nbsp; **Space:** O(n) - both children are pushed, so the stack can
 hold an entire level
+
+**Recipe**
+
+1. Empty tree, return. Stack starts holding just `root`.
+2. Loop while the stack is non-empty: pop, emit, push children.
+3. **Push right first, then left.** A stack pops in reverse, so pushing left last
+   is what makes it come out first.
+4. **Swap those two lines and you get a valid traversal of a mirrored tree**,
+   which is the kind of bug that passes a symmetric test case.
+5. Guard each push with a `None` check; unlike the recursive version there is no
+   base case to absorb empty children.
+6. Preorder is much easier iteratively than inorder because a node is emitted at
+   the moment it is popped, with nothing outstanding.
 
 ```python
 def preorder_iter(root):

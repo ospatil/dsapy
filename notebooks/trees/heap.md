@@ -103,6 +103,26 @@ that is true is worked out at the end of the notebook.
 
 **Time:** O(n) &nbsp; **Space:** O(1) plus the recursion in `heapify`
 
+**Recipe**
+
+1. A heap is an **array**, not a linked structure. Index arithmetic replaces
+   pointers: `parent(i) = (i - 1) // 2`, `lchild(i) = 2*i + 1`, `rchild(i) =
+   2*i + 2`.
+2. Those three come from numbering a complete tree level by level, left to right.
+   **Derive them from a small drawing rather than memorising them; the `- 1` and
+   `+ 1` are easy to misplace and the errors are silent.**
+3. To build from an existing list: start at the **last non-leaf node** and
+   `heapify` every index down to `0`, in reverse.
+4. The last non-leaf is the parent of the last element, `((n - 1) - 1) // 2`.
+   **Everything after it is a leaf, and a leaf is already a valid heap of one, so
+   starting anywhere later than this wastes work and starting earlier is
+   impossible.**
+5. **Reverse order is what makes `heapify` legal at every step.** It needs both
+   children to be valid heaps already, and going bottom-up is exactly what
+   guarantees that.
+6. This costs O(n), not O(n log n). Most nodes are near the bottom and sift down
+   only a level or two.
+
 ```python
 import math
 
@@ -265,6 +285,20 @@ already sat above, including the child it just displaced.
 
 **Time:** O(log n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. `arr.append(x)` and start at `i = len(arr) - 1`. **Appending is the only O(1)
+   place to add, and the array must stay a complete tree, so the new element has
+   exactly one legal home.**
+2. Sift up: while `i > 0 and arr[parent(i)] > arr[i]`, swap with the parent and
+   set `i = parent(i)`.
+3. **`i > 0` has to be tested first.** At the root `parent(0)` is `-1`, and
+   Python happily reads `arr[-1]`, so a missing guard compares against the last
+   element of the array instead of crashing.
+4. Stop as soon as the parent is not larger. Everything above is already ordered,
+   so one satisfied comparison ends it.
+5. Only one path is touched, root to leaf, hence O(log n).
+
 ```python
 def insert(self, x):
     """
@@ -343,6 +377,19 @@ An empty heap returns `math.inf` as a sentinel rather than raising.
 
 **Time:** O(log n) &nbsp; **Space:** O(log n)
 
+**Recipe**
+
+1. Empty heap, return `math.inf`, the value that loses every min comparison.
+2. Save `arr[0]`, the answer.
+3. **Move the last element into the root, then `pop` the end.** Removing from the
+   front directly would shift every element, which is O(n); removing from the end
+   is free. So the array is repaired by moving the hole rather than closing it.
+4. Call `heapify(0)`. The new root is very likely wrong, but both its subtrees
+   are untouched and still valid, which is exactly `heapify`'s precondition.
+5. Return the saved value.
+6. **Steps 3 and 4 together are the pattern: swap the victim to the end, shrink,
+   then sift down.** `delete` and `heap_sort` are both built out of it.
+
 ```python
 def extract_min(self):
     """
@@ -408,6 +455,17 @@ Dijkstra notebook pushes a duplicate entry and skips stale pops instead.
 
 **Time:** O(log n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. Overwrite `arr[i] = x`, then sift up with the identical loop from `insert`.
+2. **Only sifting up is needed, and only because the key got *smaller*.** A
+   smaller key can violate the rule against its parent but never against its
+   children, since they were already larger than the old, bigger value.
+3. Increasing a key would need `heapify` instead. Calling this with a larger `x`
+   silently corrupts the heap; nothing here checks.
+4. `insert` is really `append` plus this loop, which is why the two bodies match
+   line for line.
+
 ```python
 def decrease_key(self, i, x):
     """
@@ -463,6 +521,16 @@ written, with `-inf` as the hinge between them.
 Two O(log n) passes instead of one, in exchange for no extra code.
 
 **Time:** O(log n) &nbsp; **Space:** O(log n)
+
+**Recipe**
+
+1. Guard `i >= len(arr)` and return.
+2. `decrease_key(i, -math.inf)`. **`-inf` beats every real key, so the node sifts
+   all the way to index 0 and nothing else has to be worked out.**
+3. `extract_min()` then removes it, and repairs the heap on the way.
+4. **This is composition, not a new algorithm.** Two operations you already have,
+   picked so that the second one's precondition is arranged by the first.
+5. O(log n) up plus O(log n) down.
 
 ```python
 def delete(self, i):
@@ -589,6 +657,26 @@ heap from reaching back into the sorted tail it is already done with.
 - It's not stable
 - Heapsort is 2-3 times slower than quicksort because quicksort has better locality of reference than heapsort
 - Used in hybrid sorting algorithms like IntroSort
+
+**Recipe**
+
+Max-heap versions of the same code, plus the sort they enable.
+
+1. `max_heapify(arr, n, i)` is `heapify` with the comparisons flipped and one new
+   argument: **`n`, how much of the array is still the heap.** The tail beyond
+   `n` is finished output and must not be looked at.
+2. `build_heap` runs `max_heapify` from `(n - 2) // 2` down to `0`, the same
+   bottom-up sweep as the constructor.
+3. `heap_sort`: build a max heap, then for `i` from `n - 1` down to `1`, swap
+   `arr[0]` with `arr[i]` and call `max_heapify(arr, i, 0)`.
+4. **A max heap for an ascending sort.** The largest element is at the root, and
+   the swap parks it at the far end where it belongs, so the sorted region grows
+   backwards from the right.
+5. **Pass `i`, not `n`, to `max_heapify` after the swap.** `i` is the new,
+   shorter heap length, and it excludes the element just placed. Pass `n` and the
+   sifting drags finished elements back in.
+6. Stop at `i = 1`; a heap of one is already sorted.
+7. In place, so O(1) extra space, which is what heapsort buys over merge sort.
 
 ```python
 def build_heap(arr):
