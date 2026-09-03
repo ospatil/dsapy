@@ -114,6 +114,23 @@ could revisit a position, "popped at most once" fails and the bound reverts to O
 
 **Time:** O(n) &nbsp; **Space:** O(n)
 
+**Recipe**
+
+1. `result = [-1] * n`, so "nothing greater exists" is the default and never has
+   to be written.
+2. Iterate **right to left**. Everything to the right has already been processed,
+   so the answer for `i` is sitting on the stack when you get there.
+3. **The stack holds indices, not values.** Values would be enough here, but the
+   index version is what the other three cells need, so it is worth writing the
+   same way every time.
+4. Pop while `arr[stack[-1]] <= arr[i]`. **`<=`, not `<`. An equal element is not
+   *greater*, so it can never be anyone's answer and must go too.**
+5. Whatever survives on top is the nearest greater element; read it into
+   `result[i]`. Empty stack means nothing greater lies to the right.
+6. Push `i`. **One push per element is the entire complexity argument: a thing
+   can only be popped once, so the inner `while` totals O(n) across the whole
+   run even though any single pass may pop many.**
+
 ```python
 def next_greater(arr):
     """For each element, find next greater to the right. Time: O(n)"""
@@ -153,6 +170,16 @@ algorithm with the comparison flipped, and scanning left to right instead of rig
 flips "next" to "previous". Four problems, one template.
 
 **Time:** O(n) &nbsp; **Space:** O(n)
+
+**Recipe**
+
+1. Identical to `next_greater` with the pop test flipped: `arr[stack[-1]] >=
+   arr[i]`.
+2. **That one comparison is the entire difference**, and it inverts what the
+   stack means. Values decreased upward before; now they increase upward.
+3. Getting the boundary wrong is the usual bug. **`>=` and not `>`, for the same
+   reason as before: an equal element is not strictly smaller, so it is useless
+   as an answer and has to be discarded.**
 
 ```python
 def next_smaller(arr):
@@ -215,6 +242,20 @@ result: [1, 1, 4, 2, 1, 1, 0, 0]
 ```
 
 **Time:** O(n) &nbsp; **Space:** O(n)
+
+**Recipe**
+
+1. `result = [0] * n`, since a day that never warms up keeps `0`.
+2. Iterate **left to right**, the opposite of `next_greater`. **The answer wanted
+   here is a distance rather than a value, and a distance needs both endpoints.
+   So instead of reading an answer for the index being pushed, this version
+   writes answers for indices being popped.**
+3. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
+   everything it pops.
+4. `result[j] = i - j` for each popped `j`. **This is why the stack stores
+   indices. Values could not tell you how far apart the two days are.**
+5. Push `i` and continue. Anything still on the stack at the end never warmed up
+   and keeps its `0`.
 
 ```python
 def daily_temperatures(temps):
@@ -290,6 +331,24 @@ Two details that are easy to get wrong:
   nothing bounds it on the left and its rectangle stretches all the way back to the first bar
 
 **Time:** O(n) &nbsp; **Space:** O(n)
+
+**Recipe**
+
+1. Append a sentinel `0` to the input. **It is shorter than every real bar, so it
+   forces the stack to drain and every pending bar gets its right boundary. Skip
+   it and any bar still on the stack at the end is never measured.**
+2. Stack holds indices of bars whose right boundary is not yet known, heights
+   increasing upward.
+3. For each `i, h`: pop while `heights[stack[-1]] > h`. `h` is the first shorter
+   bar to the right of the top, which fixes that bar's right edge at `i`.
+4. For each popped bar, its height is the rectangle's height, and the width is
+   `i - stack[-1] - 1` after the pop, or `i` if the stack is now empty.
+5. **The `- 1` is because `stack[-1]` is the first shorter bar on the *left*, and
+   it is not part of the rectangle. The rectangle spans strictly between the two
+   shorter bars.** An empty stack means nothing shorter exists to the left, so
+   the rectangle reaches all the way back to index `0` and the width is just `i`.
+6. **Pop before reading `stack[-1]` for the width.** The left boundary is the bar
+   the pop exposes, not the bar being measured.
 
 ```python
 def largest_rectangle(heights):

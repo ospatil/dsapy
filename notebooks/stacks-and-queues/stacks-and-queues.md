@@ -66,6 +66,17 @@ error instead of returning garbage or an `IndexError` from deep inside.
 
 **Time:** O(1) amortized for every operation &nbsp; **Space:** O(n)
 
+**Recipe**
+
+1. Back the stack with a plain `list`.
+2. `push` is `append`, `pop` is `list.pop()`, `peek` is `items[-1]`.
+3. **Everything hangs on using the *end* of the list.** Python's list is a
+   dynamic array: appending and popping at the end are amortized O(1), while the
+   same operations at index `0` are O(n) because every other element shifts. A
+   stack built on `insert(0, x)` and `pop(0)` is correct and quadratic.
+4. `pop` and `peek` raise on an empty stack rather than returning `None`, so an
+   empty stack cannot be mistaken for one holding `None`.
+
 ```python
 class Stack:
     def __init__(self):
@@ -128,6 +139,21 @@ dequeue → 2, 3, 4    front walks 2 → 0 → 1, wrapping around
 pointing at the same slot, so a lone pair of indices could not tell them apart.
 
 **Time:** O(1) for every operation &nbsp; **Space:** O(capacity), fixed up front
+
+**Recipe**
+
+1. Store `arr`, `cap`, `front`, and `size`. **Store the size, not the rear.**
+2. Derive the rear when you need it: `rear = (front + size) % cap`. **With
+   `front` and `rear` alone, a full queue and an empty one look identical, since
+   both have the two indices equal. Keeping `size` instead removes the ambiguity
+   with no extra bookkeeping.**
+3. `enqueue`: raise if `size == cap`, write at the derived `rear`, then `size +=
+   1`.
+4. `dequeue`: raise if empty, read `arr[front]`, advance `front = (front + 1) %
+   cap`, then `size -= 1`.
+5. **The `% cap` on every move is what makes it circular.** Indices walk off the
+   end and wrap to the front, so the array is reused in place and nothing ever
+   shifts. That is what buys O(1) dequeue over a plain list.
 
 ```python
 class Queue:
@@ -208,6 +234,21 @@ stack), and leftover openers at the end - which is why the return value is
 `len(stack) == 0` rather than just `True`.
 
 **Time:** O(n) &nbsp; **Space:** O(n) - all openers, e.g. `'((((('`
+
+**Recipe**
+
+1. Map **closer to opener**, `{')': '(', ']': '[', '}': '{'}`. That direction is
+   deliberate: you look things up when you meet a closer.
+2. Opener: push it.
+3. Closer: fail if the stack is empty, or if the top is not `pairs[ch]`.
+   Otherwise pop.
+4. **Both halves of that test are needed.** The empty check catches `")("`, and
+   the match check catches `"([)]"`. Either one alone accepts a string the other
+   rejects.
+5. **Check `not stack` first.** Reversing the `or` reads `stack[-1]` on an empty
+   list and raises.
+6. At the end, balanced means the stack is **empty**. A string like `"(("` never
+   fails a check and is caught only here.
 
 ```python
 def is_balanced(s):

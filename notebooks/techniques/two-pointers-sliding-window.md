@@ -69,6 +69,18 @@ O(n), but O(n) space rather than O(1).
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. `lo, hi = 0, len(arr) - 1`, at the two ends.
+2. Loop while `lo < hi`, **strictly**, since an element may not pair with itself.
+3. Sum too small: `lo += 1`. Too large: `hi -= 1`.
+4. **Why discarding is safe, which is the only hard part.** If the sum is too
+   small, `arr[lo]` paired with the largest remaining value is still too small,
+   so `arr[lo]` cannot work with *anything* left and the whole row goes. That
+   argument needs the array sorted; on unsorted input this is wrong, not just
+   slow.
+5. Pointers met without a hit, return `(-1, -1)`.
+
 ```python
 def two_sum_sorted(arr, target):
     """Returns indices (0-based) of two elements that sum to target, or (-1, -1)."""
@@ -111,6 +123,19 @@ convention (it is how the C++ `std::unique` idiom works too), since a list canno
 shortened without moving memory.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Empty input, return `0`.
+2. `slow = 0`. Read it as **"the index of the last value already kept"**, which
+   is what makes the rest fall out.
+3. `fast` runs from `1` to the end, reading every element once.
+4. `arr[fast] != arr[slow]`: a new value. Advance `slow` first, then write
+   `arr[slow] = arr[fast]`.
+5. **Advance before writing.** `slow` points at a value being kept, so writing at
+   `slow` would overwrite it.
+6. Return `slow + 1`, converting a last-used index into a count.
+7. Works only on sorted input, where duplicates are adjacent.
 
 ```python
 def remove_duplicates(arr):
@@ -158,6 +183,19 @@ whatever survived.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. Two pointers at the ends, `best = 0`.
+2. Area is `min(heights[lo], heights[hi]) * (hi - lo)`. The shorter wall sets the
+   depth; the gap sets the width.
+3. **Always move the shorter side in.** That is the entire algorithm.
+4. **Why throwing away the shorter wall is safe:** any pair using it must have a
+   width smaller than the current one, and a depth still capped by that same
+   short wall. So every remaining pair involving it is strictly worse than the
+   one just measured, and the whole row can go.
+5. Moving the taller side instead would discard pairs that might beat the current
+   best, which is why the comparison decides the move.
+
 ```python
 def max_water(heights):
     lo, hi = 0, len(heights) - 1
@@ -199,6 +237,19 @@ window [1, 4, 2, 10]      sum 17
 ```
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Guard `n < k`, return `-1`.
+2. Compute the first window directly with `sum(arr[:k])`. **This is the only full
+   sum in the whole function.**
+3. For each `i` from `k` to `n - 1`, slide: `window_sum += arr[i] - arr[i - k]`.
+4. **Add the entering element and subtract the leaving one in one step.** Every
+   window shares all but two elements with the previous one, so recomputing the
+   sum redoes k-1 additions you already have. That is the difference between O(n)
+   and O(n*k).
+5. `arr[i - k]` is the element falling out of the back. An off-by-one here
+   returns plausible wrong numbers rather than crashing.
 
 ```python
 def max_sum_k(arr, k):
@@ -243,6 +294,20 @@ window size. With negatives, shrinking might *raise* the sum and the argument br
 prefix sums are the tool there.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. `best = math.inf`, `window_sum = 0`, `left = 0`.
+2. `right` sweeps forward, adding `arr[right]` each step. This only ever grows
+   the window.
+3. Then a **`while`**, not an `if`: while the window is still valid
+   (`window_sum >= target`), record `right - left + 1` and shrink from the left.
+4. **Record before shrinking.** The window is valid now; after `left` moves it
+   may not be.
+5. **The `while` is load-bearing.** One large element can leave several
+   successive shrinks all still valid, and an `if` would stop after the first,
+   returning a window longer than the smallest.
+6. `best` untouched means nothing qualified, so return `0`.
 
 ```python
 import math
@@ -292,6 +357,21 @@ right=5 'w'   duplicate → drop 'w' (left=3)
 
 **Time:** O(n) - `left` and `right` each traverse the string once &nbsp;
 **Space:** O(min(n, alphabet size))
+
+**Recipe**
+
+1. A `set` of the characters currently inside the window, `left = 0`, `best = 0`.
+2. `right` sweeps forward. Before adding `s[right]`, **while it is already in the
+   set**, drop `s[left]` and advance `left`.
+3. **Shrink first, then add.** Adding the duplicate before shrinking makes the
+   loop condition true forever, since the set would already hold the character
+   being searched for.
+4. The shrink stops exactly when the old copy is gone, because the only way
+   `s[right]` leaves the set is `left` passing it.
+5. Add `s[right]`, then `best = max(best, right - left + 1)`.
+6. Same skeleton as `min_subarray_sum` with the validity test inverted: there the
+   window shrinks while it *is* valid, to find a minimum; here it shrinks while
+   it is *not* valid, to find a maximum.
 
 ```python
 def longest_unique_substr(s):
