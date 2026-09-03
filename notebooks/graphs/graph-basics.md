@@ -105,6 +105,18 @@ each edge twice is also why the degrees sum to 2·|E|, which the test checks.
 
 **Time:** O(1) per edge &nbsp; **Space:** Θ(V + E)
 
+**Recipe**
+
+1. `adj = [[] for _ in range(n)]`, one list per vertex. **Not `[[]] * n`, which
+   aliases a single list into every slot and makes every vertex share one
+   neighbour list.**
+2. `add_edge` appends **both ways**, `adj[u].append(v)` and `adj[v].append(u)`.
+3. **An undirected edge is two directed entries.** There is no such thing as a
+   single undirected link in this representation, and writing only one direction
+   gives a graph that traverses correctly from one end and not the other.
+4. For a directed graph, delete the second append. That is the only change.
+5. Space is O(V + E), and listing a vertex's neighbours is O(degree).
+
 ```python
 def add_edge(adj, u, v):
     """Add an undirected edge u--v to adjacency list adj."""
@@ -146,6 +158,17 @@ u's neighbours. Dense graphs and repeated adjacency queries favour the matrix; n
 everything else favours the list.
 
 **Time:** Θ(V²) to build &nbsp; **Space:** Θ(V²)
+
+**Recipe**
+
+1. `[[0] * n for _ in range(n)]`. **The inner `[0] * n` is safe because integers
+   are immutable and get copied by value; the outer comprehension is still
+   required, for the same aliasing reason as before.**
+2. Set both `matrix[u][v]` and `matrix[v][u]` for an undirected edge, so the
+   matrix is symmetric about the diagonal.
+3. **The trade against the adjacency list: "are u and v adjacent" is O(1) here
+   and O(degree) there, but space is O(V^2) regardless of how few edges
+   exist.** Choose by density, and most real graphs are sparse.
 
 ```python
 def build_matrix(n, edges):

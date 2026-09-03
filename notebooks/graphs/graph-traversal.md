@@ -100,6 +100,22 @@ by total cost repairs exactly that, and the repair is [Dijkstra](dijkstra.md).
 
 **Time:** O(V + E) &nbsp; **Space:** O(V) for the queue and the visited list
 
+**Recipe**
+
+1. `visited` defaults to `None` and is created if absent. **Accepting it as an
+   argument is what lets the disconnected version below reuse this function
+   across components instead of duplicating it.** Never default it to `[False] *
+   n` directly in the signature; Python evaluates that once and every call would
+   share it.
+2. A `deque` seeded with `s`, and mark `s` visited immediately.
+3. Loop: `popleft`, append to the order, then for each unvisited neighbour
+   **mark it visited and enqueue it**.
+4. **Mark on enqueue, not on dequeue.** Two vertices already in the queue can
+   both list the same neighbour, so marking late lets it be queued twice and it
+   comes out of the traversal twice. On the triangle `[[1,2],[0,2],[0,1]]` the
+   late version returns `[0, 1, 2, 2]`.
+5. `popleft` is O(1) on a deque; `list.pop(0)` is O(n) and makes this quadratic.
+
 ```python
 def bfs(adj, s, visited=None):
     """
@@ -154,6 +170,17 @@ processed twice and the total work stays O(V + E) however many components there 
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
+**Recipe**
+
+1. Build **one** `visited` list up front and keep it across every call.
+2. Loop over all vertices; for each still-unvisited one, run `bfs` from it and
+   concatenate the result.
+3. **The outer loop is the whole idea.** A single BFS only reaches what is
+   reachable from its source, so an unvisited vertex after a run means a
+   component that has not been touched yet.
+4. **The shared `visited` is what stops the second run re-walking the first
+   component.** Create it inside the loop instead and vertices repeat.
+
 ```python
 def bfs_disconnected(adj):
     """BFS over every component. Returns all vertices in visit order."""
@@ -184,6 +211,14 @@ unvisited vertex when none of the earlier traversals could reach it - so every t
 does, that is one more component.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+1. Identical loop to `bfs_disconnected`, but count instead of collecting.
+2. `count += 1` **once per restart**, not once per vertex.
+3. **The number of times the outer loop has to kick off a fresh traversal is the
+   number of components.** That is the entire algorithm; the traversal itself is
+   only there to mark off everything reachable so it is not counted again.
 
 ```python
 def count_components_bfs(adj):
@@ -244,6 +279,17 @@ built on, and it is not something BFS can offer.
 **Time:** O(V + E) &nbsp; **Space:** O(V) - the recursion can reach depth V on a path
 graph
 
+**Recipe**
+
+1. Mark `u` and append it, then recurse into every unvisited neighbour.
+2. **No explicit stack and no base case.** The call stack is the stack, and the
+   `if not visited[v]` guard is what terminates it. A graph has cycles, so
+   without that check the recursion never ends.
+3. **BFS and DFS are the same traversal with a different container.** Queue means
+   explore the nearest first; the call stack means follow one path to its end.
+4. Depth is bounded by the number of vertices, so a long path can hit Python's
+   recursion limit where the iterative version below would not.
+
 ```python
 def dfs_rec(adj, u, visited, order):
     """Recursive DFS helper - appends vertices to order as they are visited."""
@@ -295,6 +341,14 @@ agree on the count - the number of components is a property of the graph, not of
 you walk it.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+1. The same shared-`visited` outer loop as the BFS pair.
+2. `count_components_dfs` passes a throwaway `[]` for the order, since only the
+   restart count matters.
+3. **BFS or DFS makes no difference to the answer here.** Components are about
+   reachability, and both traversals reach exactly the same set. Pick either.
 
 ```python
 def dfs_disconnected(adj):
@@ -352,6 +406,21 @@ either copy is popped. The check after popping is what throws the stale copy awa
 push instead and the duplicates disappear, but so does the match with the recursive order.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+1. A list as a stack, seeded with `s`.
+2. Pop, and **if the vertex is already visited, `continue`.**
+3. **Mark on pop here, unlike BFS which marks on enqueue.** A vertex can be
+   pushed several times before it is ever popped, so the same vertex arrives at
+   the top more than once and the guard is what discards the repeats. Drop it
+   and vertex 6 in the notebook's test graph is emitted twice.
+4. Mark, append to the order, then push all unvisited neighbours.
+5. Push `reversed(adj[u])`. **A stack reverses whatever it is given, so pushing
+   the neighbours backwards makes the first one pop first and matches
+   `dfs_rec`'s order.** Without it the traversal is still a valid DFS, just a
+   different one, which makes the bug invisible to any test that only checks the
+   set of vertices.
 
 ```python
 def dfs_iterative(adj, s):
