@@ -70,6 +70,18 @@ away the sortedness and pays O((m+n) log(m+n)) for information it already had.
 
 **Time:** Θ(m + n) &nbsp; **Space:** Θ(m + n) for the result
 
+**Recipe**
+
+1. One output list and one cursor per input, `i` and `j`.
+2. While both cursors are in range, append the smaller head and advance only
+   that cursor.
+3. **The test is `a[i] <= b[j]`, not `<`.** On a tie it takes from the left,
+   which is what keeps the merge stable. Merge sort inherits its stability
+   entirely from this one character.
+4. Extend with the remainder of both lists. At most one of the two does
+   anything, and writing only the one you expect to fire is the bug the prose
+   above warns about.
+
 ```python
 def merge_naive(a, b):
     """
@@ -133,6 +145,23 @@ implementations often do exactly that.
 
 **Time:** Θ(high - low) &nbsp; **Space:** Θ(high - low)
 
+**Recipe**
+
+The same merge, but writing back into the array it is reading from.
+
+1. Copy both halves out first: `left = a[low:mid + 1]`, `right = a[mid + 1:high
+   + 1]`. **This copy is not laziness. The output overwrites `a[low...]` while
+   the right half is still unread, so merging in place would destroy its own
+   input. That copy is where merge sort's O(n) space goes.**
+2. Watch the slice bounds: `mid + 1` and `high + 1`, because Python slices
+   exclude the end and both `mid` and `high` are meant to be included.
+3. Three cursors: `i` into `left`, `j` into `right`, and `k` into `a` starting at
+   **`low`, not `0`** since this call owns only a window of the array.
+4. Main loop while both copies have elements, `left[i] <= right[j]` again for
+   stability.
+5. Drain whichever copy still has elements. Both drains must be written, and at
+   most one will run.
+
 ```python
 def merge(a, low, mid, high):
     """
@@ -193,6 +222,16 @@ Each level of recursion merges Θ(n) elements in total and there are log n level
 quick sort, no input can unbalance the split, so that O(n log n) holds in *every* case.
 
 **Time:** Θ(n log n) always &nbsp; **Space:** O(n) auxiliary + O(log n) stack
+
+**Recipe**
+
+1. Base case is implicit: do nothing unless `r > l`. A range of one element, or
+   an empty one, is already sorted.
+2. `m = (r + l) // 2`.
+3. Recurse on `(l, m)` and `(m + 1, r)`. **The halves must not overlap and must
+   not leave a gap, so `m` belongs to the left and `m + 1` starts the right.**
+4. Call `merge(a, l, m, r)` after both return. Sorting happens on the way back
+   up, which is the mirror of quicksort.
 
 ```python
 def merge_sort(a, l, r):

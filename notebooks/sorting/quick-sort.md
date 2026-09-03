@@ -159,6 +159,19 @@ Returning the pivot's true index is what lets `qsort_lomuto` recurse on `[l, p-1
 
 **Time:** O(n) &nbsp; **Space:** O(1) - in place, not stable
 
+**Recipe**
+
+1. Pivot is the **last** element, `a[h]`.
+2. `i = l - 1`. Read `i` as "index of the last element known to be smaller than
+   the pivot", so starting one before the window means "none yet".
+3. Scan `j` from `l` to `h - 1`, stopping short of the pivot itself.
+4. `a[j] < pivot`: advance `i`, then swap `a[j]` into `a[i]`. This grows the
+   small region by one and pushes a large element out to where `j` was.
+5. After the scan, swap the pivot into `a[i + 1]`. **`i + 1` is the first slot of
+   the large region, which is exactly the pivot's sorted position.**
+6. Return `i + 1`, **the pivot's final index**. Remember which of the two schemes
+   returns this, because the driver depends on it.
+
 ```python
 def partition_lomuto(a, l, h):
     """
@@ -232,6 +245,21 @@ Fewer swaps and better constants than Lomuto, which is why library implementatio
 prefer it.
 
 **Time:** O(n) &nbsp; **Space:** O(1) - in place, not stable
+
+**Recipe**
+
+1. Pivot is the **first** element, `a[l]`. **Not `a[h]`. Hoare's loop only
+   terminates because the pivot sits at the low end.**
+2. `i, j = l - 1, h + 1`, one outside the window on each side, because both
+   pointers step before they read.
+3. Advance `i` while `a[i] < pivot`; retreat `j` while `a[j] > pivot`. The
+   comparisons are strict, so both pointers stop on a value equal to the pivot.
+   **That is what stops one pointer from running off the end on an array of
+   equal values.**
+4. Crossed, `i >= j`: return `j`.
+5. Otherwise swap `a[i]` and `a[j]` and go round again.
+6. Return `j`, which is **a boundary, not the pivot's position**. Nothing is
+   guaranteed to be in its final place, unlike Lomuto.
 
 ```python
 def partition_hoare(a, l, h):
@@ -313,6 +341,16 @@ shrinks the range by at least one element, which is what guarantees termination.
 
 **Time:** O(n log n) average, O(n²) worst &nbsp; **Space:** O(log n) stack average
 
+**Recipe**
+
+1. Do nothing unless `l < h`.
+2. `p = partition_lomuto(a, l, h)`.
+3. Recurse on `(l, p - 1)` and `(p + 1, h)`. **`p` is excluded from both, because
+   Lomuto leaves the pivot in its final sorted position and it never needs
+   moving again.**
+4. **Using `(l, p)` here recurses forever.** The subproblem never shrinks when
+   the pivot is the smallest element.
+
 ```python
 def qsort_lomuto(a, l, h):
     """
@@ -365,6 +403,16 @@ Getting this wrong is the classic Hoare bug - write `p - 1` here and elements si
 never get sorted, or the recursion fails to shrink and overflows the stack.
 
 **Time:** O(n log n) average, O(n²) worst &nbsp; **Space:** O(log n) stack average
+
+**Recipe**
+
+1. Same shape, one crucial difference.
+2. `p = partition_hoare(a, l, h)`, then recurse on `(l, p)` and `(p + 1, h)`.
+3. **`p` is included in the left half.** Hoare returns a boundary, not a sorted
+   position, so the element at `p` still has to be sorted by someone.
+4. **Copying Lomuto's `(l, p - 1)` here silently drops elements.** It does not
+   crash and it passes on plenty of inputs; `[2, 0, 1]` is the smallest array
+   that comes back unsorted.
 
 ```python
 def qsort_hoare(a, l, h):

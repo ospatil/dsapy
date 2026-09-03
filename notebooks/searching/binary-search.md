@@ -55,6 +55,20 @@ log₂n. Twenty steps cover a million elements, thirty cover a billion.
 
 **Time:** O(log n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. `lo, hi = 0, len(arr) - 1`. Both ends are real indices, so the range is
+   closed on both sides.
+2. Loop while `lo <= hi`. **The `=` belongs here because `lo == hi` is still a
+   live range of one element, and that element has not been compared yet.**
+3. `mid = (lo + hi) // 2`. Equal to `target`, return `mid`.
+4. `arr[mid] < target`: the answer is above, so `lo = mid + 1`. Otherwise
+   `hi = mid - 1`.
+5. **The `+ 1` and `- 1` are what guarantee termination.** `mid` has just been
+   compared and ruled out, so leaving it in the range makes a two-element step
+   loop forever.
+6. Fell out of the loop: return `-1`.
+
 ```python
 def binary_search(arr, target):
     """Returns index of target, or -1 if not found."""
@@ -89,6 +103,18 @@ It reads more like the definition, but each level costs a stack frame, so the it
 version is what you want in practice. (Python does not eliminate the tail call.)
 
 **Time:** O(log n) &nbsp; **Space:** O(log n) - call stack
+
+**Recipe**
+
+1. Carry `lo` and `hi` as arguments, since there is nothing else to remember
+   between calls.
+2. Base case is the empty range, `lo > hi`: return `-1`. **This is the same
+   condition as the loop test in step 2 above, negated. The two versions agree
+   on when to stop or they disagree on the answer.**
+3. `mid = (lo + hi) // 2`. Equal, return `mid`.
+4. Too small, recurse on `(mid + 1, hi)`. Too big, recurse on `(lo, mid - 1)`.
+5. Return the recursive call's result directly. There is nothing to fix up on the
+   way back, which is why this compiles down to the loop.
 
 ```python
 def binary_search_rec(arr, target, lo, hi):
@@ -135,6 +161,23 @@ The invariant: everything left of `lo` is `< target`, everything at `hi` and bey
 
 **Time:** O(log n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+Three changes from plain binary search, and they only work as a set:
+
+1. `lo, hi = 0, len(arr)`. **`hi` is one past the end, not `len(arr) - 1`,
+   because "every element is smaller" is a real answer and it needs an index to
+   live at.**
+2. Loop while `lo < hi`, no `=`. The range is half-open now, so `lo == hi` is
+   empty and the search is over.
+3. `arr[mid] < target`: `mid` is ruled out, so `lo = mid + 1`.
+4. Otherwise `hi = mid`, **not `mid - 1`. `mid` satisfies `>= target`, so it is
+   still a candidate answer and discarding it loses the very element you are
+   looking for.** With `hi = mid - 1` a search for 3 in `[1, 3, 3, 3, 5, 7]`
+   returns 0 instead of 1.
+5. Return `lo`. No `-1` case exists: `len(arr)` is the answer when nothing
+   qualifies.
+
 ```python
 def lower_bound(arr, target):
     """Returns first index where arr[i] >= target, or len(arr) if all elements < target."""
@@ -175,6 +218,18 @@ count of 3s    = 4 - 1 = 3
 ```
 
 **Time:** O(log n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+Copy `lower_bound` and change one character: `arr[mid] < target` becomes
+`arr[mid] <= target`.
+
+1. That `=` pushes elements equal to the target into the "go right" branch
+   instead of the "keep as candidate" branch, so the boundary lands after the
+   run of equals rather than before it.
+2. **Everything else must stay identical.** The pair is only useful because
+   `upper_bound - lower_bound` is the count of the target, and that subtraction
+   is meaningless if the two functions disagree about anything else.
 
 ```python
 def upper_bound(arr, target):
@@ -234,6 +289,24 @@ So the extra work versus plain binary search is one comparison per step to decid
 half is the trustworthy one - the complexity is unchanged.
 
 **Time:** O(log n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Same closed range and same loop as plain binary search. Return `mid` on a
+   hit.
+2. The one new idea: a rotated array cut at any `mid` always leaves **at least
+   one side sorted**. Work out which, then you can test membership on that side
+   by range alone.
+3. `arr[lo] <= arr[mid]` means the left side is sorted. **The `=` is required,
+   not stylistic. On a two-element range `lo == mid`, and with a strict `<` that
+   side is judged unsorted and the search walks off the answer.** `[1, 0]`
+   searching for `0` returns `-1` with `<`.
+4. Left sorted: if `arr[lo] <= target < arr[mid]` the target can only be there,
+   so `hi = mid - 1`. Otherwise `lo = mid + 1`.
+5. Right sorted: mirror it, `arr[mid] < target <= arr[hi]` gives `lo = mid + 1`,
+   else `hi = mid - 1`.
+6. **Both range tests are half-open, excluding `mid`, because `mid` was already
+   compared in step 1.** Include it and the range stops shrinking.
 
 ```python
 def search_rotated(arr, target):

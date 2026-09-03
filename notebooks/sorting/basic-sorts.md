@@ -57,6 +57,20 @@ is already sorted, so there is no point continuing.
 
 **Time:** O(n²), Ω(n) on already-sorted input &nbsp; **Space:** O(1) - in-place, stable
 
+**Recipe**
+
+1. Outer pass `i` from `0` to `n - 2`. After pass `i` the largest `i + 1`
+   elements are parked at the end for good.
+2. Inner loop `j` over `range(n - i - 1)`. **The `- i` is the point of the whole
+   thing: the tail is already final, so re-scanning it is the difference between
+   this and a pure quadratic.**
+3. Compare neighbours, `l[j] > l[j + 1]`, and swap.
+4. Set `swapped = True` inside the `if`, and reset it at the top of every outer
+   pass.
+5. A pass that swapped nothing means sorted, so return. **This flag is the only
+   reason bubble sort is O(n) on already-sorted input. Drop it and the best case
+   becomes the worst case.**
+
 ```python
 def bubble_sort(l):
     n = len(l)
@@ -98,6 +112,16 @@ The long-distance swap is also what breaks stability: it can jump an element pas
 one.
 
 **Time:** Θ(n²) always &nbsp; **Space:** O(1) - in-place, not stable
+
+**Recipe**
+
+1. Outer `i` from `0` to `n - 2`, marking the slot to fill.
+2. `min_idx = i`, then scan `j` from `i + 1` to the end for anything smaller.
+3. Track the **index**, not the value. You have to swap with it later, and a
+   value cannot tell you where it lives.
+4. Swap `l[i]` with `l[min_idx]` once, after the scan.
+5. **No early exit exists here.** Unlike bubble sort, a sorted array still costs
+   a full scan per slot, because nothing is learned until the scan finishes.
 
 ```python
 def selection_sort(l):
@@ -144,6 +168,21 @@ nothing - Θ(n) in the best case. That adaptiveness is why Timsort (Python's `so
 uses insertion sort on small runs.
 
 **Time:** Θ(n²) worst, Θ(n) best &nbsp; **Space:** O(1) - in-place, stable, adaptive
+
+**Recipe**
+
+1. `i` from `1`, not `0`. A one-element prefix is already sorted, so there is
+   nothing to do at `0`.
+2. Save `x = l[i]` first. **The shifting loop overwrites `l[i]`, so the value has
+   to be out of the array before the hole opens.**
+3. `j = i - 1`, then while `j >= 0 and x < l[j]`, copy `l[j]` up to `l[j + 1]`
+   and step `j` back. This shifts, it does not swap: one write per element
+   instead of three.
+4. **`j >= 0` has to come first in the `and`.** Python does not raise on `l[-1]`,
+   it wraps to the last element, so a missing guard corrupts data quietly
+   instead of crashing.
+5. Drop `x` into `l[j + 1]`. **`j + 1`, because the loop exits one slot past
+   where `x` belongs, having stepped `j` back once too far.**
 
 ```python
 def insertion_sort(l):
