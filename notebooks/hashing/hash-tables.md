@@ -217,6 +217,16 @@ shape: find the bucket in O(1), then scan that one short list.
 A prime `size` (7 here) spreads keys more evenly when hash values share factors with
 the table size.
 
+**Recipe**
+
+1. Keep `size` and a list of `size` buckets, each an empty list.
+2. **`[[] for _ in range(size)]`, never `[[]] * size`.** The multiplication makes
+   one list and stores that same object `size` times, so appending to any bucket
+   appends to all of them. It looks right until the first collision.
+3. A bucket holds `(key, value)` pairs, not bare values. The hash sends different
+   keys to the same bucket, so a stored record has to carry the key that proves
+   which one it is.
+
 ```python
 class ChainHash:
     def __init__(self, size=7):
@@ -237,6 +247,18 @@ resized degrades to O(n) as chains grow.
 Missing keys return `None` rather than raising.
 
 **Time:** O(1) average, O(n) worst case (every key in one bucket)
+
+**Recipe**
+
+1. `bucket = self.buckets[hash(key) % self.size]`. **`% self.size` is what turns
+   an arbitrarily large hash into a valid index, and it is repeated in every one
+   of these three methods.**
+2. Scan the bucket linearly for a record whose stored key equals `key`.
+3. **The key comparison is not redundant with the hash.** Two different keys land
+   in the same bucket all the time; the hash narrows the search to a bucket, and
+   only `==` confirms a hit.
+4. Not found, return `None`. Note this cannot distinguish a missing key from one
+   stored with the value `None`.
 
 ```python
 def get_val(self, key):
@@ -265,6 +287,18 @@ Skipping the scan and always appending would be faster but would leave two recor
 for one key, and `get` would return whichever it met first.
 
 **Time:** O(1) average &nbsp; **Space:** O(n) across all buckets
+
+**Recipe**
+
+1. Find the bucket the same way.
+2. **Scan for the key before appending.** Insert and update are the same call, so
+   a blind `append` gives one key two records, and `get_val` then returns
+   whichever happens to come first.
+3. Found: overwrite that slot with `(key, val)` and **return immediately**, or
+   the append below runs too.
+4. Not found: `append` the new pair.
+5. Enumerate to get `i` alongside the record, since the tuple has to be replaced
+   by index.
 
 ```python
 def put_val(self, key, val):
@@ -296,6 +330,15 @@ cannot just remove an entry (see the tombstone note below).
 Deleting a key that isn't present is a silent no-op.
 
 **Time:** O(1) average
+
+**Recipe**
+
+1. Same bucket lookup, same linear scan.
+2. Found: `bucket.pop(i)` and **`break`**.
+3. **The `break` is not an optimisation.** Removing from a list while iterating
+   over it makes the loop skip the next element, so continuing after a `pop` walks
+   a list that has shifted underneath it.
+4. Missing key is not an error here; the loop simply ends.
 
 ```python
 def delete_val(self, key):
@@ -334,6 +377,24 @@ get reused. It refuses to insert into a full table (which would loop forever) an
 refuses duplicates.
 
 **Time:** O(1) average, degrading as the load factor approaches 1
+
+**Recipe**
+
+No buckets at all: one flat array, and colliding keys move along to the next free
+slot.
+
+1. `buckets = [-1] * cap` with **two** sentinels: `-1` empty, `-2` deleted. This
+   is a plain list of ints, so `[-1] * cap` is safe here in a way `[[]] * cap`
+   was not.
+2. `hash(x)` is `x % cap`.
+3. `insert`: bail if full, bail if `search(x)` already finds it, since this is a
+   set.
+4. Probe from `hash(x)` while the slot is **neither `-1` nor `-2`**, stepping `i
+   = (i + 1) % cap`.
+5. **Insert treats a tombstone as free and reuses it; search must not.** That
+   asymmetry between the two methods is the entire point of having two sentinels
+   rather than one, and it is the thing to get right cold.
+6. Write `x`, bump `size`.
 
 ```python
 class OpenAddressHash:
@@ -378,6 +439,20 @@ The `i == h` check is what stops a full table from spinning forever.
 
 **Time:** O(1) average, O(n) worst case
 
+**Recipe**
+
+1. Start at `h = hash(x)` and probe forward.
+2. Continue while `t[i] != -1`. **Only a truly empty slot ends the search. A
+   tombstone must be probed straight past.**
+3. **This is the load-bearing line of the whole scheme.** A deleted entry sitting
+   in the middle of a probe chain is the only thing keeping the rest of that chain
+   reachable. Write `-1` on delete instead of `-2` and the search stops in the
+   hole: insert 10, 17 and 24 into a table of 7, remove 17, and `search(24)`
+   returns `False` even though 24 is right there in the array.
+4. Match, return `True`.
+5. `if i == h: return False` after each step. **A table with no empty slot left
+   would otherwise loop forever, because the `-1` test never fires.**
+
 ```python
 def search(self, x):
     h = self.hash(x)
@@ -414,6 +489,16 @@ The cost is that tombstones accumulate and lengthen probes over time, so a real
 implementation rehashes the table periodically to clear them out.
 
 **Time:** O(1) average
+
+**Recipe**
+
+1. Probe exactly like `search`, with the same `-1` stop and the same full-circle
+   guard.
+2. Found: write **`-2`, the tombstone, not `-1`**.
+3. That is the whole method. See the search recipe for why the distinction
+   matters; this is the line that creates the situation search has to survive.
+4. Tombstones accumulate and never get cleaned up here, so a table churned
+   through many insert and delete cycles slows down until it is rebuilt.
 
 ```python
 def remove(self, x):
