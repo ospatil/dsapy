@@ -62,6 +62,27 @@ behind. `if d > dist[u]: continue` discards those stale copies when they surface
 
 **Time:** O((V + E) log V) &nbsp; **Space:** O(V + E)
 
+**Recipe**
+
+1. `dist = [inf] * n`, `dist[src] = 0`, and a heap seeded with `(0, src)`.
+   **Tuples go on the heap distance-first, because `heapq` compares tuples
+   left to right and the distance has to be the sort key.**
+2. Pop the smallest `(d, u)`.
+3. **`if d > dist[u]: continue`.** The heap has no decrease-key operation, so a
+   shorter route to `u` found after `u` was pushed leaves the older, longer entry
+   sitting in the heap. This line discards those stale copies. Without it a
+   vertex is processed several times, once per push.
+4. Relax each edge: `dist[u] + w < dist[v]` means a better route, so update
+   `dist[v]` and push `(dist[v], v)`.
+5. **Push a new entry rather than trying to update the old one.** That is what
+   makes the stale check in step 3 necessary, and it is the standard trade: a
+   slightly larger heap in exchange for not needing an indexed priority queue.
+6. Unreachable vertices are never pushed and keep `inf`.
+7. **Why popping the minimum is safe to treat as final:** every edge weight is
+   non-negative, so no route through an unprocessed vertex could come back
+   cheaper. Negative weights break exactly this argument, which is why Dijkstra
+   cannot handle them.
+
 ```python
 import heapq
 import math
@@ -138,6 +159,19 @@ Walk `parent` backwards from the destination to the source, then reverse. `paren
 destination is caught up front by its infinite distance.
 
 **Time:** O((V + E) log V) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+1. Identical to `dijkstra` plus a `parent` array of `None`.
+2. Inside the relaxation, alongside `dist[v] = dist[u] + w`, record `parent[v] =
+   u`. **One line. The predecessor is recorded at the moment a better route is
+   found, so `parent` always reflects the current best path rather than the first
+   one seen.**
+3. Rebuild by walking `parent` back from `dst` until `None`, then reverse.
+4. **Store the predecessor, not the whole path.** Copying a path per vertex would
+   be O(V) per update; one back-pointer is O(1) and the path is reconstructed
+   once at the end.
+5. `dist[dst]` still `inf` means unreachable, so there is no path to rebuild.
 
 ```python
 def dijkstra_path(adj, src, dst):

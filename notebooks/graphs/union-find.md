@@ -89,6 +89,17 @@ second.
 **Time:** O(n) worst case per operation, O(log n) once union by rank is added &nbsp;
 **Space:** O(n)
 
+**Recipe**
+
+1. `parent = list(range(n))`: every element starts as its own root, so `parent[x]
+   == x` is the test for "this is a root".
+2. `find`: walk `parent` until it points at itself.
+3. `union`: find both roots, and if they differ point one at the other.
+4. **Compare roots, never the elements themselves.** Two elements in the same set
+   usually have different parents; only the root identifies the set.
+5. **The flaw is that the tree can grow into a chain.** Union in a bad order and
+   `find` degrades to O(n), which is what the next cell fixes.
+
 ```python
 def make_set_naive(n):
     """Each element is its own parent."""
@@ -148,6 +159,23 @@ as a merge heuristic, never as a measurement.
 
 **Time:** O(α(n)) amortized &nbsp; **Space:** O(n)
 
+**Recipe**
+
+Two independent optimisations, and each is a couple of lines.
+
+1. Track a `rank` array alongside `parent`, all zeros. Read rank as a rough upper
+   bound on tree height, not an exact count.
+2. **Path compression** in `find`: after recursing to the root, write it back
+   with `parent[x] = find(parent, parent[x])`. **Every node on the path is
+   re-pointed straight at the root, so the next `find` on any of them is one
+   hop.** The line both returns the answer and flattens the path.
+3. **Union by rank**: attach the shorter tree under the taller. Equal ranks are
+   the only case where the winner's rank goes up by one.
+4. **Attaching the taller under the shorter is what makes trees deep.** Both
+   orderings are correct; only one keeps `find` fast.
+5. `union` returns `False` when the roots already match, which is what makes the
+   cycle detection below a one-liner.
+
 ```python
 def make_set(n):
     parent = list(range(n))
@@ -205,6 +233,18 @@ unless it would form a cycle).
 
 **Time:** O(E · α(V)) &nbsp; **Space:** O(V)
 
+**Recipe**
+
+1. One set per vertex, then walk the edges.
+2. **If the endpoints are already connected, this edge closes a cycle.** They
+   were joined by some earlier path, so adding a second route between them makes
+   a loop.
+3. Otherwise `union` them and continue.
+4. **Check before uniting.** Do it the other way round and every edge looks like
+   a cycle, since `union` has just made the endpoints connected.
+5. This is for undirected graphs only. Union-find tracks connectivity, which has
+   no notion of direction.
+
 ```python
 def has_cycle(n, edges):
     """Detect cycle in undirected graph using Union-Find. Time: O(E × α(V))"""
@@ -234,6 +274,17 @@ Same answer, different trade-off: traversal needs the adjacency list up front, u
 only needs the edges, one at a time.
 
 **Time:** O(V + E · α(V)) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+1. Start the count at `n`: with no edges, every vertex is its own component.
+2. For each edge, **decrement only when `union` actually merged**, which is
+   exactly what its `True` return means.
+3. **Counting edges instead of successful merges over-counts.** A second edge
+   between two already-joined vertices merges nothing and must not reduce the
+   count.
+4. No traversal anywhere. Union-find answers this incrementally as edges arrive,
+   which is what it offers over the BFS and DFS versions.
 
 ```python
 def count_components(n, edges):

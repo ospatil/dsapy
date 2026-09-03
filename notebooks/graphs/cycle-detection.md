@@ -46,6 +46,22 @@ other route, and two routes to the same vertex close a cycle.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
+**Recipe**
+
+1. Ordinary DFS, except every call carries **the vertex it came from** as
+   `parent`. The outer loop starts each component with `parent = -1`.
+2. Unvisited neighbour: recurse, and propagate a `True` straight up.
+3. Already-visited neighbour: a cycle **only if `v != parent`**.
+4. **That check exists because an undirected edge is stored twice.** Standing on
+   `1` after arriving from `0`, the list `adj[1]` contains `0`, which is visited.
+   Without the exclusion every single edge reports a cycle: the two-edge tree
+   `0-1, 0-2` comes back `True`.
+5. The outer loop must cover every vertex, or a cycle hiding in a second
+   component is missed.
+6. **Return values have to be propagated deliberately.** `dfs(v, u)` is wrapped
+   in an `if` rather than called bare, since a `True` found deep in the recursion
+   is otherwise thrown away.
+
 ```python
 def has_cycle_undirected(adj):
     """Detect a cycle in an undirected graph using DFS with parent tracking."""
@@ -105,6 +121,23 @@ edge like that is exactly a cycle. It has a name, a **back edge**. Meeting color
 forward or cross edge: harmless.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+Three states, not two: `0` untouched, `1` on the current path, `2` finished.
+
+1. Set `color[u] = 1` on entry, and `color[u] = 2` **after** the neighbour loop.
+2. Neighbour with `color == 1`: cycle. It is an ancestor on the path you are
+   standing on right now, so the edge closes a loop.
+3. Neighbour with `color == 0`: recurse.
+4. Neighbour with `color == 2`: **ignore it.** It is finished, reachable from
+   here, and provably not on the current path.
+5. **State `2` is the whole reason this is not just `has_cycle_undirected`.** A
+   plain visited flag cannot tell "I am inside this vertex's call" from "I
+   finished it earlier", and reports the diamond `0->1, 0->2, 1->3, 2->3` as
+   cyclic even though it is a DAG.
+6. No `parent` argument here. In a directed graph the reverse edge is not
+   implied, so `u -> v` and `v -> u` really is a cycle.
 
 ```python
 def has_cycle_directed(adj):

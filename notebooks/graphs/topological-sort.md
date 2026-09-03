@@ -58,6 +58,17 @@ every edge (u, v) the position of u precedes the position of v. Building a
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
+**Recipe**
+
+1. First check `order` is a permutation of all vertices, so a short or repeated
+   result cannot pass.
+2. Build `position`, mapping vertex to its index in the order.
+3. Assert `position[u] < position[v]` for **every** edge `u -> v`.
+4. **Assert the defining property, not one specific answer.** Most DAGs have many
+   valid topological orders and the two algorithms below produce different ones,
+   so comparing against a hard-coded list would test the implementation rather
+   than the requirement.
+
 ```python
 def is_topological(adj, order):
     """True if order lists every vertex once and respects every edge."""
@@ -112,6 +123,19 @@ place a vertex before its descendants are known and can produce an invalid order
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
+**Recipe**
+
+1. Plain DFS with a `visited` list and an outer loop over every vertex.
+2. `stack.append(u)` **after** the neighbour loop, never before.
+3. **Appending on the way out is the entire algorithm.** A vertex is only pushed
+   once everything reachable from it is already pushed, so it always lands
+   *below* its own descendants. Move that line above the loop and you get
+   preorder, which is not a topological order.
+4. Return `stack[::-1]`. The deepest-finishing vertices sit at the bottom, and
+   reversing puts the ones with no prerequisites first.
+5. **This assumes a DAG and cannot tell you otherwise.** Given a cycle it returns
+   a confident, wrong answer. Kahn's algorithm below detects that for free.
+
 ```python
 def topo_sort_dfs(adj):
     """DFS-based topological sort. Assumes adj is a DAG."""
@@ -157,6 +181,21 @@ It doubles as a cycle detector for free: vertices inside a cycle keep each other
 in-degree above zero forever, so a result shorter than V proves a cycle exists.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
+
+**Recipe**
+
+1. Count `in_degree` for every vertex by walking all edges once. **Count
+   arrivals, `in_degree[v] += 1` for each edge `u -> v`, not departures.**
+2. Seed the queue with every vertex of in-degree `0`: the things with no
+   prerequisites.
+3. Pop `u`, append it to the order, then for each neighbour `v` decrement
+   `in_degree[v]` and enqueue it **only when it reaches exactly `0`**.
+4. **Decrementing is "remove u from the graph".** A vertex becomes available the
+   moment its last prerequisite is emitted, and testing `== 0` rather than `<= 0`
+   is what enqueues it exactly once.
+5. **`len(order) < n` means a cycle.** Vertices inside a cycle each wait on
+   another one in the same cycle, so their in-degree never falls to zero and they
+   are never emitted. This is the free cycle check the DFS version lacks.
 
 ```python
 from collections import deque
