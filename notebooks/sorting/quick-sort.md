@@ -85,6 +85,22 @@ and Hoare schemes that follow do the same job in place, with a single pass.
 
 **Time:** O(n) for all three schemes &nbsp; **Space:** Θ(n) naive, O(1) for the others
 
+**Recipe**
+
+1. Swap the chosen pivot to the end, then read `pivot = a[n - 1]`.
+2. Pass one: append every element `<= pivot` to a scratch list, in order.
+3. Pass two: append every element `> pivot` to the same list.
+4. Pass three: `a[:] = temp` to copy back. **`a[:] =` rather than `a = `, or the
+   caller sees no change at all.**
+5. **This is stable**, since both passes preserve the original relative order,
+   and that is the one thing it has over the two schemes below.
+6. **The cost is O(n) extra space and three passes**, which is exactly what
+   Lomuto and Hoare remove by swapping in place. Nobody uses this in a real
+   quicksort; it is here to make the in-place versions look like a repair rather
+   than a fact.
+7. `is_partitioned` checks the defining property, not a specific arrangement:
+   once a value greater than the pivot has been seen, nothing smaller may follow.
+
 ```python
 def partition_naive(a, p):
     """
