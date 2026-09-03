@@ -26,6 +26,10 @@ A stack that maintains elements in sorted order (increasing or decreasing). When
 | Next greater element | Decreasing | top <= current |
 | Next smaller element | Increasing | top >= current |
 
+Which *side* the answer comes from is a separate choice from the comparison, and it is set by
+where you record the answer rather than by the scan direction alone. The Next Smaller section
+below lays out both axes.
+
 **Time:** O(n) &nbsp; **Space:** O(n)
 
 > **Mental model.** The stack holds exactly the elements that are still waiting for an
@@ -165,9 +169,38 @@ The mirror image: the same scan with the comparison reversed. An arriving elemen
 discards tops that are greater than or equal to it, so the survivors *increase* as you go up
 instead of decreasing, and the top is the largest thing still in play.
 
-That symmetry is the useful takeaway - "nearest larger" and "nearest smaller" are the same
-algorithm with the comparison flipped, and scanning left to right instead of right to left
-flips "next" to "previous". Four problems, one template.
+That symmetry is the useful takeaway, but only half of it. Flipping the comparison swaps
+"larger" for "smaller", and that much is free. Flipping *sides* - "next" for "previous" - is
+not just a matter of reversing the scan, and assuming it is will cost you.
+
+There are two independent choices, and the four cells in this notebook use three of the four
+combinations:
+
+- **The comparison** decides larger or smaller. Independent of everything else.
+- **Where the answer is recorded** decides which side it comes from:
+  - **Read at push** - the arriving element takes whatever survived on top as *its own*
+    answer. The answer is therefore something already scanned, so it lies **behind** the
+    arriving element.
+  - **Write at pop** - the arriving element *is* the answer for everything it evicts, and
+    writes into their slots. The answer lies **ahead** of each element it settles.
+
+Direction then only decides which of those two reads as "next":
+
+| scan direction | answer recorded | gives you |
+|----------------|-----------------|-----------|
+| right to left  | at push         | **next** greater/smaller |
+| left to right  | at push         | **previous** greater/smaller |
+| left to right  | at pop          | **next** greater/smaller |
+| right to left  | at pop          | **previous** greater/smaller |
+
+So `next_greater` (right to left, at push) and `daily_temperatures` (left to right, at pop)
+sit in different rows and both compute *next*. Direction on its own settles nothing.
+
+**Which one to reach for:** read at push when the answer is the other element's *value*, since
+you only need the survivor. Switch to write at pop when the answer needs *both* endpoints - a
+distance, or a width - because only then do you hold the popped element and the arriving one
+at the same moment. That is the whole reason the two application cells below are written the
+other way round.
 
 **Time:** O(n) &nbsp; **Space:** O(n)
 
@@ -246,15 +279,18 @@ result: [1, 1, 4, 2, 1, 1, 0, 0]
 **Recipe**
 
 1. `result = [0] * n`, since a day that never warms up keeps `0`.
-2. Iterate **left to right**, the opposite of `next_greater`. **The answer wanted
-   here is a distance rather than a value, and a distance needs both endpoints.
-   So instead of reading an answer for the index being pushed, this version
-   writes answers for indices being popped.**
-3. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
+2. Iterate **left to right** and **write answers at pop**, where `next_greater`
+   went right to left and read at push. **Both still compute "next". Direction
+   alone would have flipped this to "previous"; it is the move to writing at pop
+   that flips it back.**
+3. **The answer here is a distance, which forces that choice.** A distance needs
+   both endpoints at once, and only the pop has them: the evicted day and the day
+   evicting it.
+4. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
    everything it pops.
-4. `result[j] = i - j` for each popped `j`. **This is why the stack stores
+5. `result[j] = i - j` for each popped `j`. **This is why the stack stores
    indices. Values could not tell you how far apart the two days are.**
-5. Push `i` and continue. Anything still on the stack at the end never warmed up
+6. Push `i` and continue. Anything still on the stack at the end never warmed up
    and keeps its `0`.
 
 ```python
@@ -337,18 +373,25 @@ Two details that are easy to get wrong:
 1. Append a sentinel `0` to the input. **It is shorter than every real bar, so it
    forces the stack to drain and every pending bar gets its right boundary. Skip
    it and any bar still on the stack at the end is never measured.**
-2. Stack holds indices of bars whose right boundary is not yet known, heights
+2. Left to right, **writing at pop**, the same idiom as `daily_temperatures` and
+   for the same reason: a width needs both boundaries, so the answer can only be
+   settled at the moment of eviction. This one needs *three* indices at once, the
+   popped bar and both bars flanking it, which is why nothing simpler works.
+3. Stack holds indices of bars whose right boundary is not yet known, heights
    increasing upward.
-3. For each `i, h`: pop while `heights[stack[-1]] > h`. `h` is the first shorter
+4. For each `i, h`: pop while `heights[stack[-1]] > h`. `h` is the first shorter
    bar to the right of the top, which fixes that bar's right edge at `i`.
-4. For each popped bar, its height is the rectangle's height, and the width is
+5. For each popped bar, its height is the rectangle's height, and the width is
    `i - stack[-1] - 1` after the pop, or `i` if the stack is now empty.
-5. **The `- 1` is because `stack[-1]` is the first shorter bar on the *left*, and
+6. **The `- 1` is because `stack[-1]` is the first shorter bar on the *left*, and
    it is not part of the rectangle. The rectangle spans strictly between the two
    shorter bars.** An empty stack means nothing shorter exists to the left, so
    the rectangle reaches all the way back to index `0` and the width is just `i`.
-6. **Pop before reading `stack[-1]` for the width.** The left boundary is the bar
+7. **Pop before reading `stack[-1]` for the width.** The left boundary is the bar
    the pop exposes, not the bar being measured.
+8. The comparison is strict `>`, so equal bars are not popped by each other. The
+   earlier of two equal bars settles for too narrow a rectangle, but the later
+   one measures the full span, so the maximum is still found.
 
 ```python
 def largest_rectangle(heights):
