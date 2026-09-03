@@ -77,6 +77,23 @@ on the query length and not on how many words the trie holds.
 
 **Time:** O(L) insert and search, O(P) prefix check &nbsp; **Space:** O(total characters)
 
+**Recipe**
+
+1. A trie node is just a **dict**: keys are characters, values are child nodes.
+   No class needed.
+2. `insert`: walk the word, creating `node[ch] = {}` for any character not
+   present, stepping down each time. At the end set `node['$'] = True`.
+3. **`'$'` marks that a word ends here, and it is the load-bearing piece.**
+   Without it there is no way to tell a complete word from a prefix of one, and
+   `search` would return `True` for `'ap'` after inserting `'apple'`.
+4. `search`: walk, failing on any missing character, and finish with **`'$' in
+   node`**, not `True`.
+5. `starts_with`: the identical walk finishing with plain `True`. **The one-line
+   difference between the two is the entire distinction between a word and a
+   prefix.**
+6. `'$'` works as the marker only because it cannot appear in a word. Any
+   sentinel outside the alphabet does.
+
 ```python
 def create_trie():
     """A trie node is just a dict. Keys = child characters, '$' = end of word."""
@@ -149,6 +166,22 @@ to the dictionary. A hash set would have to test all N words.
 
 **Time:** O(P + output size) &nbsp; **Space:** O(output size)
 
+**Recipe**
+
+1. Walk down to the prefix's node, returning `[]` if the path breaks.
+2. From there, DFS collecting every word beneath.
+3. **The walk down is the search and the DFS is the enumeration.** They are two
+   separate phases; the first costs O(len(prefix)) regardless of dictionary size,
+   which is what a trie buys over scanning a word list.
+4. In the DFS, emit `prefix + path` whenever `'$'` is in the node. **A node can
+   both end a word and have children**, so this is not an early return: `app` is
+   emitted and the walk continues into `apple`.
+5. **Skip the `'$'` key when iterating children.** It maps to `True`, not a dict,
+   so recursing into it raises.
+6. `path.append(ch)` before the call and `path.pop()` after. **The list is shared
+   across the whole traversal, so the pop is what stops a sibling branch
+   inheriting characters from the branch just finished.**
+
 ```python
 def autocomplete(root, prefix):
     """
@@ -214,6 +247,26 @@ Returning `False` on a missing word is what keeps the pruning from cascading thr
 unrelated branches.
 
 **Time:** O(L) &nbsp; **Space:** O(L) recursion
+
+**Recipe**
+
+The interesting part is not removing the word but deciding which nodes may go.
+
+1. Recurse down with an index `i`. **Each call returns a boolean meaning "the
+   child I just handled is now empty, so you may unlink it"**, which is how the
+   decision travels back up.
+2. At `i == len(word)`: no `'$'` means the word was never there, return `False`.
+   Otherwise `del node['$']` and return `len(node) == 0`.
+3. **That length test is the safety check.** The node is only removable if
+   nothing hangs off it. Delete `apple` while `app` exists and the `p` node still
+   has children, so the chain stops there.
+4. On the way back up, if the child reported removable, `del node[ch]`, then
+   return `len(node) == 0 and '$' not in node`.
+5. **Both halves of that condition are needed.** A node with no children may
+   still terminate a shorter word, and unlinking it would silently delete that
+   word too.
+6. Nodes are removed only on the unwind, one level at a time, and the first
+   `False` stops the pruning for everything above it.
 
 ```python
 def delete(root, word):
