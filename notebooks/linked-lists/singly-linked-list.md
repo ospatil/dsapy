@@ -73,6 +73,16 @@ Order matters: overwrite `head.next` first and the rest of the list is lost.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. Make the node.
+2. `new.next = head.next` **first**, then `head.next = new`.
+3. **That order is the whole cell.** Assign `head.next = new` first and
+   `head.next` no longer names the old first node, so the next line points `new`
+   at itself and the rest of the list is unreachable.
+4. No empty-list case is needed. `head` is the dummy, so `head.next` is `None`
+   on an empty list and the same two lines still work.
+
 ```python
 def insert_front(head, val):
     new = ListNode(val)
@@ -97,6 +107,16 @@ whole cost. `curr.next is None` identifies the tail, and on an empty list the
 dummy head *is* the last node, so the same code handles it.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Start `curr` at the **dummy**, not at `head.next`.
+2. Walk while `curr.next` is truthy, so `curr` finishes on the last real node.
+   **The test is `curr.next`, not `curr`. Stopping on `curr is None` walks off
+   the end and leaves nothing to attach to.**
+3. `curr.next = new`.
+4. Starting at the dummy is what removes the empty-list special case: the loop
+   runs zero times and the dummy itself is the node to attach to.
 
 ```python
 def insert_end(head, val):
@@ -125,6 +145,13 @@ hop - `head.next = head.next.next` - with no traversal and no special case beyon
 empty list, which the `if head.next` guard covers.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Guard the empty list: nothing to do if `head.next` is `None`.
+2. `head.next = head.next.next`, skipping over the first real node.
+3. Nothing frees the node explicitly; once nothing points at it Python collects
+   it.
 
 ```python
 def delete_first(head):
@@ -156,6 +183,18 @@ node - then cut with `curr.next = None`.
 The `head.next is None` guard covers the empty list, where `curr.next.next` would raise.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Empty list, `head.next is None`, return. **This guard has to come first.
+   Without it the loop reads `curr.next.next` on `None` and raises.**
+2. Start `curr` at the dummy.
+3. Walk while **`curr.next.next`** is truthy, so `curr` stops on the
+   *second-to-last* node. Deleting from a singly linked list means editing the
+   pointer that aims at the victim, and only the node before it holds that.
+4. `curr.next = None`.
+5. A one-element list works because `curr` stays on the dummy and the dummy's
+   `next` is what gets cleared.
 
 ```python
 def delete_last(head):
@@ -218,6 +257,19 @@ tail instead of failing.
 
 **Time:** O(p) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. Positions are 1-based, and `curr` starts on the dummy.
+2. Move `position - 1` times. **Count from the dummy and the arithmetic comes out
+   right: to insert at position 4 you must be holding node 3, which is three
+   steps from the dummy.**
+3. Inside the loop, break early if `curr.next is None`. **This is what turns an
+   out-of-range position into "append" instead of a crash.**
+4. Then the same two lines as `insert_front`, in the same order: `new.next =
+   curr.next`, `curr.next = new`.
+5. Position 1 needs no special case, because zero steps leaves `curr` on the
+   dummy, which is exactly what `insert_front` uses.
+
 ```python
 # Position is 1 based
 def insert_at(head, val, position):
@@ -276,6 +328,15 @@ count lines up with the caller's positions.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. `pos, curr = 1, head.next`. **Both halves of that line encode the 1-based
+   convention: skip the dummy, and start the count at 1 rather than 0.**
+2. Walk while `curr`, returning `pos` on a match.
+3. Advance `pos` and `curr` together. They must move as a pair or the returned
+   position is off by the number of times they disagreed.
+4. Ran off the end, return `-1`.
+
 ```python
 # Return the position of val if found else return -1. Position is 1 based.
 def search(head, val):
@@ -322,6 +383,19 @@ The comparison is strict (`curr.next.val < val`), so a duplicate lands *after* t
 existing equal values - the insert is stable.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Start on the dummy and walk while **`curr.next and curr.next.val < val`**.
+2. Look at `curr.next.val`, not `curr.val`. You need to stop *before* the first
+   node that is too big, since that is the node whose incoming pointer you are
+   about to rewrite.
+3. **`curr.next` must be tested first in the `and`.** It short-circuits at the
+   end of the list; reverse the two and the walk reads `.val` on `None`.
+4. **The comparison is strict `<`.** Equal values fail the test, so the walk
+   stops before them and a duplicate lands ahead of its equals rather than
+   scanning past the whole run.
+5. Splice with the usual pair, `new.next = curr.next` then `curr.next = new`.
 
 ```python
 def sorted_insert(head, val):
@@ -371,6 +445,19 @@ existing ones. Worth writing once anyway, because the in-place version below is 
 same "push onto the front" motion, with the list's own pointers doing the stack's job.
 
 **Time:** O(n) &nbsp; **Space:** O(n)
+
+**Recipe**
+
+1. Walk the list pushing every **value** onto a list used as a stack.
+2. Reset `curr` to the dummy.
+3. Pop until empty, and for each value hang a **brand new `ListNode`** off
+   `curr`, then step onto it.
+4. **This rebuilds rather than rewires.** Every original node is discarded and
+   replaced, so any reference a caller held into the old list now points at
+   nodes that are no longer in it. The two versions below reverse the same list
+   in place instead.
+5. The cost is O(n) for the stack plus O(n) for the new nodes, which is what the
+   next cell is written to avoid.
 
 ```python
 def reverse_using_stack(head):
@@ -429,6 +516,20 @@ reversed prefix. So `prev` is the new head, and the last line hooks the dummy on
 "Three-pointer technique" undersells it: there are two *regions* and one temporary.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. `prev, curr = None, head.next`. **`prev` starts as `None` because the reversed
+   prefix is empty, and that `None` becomes the new tail's `next`, terminating
+   the list.**
+2. Loop while `curr`.
+3. `next = curr.next` before anything else. **The following line overwrites
+   `curr.next`, which is the only route into the untouched suffix.**
+4. `curr.next = prev` moves one node across the boundary.
+5. Advance the pair, `prev = curr` then `curr = next`. **In that order. Assign
+   `curr` first and `prev = curr` copies the new value, losing the prefix.**
+6. Loop ends with `curr is None`, so the suffix is empty and `prev` is the head
+   of the whole reversed list. Hook it on: `head.next = prev`.
 
 ```python
 def reverse(head):

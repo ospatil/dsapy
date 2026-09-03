@@ -68,6 +68,16 @@ one node later.
 An empty list has no starting node, so there is nothing to come back to and the
 wrap-around test has nothing to compare against. Hence the early return.
 
+**Recipe**
+
+1. `first = head.next`. Empty list, return early.
+2. Append `first.val`, then start `curr` at `first.next`.
+3. Loop while **`curr is not first`**. **There is no `None` to stop on; the last
+   node points back at the first. Reusing the singly linked list's `while curr`
+   spins forever.**
+4. The first node has to be handled before the loop, because the loop's stopping
+   condition is already true when `curr` starts there.
+
 ```python
 class ListNode:
     def __init__(self, val=0):
@@ -105,6 +115,16 @@ pointers by themselves never said which node was.
 
 **Time:** O(n), essentially all of it spent finding the last node &nbsp;
 **Space:** O(1)
+
+**Recipe**
+
+1. `first = head.next`. Empty list: `new.next = new`, a one-node ring pointing at
+   itself, and `head.next = new`.
+2. Otherwise walk from `first.next` while `curr.next is not first`, stopping on
+   the **last** node. **This walk is the whole cost. Inserting at the front means
+   editing the last node's pointer, and finding it is O(n).**
+3. `new.next = curr.next` (which is `first`), then `curr.next = new`.
+4. `head.next = new`, since the new node is now the first.
 
 ```python
 def insert_begin_linear(head, val):
@@ -156,6 +176,22 @@ values and wrong when a node itself is the thing being tracked.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+The same operation with the O(n) walk removed by moving values instead of nodes.
+
+1. Empty list, same as before: self-loop and point the dummy at it.
+2. Otherwise splice `new` in as the **second** node: `new.next = first.next`,
+   `first.next = new`. Both links are one hop away, so this is O(1).
+3. Swap the two values: `new.val, first.val = first.val, new.val`. The node that
+   was already in first place now holds the new value, and the freshly inserted
+   node holds the old one.
+4. **`head.next` is deliberately not touched.** The first *node* never changed,
+   only what it contains.
+5. **The catch is that node identity moves.** A caller holding a reference to the
+   old first node finds its value silently changed, which is the price for
+   avoiding the walk.
+
 ```python
 def insert_begin_constant(head, val):
     # neat trick, insert new node at second place and swap data with first node
@@ -194,6 +230,16 @@ Insert-at-beginning and insert-at-end differ *only* in whether `head` moves - in
 ring there is no other distinction between the two ends.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Identical to `insert_begin_linear` except for the last line.
+2. Empty list, self-loop, point the dummy at it.
+3. Walk to the last node, splice `new` in after it.
+4. **Do not touch `head.next`.** Appending at the end is the same splice as
+   inserting at the front; the only thing that decides which one it is, is
+   whether the dummy is moved to the new node afterwards. In a ring, "first" is
+   purely whatever the dummy points at.
 
 ```python
 def insert_end_linear(head, val):
@@ -242,6 +288,17 @@ own, so which node is last is a decision rather than a fact, and both O(1)
 variants are just that decision being made differently.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Character for character the same as `insert_begin_constant`, plus one line.
+2. Splice `new` in second, swap the values.
+3. `head.next = new`. **That single line is the entire difference between
+   inserting at the front and at the end.** After the swap, `new` holds the old
+   first value and sits second; naming it the first node rotates the ring so the
+   new value lands at the end.
+4. Worth holding onto: in a circular list, front and back are the same splice
+   seen from two different starting points.
 
 ```python
 def insert_end_constant(head, val):

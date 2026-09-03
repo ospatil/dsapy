@@ -72,6 +72,19 @@ old first node, which is the only thing the `if new.next` guard is for.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+Four pointers touch this splice, and the singly-linked version only had two.
+
+1. `new.next = head.next`, then `head.next = new`, same order and same reason as
+   the singly linked list.
+2. `new.prev = head`. The dummy is a real node here, so the first node's `prev`
+   points at it rather than being `None`.
+3. `if new.next: new.next.prev = new`. **The guard is the empty-list case: there
+   is no old first node whose `prev` needs repairing.**
+4. Forgetting step 3 leaves a list that reads correctly forwards and is broken
+   backwards, which no forward traversal will ever catch.
+
 ```python
 def insert_front(head, val):
     new = ListNode(val)
@@ -111,6 +124,14 @@ below matters more than this function.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
+**Recipe**
+
+1. Walk from the dummy while `curr.next`, landing on the last node.
+2. `curr.next = new` and `new.prev = curr`.
+3. **Only two links here, against four in `insert_front`.** `new` is the tail, so
+   its `next` is already `None` and there is no following node with a `prev` to
+   repair.
+
 ```python
 def insert_end(head, val):
     new = ListNode(val)
@@ -147,6 +168,15 @@ still returns the right answer, because it only follows `next`. The list is brok
 one direction nothing is looking.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. `if head.next:` guards the empty list.
+2. `head.next = head.next.next` unlinks forwards.
+3. `if head.next:` **again**, because the list may have just become empty and
+   there is no new first node to fix. **Two separate guards on the same
+   expression, checked before and after the unlink.**
+4. `head.next.prev = head` repairs the backward link.
 
 ```python
 def delete_front(head):
@@ -191,6 +221,18 @@ Without one we walk, stopping one node short via `curr.next.next`. The empty-lis
 to come first, or that expression reads a field off `None`.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. Empty list, return.
+2. Walk while `curr.next.next` to stop on the second-to-last node.
+3. `curr.next = None`.
+4. **Nothing else needs fixing.** The new tail's `prev` already pointed where it
+   should; only the dropped node held pointers that are now stale, and it is
+   unreachable.
+5. Note this is still O(n) even in a doubly linked list, because the walk starts
+   from the dummy. Keeping a tail pointer is what makes it O(1), and this
+   notebook does not.
 
 ```python
 def delete_end(head):
@@ -244,6 +286,21 @@ to its old neighbours means a stale reference can still walk into a list it is n
 of.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+The operation the whole structure exists for: unlink in O(1) with no walk.
+
+1. Return if `node is None`, or if `node.prev is None`. **The second test
+   identifies the dummy, which must never be removed.**
+2. `node.prev.next = node.next` closes the gap forwards. **This line is why a
+   doubly linked list can do it in constant time: the node behind is one hop
+   away, rather than a full traversal away.**
+3. `if node.next: node.next.prev = node.prev` closes it backwards, guarded
+   because a tail has nobody behind it.
+4. `node.prev = node.next = None`. **Not tidiness. A caller still holding this
+   reference could otherwise keep walking into the live list from a node no
+   longer in it.**
 
 ```python
 def delete_node(node):
@@ -313,6 +370,22 @@ the dummy and `to_list` never terminates. Detaching first makes the new tail end
 and the two lines after the loop attach the dummy at the other end instead.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
+
+**Recipe**
+
+1. `curr = head.next`. If the list is non-empty, set `curr.prev = None` first.
+   **The old first node becomes the new tail, and its `prev` currently points at
+   the dummy, which would leave a link into a node that is no longer behind it.**
+2. `prev = None`, then loop while `curr`.
+3. Set `prev = curr` at the **top** of the body, so that when the loop ends
+   `prev` still holds the last node visited. That is the new head.
+4. Reverse the node itself with one swap: `curr.prev, curr.next = curr.next,
+   curr.prev`. **In a doubly linked list, reversing a node is just exchanging its
+   two pointers. There is no temporary and no `next` to save, because the
+   forward pointer survives in `prev`.**
+5. Advance with `curr = curr.prev`, **not `curr.next`**. The swap already
+   happened, so the node's original `next` now lives in `prev`.
+6. `head.next = prev`, and `prev.prev = head` if the list was not empty.
 
 ```python
 def reverse(head):

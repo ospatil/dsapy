@@ -70,6 +70,23 @@ walking backwards:
 Iterating forwards instead would reverse equal elements - and radix sort, which leans on
 this subroutine being stable, would silently produce wrong answers.
 
+**Recipe**
+
+1. Empty input, return it. `max` on an empty list raises.
+2. `k = max(arr)`, then `count = [0] * (k + 1)`. **The `+ 1` is because `k`
+   itself needs a slot; indices run `0..k`.**
+3. Tally: `count[x] += 1` for every element.
+4. Turn the tally into a prefix sum, `count[i] += count[i - 1]` from `1` upward.
+   **`count[i]` now means "how many elements are `<= i`", which is the same thing
+   as "one past the last slot where an `i` belongs".** This reinterpretation is
+   the whole trick.
+5. Walk the input **in reverse**, and for each `x`: decrement `count[x]` first,
+   then write `x` at that index.
+6. **Decrement before writing**, because the prefix sum points one past the slot.
+   **Reverse, because taking the last equal element first and filling backwards
+   is what makes the sort stable.** Iterating forward still sorts plain integers,
+   so this bug is invisible here and fatal in radix sort, which is built on it.
+
 ```python
 def counting_sort(arr):
     """
@@ -130,6 +147,24 @@ the 10s pass established is still there at the end.
 digit, and a fixed count array of size 10.
 
 **Time:** O(d × (n + 10)) for d digits &nbsp; **Space:** O(n) &nbsp; **Stable:** yes
+
+**Recipe**
+
+1. `_counting_sort_by_digit` is the counting sort above with two changes: the key
+   is `(x // exp) % 10` instead of `x`, and `count` is always size 10, so a pass
+   costs O(n + 10) no matter how large the values are.
+2. It writes back with `arr[:] = output`, mutating in place, since radix sort
+   runs it repeatedly over the same list.
+3. `radix_sort` walks `exp = 1, 10, 100, ...` while `max_val // exp > 0`, one
+   pass per digit of the largest number.
+4. **Least significant digit first.** Sorting by the most significant digit first
+   with this same stable pass returns garbage: on 40 random three-digit numbers
+   it produced `[310, 430, 940, 150, ...]`.
+5. **Every pass must be stable, and that is the only reason counting sort is the
+   one used here.** Each pass preserves the order the previous passes
+   established, so after the last digit the whole array is sorted. Swap the
+   `reversed(arr)` in the helper for a forward loop and radix sort stops working
+   entirely, even though counting sort alone looked fine without it.
 
 ```python
 def _counting_sort_by_digit(arr, exp):
