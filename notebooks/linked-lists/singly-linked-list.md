@@ -465,6 +465,19 @@ Python keeps every call alive even when that call is the last thing the function
 
 **Time:** O(n) &nbsp; **Space:** O(n) - one frame per node
 
+**Recipe**
+
+1. Base case is the empty suffix, `curr is None`: return `prev`. **Return `prev`,
+   not `curr`. `prev` is the part already reversed, and once the suffix is empty
+   that is the whole list.**
+2. Save `next = curr.next` before anything else. **The next line overwrites
+   `curr.next`, and that pointer is the only route into the untouched suffix.**
+3. `curr.next = prev` moves one node across the boundary.
+4. Recurse with `(curr, next)`, the new prefix head and the new suffix head, and
+   return what it returns unchanged. Nothing happens on the way back up.
+5. The outer function starts the walk past the dummy and hooks the result back
+   on: `head.next = reverse_recursive_util(None, head.next)`.
+
 ```python
 def reverse_recursive(head):
     # the idea is we reverse the first link and then make recursive call to reverse next link

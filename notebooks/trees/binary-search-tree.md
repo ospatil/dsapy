@@ -307,6 +307,22 @@ its key changes, so a reference a caller was holding now points at a different k
 
 **Time:** O(h) &nbsp; **Space:** O(h)
 
+**Recipe**
+
+1. Empty subtree: return `None`.
+2. Target below this node: `root.left = delete(root.left, data)`. Above it: the
+   same on the right. **Every call returns the new root of the subtree it was
+   given, and the caller assigns it back. That assignment is how a node actually
+   gets unlinked; nothing else touches pointers.**
+3. Found it, and no left child: return `root.right`. No right child: return
+   `root.left`. The leaf case falls out of these two, since both are `None`.
+4. Two children: walk `root.right` left as far as it goes. That is the successor.
+5. Copy `succ.data` into `root.data`, then `root.right = delete(root.right,
+   succ.data)`. **Delete from the right subtree, not from the whole tree, or the
+   search starts above the node you mean. That call cannot re-enter step 4, since
+   a leftmost node has no left child.**
+6. Return `root`, because the caller in step 2 is waiting to assign it.
+
 ```python
 def delete(root, data):
     """

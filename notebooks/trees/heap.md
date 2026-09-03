@@ -183,6 +183,21 @@ is arranged to hand it that situation.
 **Time:** O(log n) - one comparison pair per level of descent &nbsp;
 **Space:** O(log n) recursion depth
 
+**Recipe**
+
+1. Precondition: both children already head valid heaps, and only `i` may be out
+   of place. **Nothing here repairs a scrambled array. Every caller is arranged
+   to hand `heapify` exactly this situation.**
+2. `smallest = i`, so "the node is already fine" is the default answer.
+3. Left child: if `lt < n` and `arr[lt] < arr[smallest]`, set `smallest = lt`.
+   The bounds test comes first, since a leaf has no children to read.
+4. Right child: the same test against `arr[smallest]`. **Against `arr[smallest]`,
+   not `arr[i]`. That comparison is the whole reason the winner is the smaller of
+   the two children rather than either one that beats the parent.**
+5. `smallest == i` means the node is where it belongs and everything under it was
+   already valid, so stop. Otherwise swap and recurse on `smallest`, the slot the
+   node just moved into.
+
 ```python
 def heapify(self, i):
     """

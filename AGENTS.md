@@ -150,9 +150,14 @@ Also:
 
 ## Explanation style
 
-The reader is the author returning cold after months. Explain the idea, never the
-steps: a per-iteration transcript or a numbered restatement of the loop body is
-noise, because the code already says that. Each section should answer, in order:
+The reader is the author returning cold after months, and they need two
+different things. The prose explains why the algorithm is correct; the **recipe**
+below it says how to produce the code. Do not let one do the other's job. Prose
+that has to carry both turns into a per-iteration transcript, which is noise
+because the code already says that. Prose alone, though, is how a section ends up
+feeling understood on the page and unwritable on a blank one.
+
+The prose comes first and should answer, in order:
 
 1. **The reframe** - the question the algorithm is really answering, which is
    often the whole insight.
@@ -163,6 +168,27 @@ noise, because the code already says that. Each section should answer, in order:
 4. **Why the clever step is safe** - the moment it throws work away or commits
    irrevocably is where intuition breaks; justify it.
 5. **What is load-bearing** - what breaks if you remove this piece.
+
+Then a **recipe**: a numbered list, directly above the code cell, holding just
+enough to type the implementation from. Four rules keep it from decaying into the
+transcript the prose is not allowed to be:
+
+- One step per **decision or move**, not per line. If two lines have no branch
+  between them, they are one step.
+- State the plumbing the prose leaves implicit: return-and-reassign, saved
+  temporaries, what the base case returns. The prose says "the parent's pointer
+  drops it"; the recipe says `root.left = delete(root.left, key)`, because that
+  assignment is the thing you cannot reconstruct from the idea alone.
+- Put the trap **inline, at the step where getting it wrong bites**, in bold. A
+  trap in a trailing paragraph is invisible to someone skimming to implement.
+- **Verify a recipe by executing the code and comparing, never by re-reading
+  it.** A recipe is exactly the shape that hides a missing base case: every step
+  reads as locally obvious, so nothing snags. The published version of recursive
+  list reversal that says only "if the list is empty, return null" crashes on a
+  one-element list, and it reads perfectly.
+
+A section that is one straight line of code with no branches and no saved state
+does not need a recipe. Most do.
 
 Write it for a 13-year-old: short sentences, one idea each, no unexplained
 vocabulary. Precise terms (*amortized*, *invariant*, *tail call*) are welcome,
