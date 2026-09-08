@@ -26,6 +26,11 @@ That is everything below.
   in docstrings and belongs in the card's Load-bearing half; `avl-tree`'s case table is named
   for the "newly-inserted node" but is reused by delete; `basic-sorts` mixes O, Θ and Ω in one
   table with no gloss. The audit method that found these is in Decisions below.
+- **The six analysis notebooks have no recipes.** The recipe pass never reached
+  `00`-`05`, so they carry prose and cards only. Plausibly correct, since they teach analysis
+  rather than implementations and most have little to type from. Left as it stands rather
+  than decided: if it is deliberate, say so here and the question stops recurring. Note they
+  are not exempt from scrutiny either way - the `2^k` resize-index error above was in `05`.
 - **Pin black's target version, or don't.** `black --check` warns that Python
   3.14 cannot parse code formatted for 3.15, because `requires-python` is
   `>=3.14` while black assumes a newer target. Setting
@@ -75,6 +80,63 @@ innocent prose), and unigram overlap with a length floor (same problem). The dup
 similarity metrics rank noise above signal. Reading is the instrument. What worked was fanning
 the notebooks out to parallel subagents with the five defect categories spelled out, then
 verifying every high-severity quote by grep before trusting it.
+
+### Recipes drift into re-arguing the prose, and cards make it worse
+
+The recipe pass across the notebooks left most sections saying one thing two or three times:
+the prose established an insight, then a recipe step restated it in weaker words. That is
+what made the notebooks feel simultaneously long and unintuitive - nothing read as the
+definitive statement, because a fainter copy always followed it.
+
+The division that fixes it is already in `AGENTS.md` ("do not let one do the other's job"),
+so this is about what violating it looks like in practice. A recipe step earns its place only
+if it carries something the prose cannot: a saved temporary, an assignment order, a guard, a
+language-level trap. Anything that re-derives *why* the algorithm is correct belongs upward.
+
+Worst where a mental-model card is involved, because `build-recall.py` extracts cards into
+`RECALL.md`. A card competing with a recipe step ships the same sentence in two documents.
+The knapsack `dp[i-1]` rule, AVL's "rebalance on the unwind", and doubly-linked-list's "half
+the tests keep passing" were each stated three or four times inside one screen.
+
+Two things worth knowing before repeating the exercise:
+
+- **Some sections need no recipe at all.** `AGENTS.md` permits this and it is the right call
+  more often than it looks: binary-tree's recursive preorder and postorder had nothing left
+  once the restatement went, because their prose first sentence *is* the recipe.
+- **Cutting can leave ordered lists renumbered wrong.** Markdown renders `1, 2, 4, 5` as
+  1-2-3-4 so it never shows, but the source drifts. Worth a mechanical check over any file
+  whose recipes were edited.
+
+### Prose claims about ordering and ties are where the defects hide
+
+That same pass found six factual errors, and five shared one shape: a confident directional
+claim no assert can reach. Which of two equal elements comes out first, which index a resize
+is charged to, which side a duplicate lands on. The tests pass because the values involved
+are indistinguishable - both duplicates are the literal `3`, both equal bars are the same
+height - so the sentence is never exercised.
+
+Named so they are not rediscovered as novel:
+
+- `singly-linked-list`'s `sorted_insert` said a duplicate lands *after* its equals and that
+  the insert is therefore stable. It lands before, which is the opposite of stable.
+- `monotonic-stack` said the *earlier* of two equal bars settles for the narrow rectangle. It
+  is the later one, boxed in by its own twin. That file already carried a correctness commit
+  (`8454f01`); that pass fixed a different sentence in the same section.
+- `05-amortized-analysis` put resizes at `i = 2^k` in steps 1 and 3 while step 2 correctly had
+  `2^k + 1`. The derivation contradicted itself, and because the *sum* was unaffected the
+  conclusion still held, so nothing downstream ever complained.
+
+`AGENTS.md` already says to verify a trace by executing it. Extend that to any sentence
+asserting an order, a tie-break or an index: run it and diff. That is what caught all six.
+Two further traps surfaced the same way:
+
+- **A recipe can describe a different implementation than the code beneath it.**
+  `union-find`'s `count_components` recipe walked a decrement counter; the code counts
+  distinct roots. Nothing cross-checks the two.
+- **A counterexample sampled from unseeded `random` cannot be reproduced by the next reader.**
+  `counting-radix-sort` cited `[310, 430, 940, 150, ...]` from one such run. Prefer the
+  smallest deterministic input that fails, which is usually far smaller than a random draw:
+  `[12, 21, 30]` for that one, `[2, 0, 1]` for quick-sort's Hoare recursion bound.
 
 ### The card convention was documented in three places and enforced in none
 
