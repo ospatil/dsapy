@@ -48,7 +48,7 @@ results.
 We'll use the **dynamic array** (Python's `list.append()`) as our running example.
 
 
-# The Problem: Dynamic Array Append
+## The Problem: Dynamic Array Append
 
 A dynamic array starts with capacity 1. When an append finds the array already full, it
 allocates a new array of **double** the size, copies everything over, and then writes. That
@@ -76,7 +76,7 @@ be. A copy only happens when the array is exactly full, which is at capacities 1
 so on, so the expensive appends are spread further and further apart. Everything else costs 1.
 
 
-# Method 1: Aggregate
+## Method 1: Aggregate
 
 Compute the total cost of n appends, then divide by n.
 
@@ -90,7 +90,9 @@ why the total is linear and the per-append price is a constant.
 Let t(i) = cost of the ith append:
 
 - **Case 1:** No reallocation needed. Just assign the element. t(i) = 1
-- **Case 2:** Array is full before the insert (i = 2^k for some k >= 0, i.e., size equals capacity). Must allocate new array, copy 2^k elements, then assign. t(i) = 2^k + 1
+- **Case 2:** Array is full before the insert - size equals capacity. That happens at
+  i = 2^k + 1 for k >= 0, so at i = 2, 3, 5, 9, 17, ... Allocate a new array, copy the 2^k
+  elements already there, then assign. t(i) = 2^k + 1
 
 ### Step 2: Compute total cost T(n)
 
@@ -109,7 +111,8 @@ T(n) = n  +  (sum of copy costs)
 
 ### Step 3: Sum the copy costs
 
-Copies happen at i = 1, 2, 4, 8, 16, ... (i.e., when i = 2^k). At each, we copy 2^k elements.
+Copies happen at i = 2, 3, 5, 9, 17, ... (i.e. when i = 2^k + 1). The copy at i = 2^k + 1
+moves the 2^k elements already in the array.
 
 How many times can this happen? At most floor(log2(n)) + 1 times, since 2^k <= n means k <= log2(n).
 
@@ -187,7 +190,7 @@ for n in [100, 1000, 10000, 100000]:
     print(f"n={n:>6}  total={total:>7}  amortized={total / n:.2f}")
 ```
 
-# Method 2: Accounting (Banker's Method)
+## Method 2: Accounting (Banker's Method)
 
 Instead of adding up the real costs, pretend every append is sold at one flat price. Cheap
 appends cost less than the price, so the change goes into a savings account. An expensive
@@ -259,7 +262,7 @@ verify_accounting(1000)
 verify_accounting(10000)
 ```
 
-# Method 3: Potential (Physics Method)
+## Method 3: Potential (Physics Method)
 
 <details>
 <summary><strong>Click to expand - more advanced, uses a potential function like energy in physics</strong></summary>
@@ -336,7 +339,7 @@ This makes the potential method more powerful for complex data structures where 
 </details>
 
 
-# Where Amortized Analysis Appears
+## Where Amortized Analysis Appears
 
 | Data structure / Operation | Worst-case | Amortized | Why |
 |---------------------------|-----------|-----------|-----|

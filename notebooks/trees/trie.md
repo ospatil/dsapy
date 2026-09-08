@@ -46,7 +46,7 @@ L = word length, P = prefix length, N = number of words
 ![Trie Structure](images/trie.png)
 
 
-# Core Operations
+## Core Operations
 
 A node is just a dict mapping a character to a child node, so the trie is a dict of dicts.
 Inserting a word walks that structure one character at a time, creating whatever is missing.
@@ -79,19 +79,13 @@ on the query length and not on how many words the trie holds.
 
 **Recipe**
 
-1. A trie node is just a **dict**: keys are characters, values are child nodes.
-   No class needed.
+1. A trie node is a plain **dict** - no class, no `Node` type.
 2. `insert`: walk the word, creating `node[ch] = {}` for any character not
    present, stepping down each time. At the end set `node['$'] = True`.
-3. **`'$'` marks that a word ends here, and it is the load-bearing piece.**
-   Without it there is no way to tell a complete word from a prefix of one, and
-   `search` would return `True` for `'ap'` after inserting `'apple'`.
-4. `search`: walk, failing on any missing character, and finish with **`'$' in
-   node`**, not `True`.
-5. `starts_with`: the identical walk finishing with plain `True`. **The one-line
-   difference between the two is the entire distinction between a word and a
-   prefix.**
-6. `'$'` works as the marker only because it cannot appear in a word. Any
+3. `search`: the same walk, failing on any missing character, finishing with
+   **`'$' in node`, not `True`**.
+4. `starts_with`: that identical walk finishing with plain `True`.
+5. `'$'` works as the marker only because it cannot appear in a word. Any
    sentinel outside the alphabet does.
 
 ```python
@@ -140,7 +134,7 @@ def test_core():
 test_core()
 ```
 
-# Autocomplete (Words with Prefix)
+## Autocomplete (Words with Prefix)
 
 Two phases. Walk down to the node the prefix ends at - O(P) - and everything below that
 node is, by construction, a word starting with the prefix. Then DFS the subtree collecting
@@ -170,17 +164,13 @@ to the dictionary. A hash set would have to test all N words.
 
 1. Walk down to the prefix's node, returning `[]` if the path breaks.
 2. From there, DFS collecting every word beneath.
-3. **The walk down is the search and the DFS is the enumeration.** They are two
-   separate phases; the first costs O(len(prefix)) regardless of dictionary size,
-   which is what a trie buys over scanning a word list.
-4. In the DFS, emit `prefix + path` whenever `'$'` is in the node. **A node can
+3. In the DFS, emit `prefix + path` whenever `'$'` is in the node. **A node can
    both end a word and have children**, so this is not an early return: `app` is
    emitted and the walk continues into `apple`.
-5. **Skip the `'$'` key when iterating children.** It maps to `True`, not a dict,
+4. **Skip the `'$'` key when iterating children.** It maps to `True`, not a dict,
    so recursing into it raises.
-6. `path.append(ch)` before the call and `path.pop()` after. **The list is shared
-   across the whole traversal, so the pop is what stops a sibling branch
-   inheriting characters from the branch just finished.**
+5. `path.append(ch)` before the call, `path.pop()` after. **Drop the pop and every
+   sibling branch inherits the characters of the one before it.**
 
 ```python
 def autocomplete(root, prefix):
@@ -217,7 +207,7 @@ def test_autocomplete():
 test_autocomplete()
 ```
 
-# Delete Word
+## Delete Word
 
 The complication is shared prefixes: removing `'apple'` must not disturb `'app'`. So there
 are two distinct steps - unmark the word, then prune only the nodes nothing else needs.
@@ -252,55 +242,67 @@ unrelated branches.
 
 The interesting part is not removing the word but deciding which nodes may go.
 
-1. Recurse down with an index `i`. **Each call returns a boolean meaning "the
-   child I just handled is now empty, so you may unlink it"**, which is how the
-   decision travels back up.
+1. Recurse down with an index `i`; each call returns a boolean the parent reads
+   as "you may unlink the child I just handled".
 2. At `i == len(word)`: no `'$'` means the word was never there, return `False`.
    Otherwise `del node['$']` and return `len(node) == 0`.
-3. **That length test is the safety check.** The node is only removable if it
-   has no remaining children. Delete `apple` while `app` exists and the `p`
-   node still has children, so the chain stops there.
-4. On the way back up, if the child reported removable, `del node[ch]`, then
+3. On the way back up, if the child reported removable, `del node[ch]`, then
    return `len(node) == 0 and '$' not in node`.
-5. **Both halves of that condition are needed.** A node with no children may
-   still terminate a shorter word, and unlinking it would silently delete that
-   word too.
-6. Nodes are removed only on the unwind, one level at a time, and the first
-   `False` stops the pruning for everything above it.
+4. **Both halves of that condition are load-bearing.** Drop `'$' not in node` and
+   unlinking a childless node silently deletes the shorter word that ended there.
+5. **That boolean answers "may I be pruned?", never "was the word found?"** A
+   `False` means either one, so it cannot be handed back to the caller as the
+   result. Set a separate `found` flag at the one place the word is actually
+   removed, and return that.
 
 ```python
 def delete(root, word):
     """
     Delete word from trie. Only removes nodes that aren't shared with other words.
-    Returns True if word was found and deleted.
+    Returns True if the word was found and deleted, False if it was never there.
     Time: O(L)
     """
-    def _delete(node, word, i):
+    found = False
+
+    def _delete(node, i):
+        """True if node is now safe for its parent to unlink."""
+        nonlocal found
         if i == len(word):
             if '$' not in node:
-                return False
+                return False  # path exists, but it was never a word
             del node['$']
+            found = True
             return len(node) == 0  # can delete this node if no children
         ch = word[i]
         if ch not in node:
             return False
-        should_delete = _delete(node[ch], word, i + 1)
-        if should_delete:
+        if _delete(node[ch], i + 1):
             del node[ch]
             return len(node) == 0 and '$' not in node
         return False
-    _delete(root, word, 0)
+
+    _delete(root, 0)
+    return found
 
 def test_delete():
     t = create_trie()
     insert(t, 'apple')
     insert(t, 'app')
-    delete(t, 'apple')
+    assert delete(t, 'apple')
     assert not (search(t, 'apple'))
     assert search(t, 'app')  # 'app' still exists
-    delete(t, 'app')
+    assert delete(t, 'app')
     assert not (search(t, 'app'))
     assert not (starts_with(t, 'a'))  # trie is empty
+
+    # a word that was never inserted reports False and prunes nothing
+    t = create_trie()
+    insert(t, 'apple')
+    assert not (delete(t, 'nope'))
+    assert not (delete(t, 'app'))  # a prefix of a word is not a word
+    assert search(t, 'apple')      # nothing was disturbed
+    assert delete(t, 'apple')      # deleting it once works
+    assert not (delete(t, 'apple'))  # deleting it twice reports False
 
 test_delete()
 ```

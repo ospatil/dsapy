@@ -59,7 +59,7 @@ def to_list(head):
 We'll use a dummy head for all functions.
 
 
-### Insert at front
+## Insert at front
 
 The forward half is the singly linked list's splice, unchanged: the new node adopts the
 rest of the list, then the dummy lets go of it. The order trap is unchanged too - read
@@ -80,10 +80,8 @@ Four pointers touch this splice, and the singly-linked version only had two.
    the singly linked list.
 2. `new.prev = head`. The dummy is a real node here, so the first node's `prev`
    points at it rather than being `None`.
-3. `if new.next: new.next.prev = new`. **The guard is the empty-list case: there
-   is no old first node whose `prev` needs repairing.**
-4. Forgetting step 3 leaves a list that reads correctly forwards and is broken
-   backwards, which no forward traversal will ever catch.
+3. `if new.next: new.next.prev = new`, **guarded** because an empty list has no
+   old first node to repair.
 
 ```python
 def insert_front(head, val):
@@ -109,7 +107,7 @@ def test_insert_front():
 test_insert_front()
 ```
 
-### Insert at end
+## Insert at end
 
 Still O(n), and the reason is worth naming. A `prev` pointer lets you move backwards from
 a node you are already holding. It never helps you *find* a node. Nothing in this list
@@ -157,15 +155,11 @@ def test_insert_end():
 test_insert_end()
 ```
 
-### Delete front
+## Delete front
 
 Hop the dummy over the first node, then repair the new first node's `prev`. The outer guard
 is for the empty list. The inner one is for deleting the only node, where there is no new
 first node left to repair.
-
-This is the smallest instance of the card's warning. Drop the `prev` repair and `to_list`
-still returns the right answer, because it only follows `next`. The list is broken in the
-one direction nothing is looking.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
@@ -173,9 +167,8 @@ one direction nothing is looking.
 
 1. `if head.next:` guards the empty list.
 2. `head.next = head.next.next` unlinks forwards.
-3. `if head.next:` **again**, because the list may have just become empty and
-   there is no new first node to fix. **Two separate guards on the same
-   expression, checked before and after the unlink.**
+3. `if head.next:` **again** - two guards on the same expression, one before the
+   unlink and one after, because the list may have just become empty.
 4. `head.next.prev = head` repairs the backward link.
 
 ```python
@@ -206,7 +199,7 @@ def test_delete_front():
 test_delete_front()
 ```
 
-### Delete end
+## Delete end
 
 Deleting always costs two things: finding the node, and unlinking it. Separating them is
 what makes this function's O(n) make sense. Unlinking the last node is free here - `prev`
@@ -230,9 +223,6 @@ to come first, or that expression reads a field off `None`.
 4. **Nothing else needs fixing.** The new tail's `prev` already pointed where it
    should; only the dropped node held pointers that are now stale, and it is
    unreachable.
-5. Note this is still O(n) even in a doubly linked list, because the walk starts
-   from the dummy. Keeping a tail pointer is what makes it O(1), and this
-   notebook does not.
 
 ```python
 def delete_end(head):
@@ -264,7 +254,7 @@ def test_delete_end():
 test_delete_end()
 ```
 
-### Delete a node you already hold
+## Delete a node you already hold
 
 This is the operation the second pointer exists for, and the only row in the table at the top
 where the two list types differ by more than a constant.
@@ -279,23 +269,13 @@ first place is still a walk, so `delete_node` only pays off when something else 
 you the reference - which is exactly the situation an LRU cache is in, holding a dict from key
 to node so the list never has to be searched at all.
 
-Two details. The tail has nobody behind it, so the backward repair has to be guarded, the same
-shape of guard as `delete_front`. And the removed node's own pointers are cleared afterwards:
-nothing in the list still references it, but the caller's variable does, and leaving it wired
-to its old neighbours means a stale reference can still walk into a list it is no longer part
-of.
-
 **Time:** O(1) &nbsp; **Space:** O(1)
 
 **Recipe**
 
-The operation the whole structure exists for: unlink in O(1) with no walk.
-
 1. Return if `node is None`, or if `node.prev is None`. **The second test
    identifies the dummy, which must never be removed.**
-2. `node.prev.next = node.next` closes the gap forwards. **This line is why a
-   doubly linked list can do it in constant time: the node behind is one hop
-   away, rather than a full traversal away.**
+2. `node.prev.next = node.next` closes the gap forwards.
 3. `if node.next: node.next.prev = node.prev` closes it backwards, guarded
    because a tail has nobody behind it.
 4. `node.prev = node.next = None`. **Not tidiness. A caller still holding this
@@ -346,7 +326,7 @@ def test_delete_node():
 test_delete_node()
 ```
 
-### Reverse
+## Reverse
 
 Reversing a [singly linked list](singly-linked-list.md) means moving nodes, one at a time,
 out of the untouched part and onto the front of the reversed part. Here nothing moves. Every
@@ -355,34 +335,25 @@ neighbour it calls `next`. One swap per node and it is done.
 
 The temporary variable disappears, and that is the second pointer paying for itself. In a
 singly linked list, overwriting `curr.next` destroys the only route to the rest of the list,
-so the route has to be saved first. Here it is not destroyed, it is moved: after the swap
-the old `next` is sitting in `curr.prev`. That is why the walk continues with
-`curr = curr.prev`, which looks backwards and is correct.
+so the route has to be saved first. Here it is not destroyed, only moved: after the swap
+the old `next` is sitting in `curr.prev`.
 
 `prev` in this loop does not mean what it meant in the singly version. It is not the head of
 a reversed region - it is just the last node visited. When the loop ends, the last node
 visited is the old final node, which is the new first node.
-
-One line is load-bearing and easy to leave out: `curr.prev = None` before the loop. The dummy
-is not part of the list being reversed, but the first node points back at it. Leave that
-pointer alone and the swap turns it into the new tail's `next`, so the list runs back into
-the dummy and `to_list` never terminates. Detaching first makes the new tail end in `None`,
-and the two lines after the loop attach the dummy at the other end instead.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
 **Recipe**
 
 1. `curr = head.next`. If the list is non-empty, set `curr.prev = None` first.
-   **The old first node becomes the new tail, and its `prev` currently points at
-   the dummy, which would leave a link into a node that is no longer behind it.**
+   **The old first node becomes the new tail, and its `prev` still points at the
+   dummy. Leave it and the swap turns that into the new tail's `next`, so the
+   list runs back into the dummy and `to_list` never terminates.**
 2. `prev = None`, then loop while `curr`.
-3. Set `prev = curr` at the **top** of the body, so that when the loop ends
-   `prev` still holds the last node visited. That is the new head.
-4. Reverse the node itself with one swap: `curr.prev, curr.next = curr.next,
-   curr.prev`. **In a doubly linked list, reversing a node is just exchanging its
-   two pointers. There is no temporary and no `next` to save, because the
-   forward pointer survives in `prev`.**
+3. Set `prev = curr` at the **top** of the body, so the loop leaves `prev`
+   holding the last node visited.
+4. Swap the node's two pointers: `curr.prev, curr.next = curr.next, curr.prev`.
 5. Advance with `curr = curr.prev`, **not `curr.next`**. The swap already
    happened, so the node's original `next` now lives in `prev`.
 6. `head.next = prev`, and `prev.prev = head` if the list was not empty.
@@ -435,7 +406,7 @@ def test_reverse():
 test_reverse()
 ```
 
-# Python Built-in: `collections.deque`
+## Python Built-in: `collections.deque`
 
 Python's `collections.deque` is implemented as a **doubly-linked list** of fixed-size blocks.
 

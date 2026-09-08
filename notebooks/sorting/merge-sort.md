@@ -56,7 +56,7 @@ deep it sits. Halving n reaches 1 after log₂n steps, so there are that many le
 ![Merge Sort Divide and Merge](images/merge-sort-divide-merge.png)
 
 
-# Merge Two Sorted Lists
+## Merge Two Sorted Lists
 
 The primitive the whole algorithm is built on. Because both inputs are sorted, the next
 smallest element overall can only be at the front of one of them - so compare the two
@@ -75,12 +75,9 @@ away the sortedness and pays O((m+n) log(m+n)) for information it already had.
 1. One output list and one cursor per input, `i` and `j`.
 2. While both cursors are in range, append the smaller head and advance only
    that cursor.
-3. **The test is `a[i] <= b[j]`, not `<`.** On a tie it takes from the left,
-   which is what keeps the merge stable. Merge sort inherits its stability
-   entirely from this one character.
-4. Extend with the remainder of both lists. At most one of the two does
-   anything, and writing only the one you expect to fire is the bug the prose
-   above warns about.
+3. **The test is `a[i] <= b[j]`, not `<`.**
+4. Extend with the remainder of **both** lists. At most one of the two does
+   anything, and writing only the one you expect to fire is the bug.
 
 ```python
 def merge_naive(a, b):
@@ -123,7 +120,7 @@ def test_merge_lists():
 test_merge_lists()
 ```
 
-# Merge Subarrays
+## Merge Subarrays
 
 The same merge, adapted to work on *one* array. Instead of two lists there are two sorted
 ranges sitting side by side - `a[low..mid]` and `a[mid+1..high]` - and the result has to
@@ -132,9 +129,6 @@ land back in `a[low..high]`.
 The complication: writing into `a` would overwrite elements not yet read. So the two
 halves are **copied out** first, then merged back in over the original range with the
 write cursor `k`.
-
-`left[i] <= right[j]` (rather than `<`) is what keeps the merge stable: on a tie the
-element from the left half goes first, preserving the original order.
 
 Only the *left* run strictly needs copying. The right run is consumed from `mid + 1` onwards,
 and the write position never overtakes it: each step advances the write by one and the right
@@ -150,9 +144,7 @@ implementations often do exactly that.
 The same merge, but writing back into the array it is reading from.
 
 1. Copy both halves out first: `left = a[low:mid + 1]`, `right = a[mid + 1:high
-   + 1]`. **This copy is not laziness. The output overwrites `a[low...]` while
-   the right half is still unread, so merging in place would destroy its own
-   input. That copy is where merge sort's O(n) space goes.**
+   + 1]`.
 2. Watch the slice bounds: `mid + 1` and `high + 1`, because Python slices
    exclude the end and both `mid` and `high` are meant to be included.
 3. Three cursors: `i` into `left`, `j` into `right`, and `k` into `a` starting at
@@ -208,7 +200,7 @@ def test_merge():
 test_merge()
 ```
 
-# Merge Sort Algorithm
+## Merge Sort Algorithm
 
 Divide and conquer in its purest form: a one-element array is already sorted, so split until
 you reach that base case, then merge on the way back up. The diagram at the top of the

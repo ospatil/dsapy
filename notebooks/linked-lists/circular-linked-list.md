@@ -50,7 +50,7 @@ part of the structure, it only holds the label.
 ![Circular Linked List](images/circular-linked-list.png)
 
 
-### Node and traversal helper
+## Node and traversal helper
 
 The node is unchanged - one value, one `next`. Nothing inside a node says the
 list is circular. Only the shape of the links does.
@@ -72,11 +72,7 @@ wrap-around test has nothing to compare against. Hence the early return.
 
 1. `first = head.next`. Empty list, return early.
 2. Append `first.val`, then start `curr` at `first.next`.
-3. Loop while **`curr is not first`**. **There is no `None` to stop on; the last
-   node points back at the first. Reusing the singly linked list's `while curr`
-   spins forever.**
-4. The first node has to be handled before the loop, because the loop's stopping
-   condition is already true when `curr` starts there.
+3. Loop while **`curr is not first`**, appending as you go.
 
 ```python
 class ListNode:
@@ -97,33 +93,28 @@ def to_list(head):
     return ls
 ```
 
-### Insert at beginning, the direct way
+## Insert at beginning, the direct way
 
-Reaching the first node is free - it is `head.next`. Putting a *new* node in front
-of it is not the same job. The pointer that has to change belongs to the **last**
-node, because that is the pointer aimed at the front of the list. A ring offers no
-route backwards to it, so getting there costs a full lap.
+Reaching the first node is free - it is `head.next` - but inserting in front of it
+edits the node *before* it, its **predecessor**, and in a ring that is the last node.
+The links run one way, so reaching it costs a full traversal. The splice is O(1); the
+search for the predecessor is the O(n).
 
-The expense is the search, not the insert. The splice is the usual two
-assignments, in the usual order: the new node adopts the rest of the ring first,
-then the old last node lets go of it. Do it the other way round and `curr.next` is
-overwritten while nothing else points at the first node, which loses the whole
-list.
+`head.next = new` is what makes the node first. The pointers never marked a front, so
+the label is the only place that fact lives.
 
-`head.next = new` is the line that actually makes the new node first. The
-pointers by themselves never said which node was.
-
-**Time:** O(n), essentially all of it spent finding the last node &nbsp;
-**Space:** O(1)
+**Time:** O(n) for the traversal, O(1) for the splice &nbsp; **Space:** O(1)
 
 **Recipe**
 
 1. `first = head.next`. Empty list: `new.next = new`, a one-node ring pointing at
    itself, and `head.next = new`.
 2. Otherwise walk from `first.next` while `curr.next is not first`, stopping on
-   the **last** node. **This walk is the whole cost. Inserting at the front means
-   editing the last node's pointer, and finding it is O(n).**
-3. `new.next = curr.next` (which is `first`), then `curr.next = new`.
+   the **last** node.
+3. `new.next = curr.next` (which is `first`), then `curr.next = new` - **the same
+   order trap as `insert_at` in the [singly linked
+   list](singly-linked-list.md)**, since the new node has to point into the ring
+   before the last node's pointer is overwritten.
 4. `head.next = new`, since the new node is now the first.
 
 ```python
@@ -154,43 +145,35 @@ def test_insert_begin_linear():
 test_insert_begin_linear()
 ```
 
-### Insert at beginning in O(1)
+## Insert at beginning in O(1)
 
-The lap is only there to make a new *node* first. Nobody asked for that. What was
-asked is that the new *value* be read first. Give up on moving nodes and the walk
-disappears: hook the new node into second place, which needs no walk because the
-first node is right there, then swap the two values.
+The walk exists only to make the new *node* first. But the list's contract is over the
+sequence of *values*; which node holds which is an implementation detail. So leave the
+nodes where they are and move the values instead.
 
 ```
+D is the dummy, [n] a node holding value n, ... the rest of the ring
+
 insert 9 into      D → [1] → [2] → ...
 link after first   D → [1] → [9] → [2] → ...
 swap the values    D → [9] → [1] → [2] → ...
 ```
 
-The nodes never move. Only what they hold changes, and the node that was already
-first is still first, so `head` is untouched and the last node is never needed.
-
-The price is that a value no longer stays in one node. Any reference a caller kept
-to the old first node now reads a different value. That is fine for a list of
-values and wrong when a node itself is the thing being tracked.
+What this spends is node identity: a caller holding a reference to the old first node
+now reads a different value. Fine for a list of values, wrong when the node itself is
+what is tracked - the LRU cache in the [doubly linked
+list](doubly-linked-list.md) notebook, for instance.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
 **Recipe**
 
-The same operation with the O(n) walk removed by moving values instead of nodes.
-
 1. Empty list, same as before: self-loop and point the dummy at it.
 2. Otherwise splice `new` in as the **second** node: `new.next = first.next`,
    `first.next = new`. Both links are one hop away, so this is O(1).
-3. Swap the two values: `new.val, first.val = first.val, new.val`. The node that
-   was already in first place now holds the new value, and the freshly inserted
-   node holds the old one.
+3. Swap the two values: `new.val, first.val = first.val, new.val`.
 4. **`head.next` is deliberately not touched.** The first *node* never changed,
    only what it contains.
-5. **The catch is that node identity moves.** A caller holding a reference to the
-   old first node finds its value silently changed, which is the price for
-   avoiding the walk.
 
 ```python
 def insert_begin_constant(head, val):
@@ -220,7 +203,7 @@ def test_insert_begin_constant():
 test_insert_begin_constant()
 ```
 
-### Insert at end, the direct way
+## Insert at end, the direct way
 
 The same walk as the linear insert-at-beginning, with one difference: `head` is left
 alone. The new node is spliced in after the last node, so it becomes the new last
@@ -236,10 +219,8 @@ ring there is no other distinction between the two ends.
 1. Identical to `insert_begin_linear` except for the last line.
 2. Empty list, self-loop, point the dummy at it.
 3. Walk to the last node, splice `new` in after it.
-4. **Do not touch `head.next`.** Appending at the end is the same splice as
-   inserting at the front; the only thing that decides which one it is, is
-   whether the dummy is moved to the new node afterwards. In a ring, "first" is
-   purely whatever the dummy points at.
+4. **Do not touch `head.next`** - that omission is the only thing making this an
+   append rather than a prepend.
 
 ```python
 def insert_end_linear(head, val):
@@ -269,21 +250,24 @@ def test_insert_end_linear():
 test_insert_end_linear()
 ```
 
-### Insert at end in O(1)
+## Insert at end in O(1)
 
-The same two assignments as the O(1) insert at the beginning, plus one move of the
-label. After the swap the new value sits in the first node and the old first value
-sits in the second. Point `head` at that second node and reading now starts there,
-which leaves the node holding the new value sitting just before the label - and
-just before the label is last.
+The O(1) insert at the beginning leaves the label where it is, so the new value reads
+first. Move the label forward one node and the same ring reads it last - in a ring,
+*last* only means immediately before wherever reading starts.
 
 ```
-after link and swap      [9] → [1] → [2] → [3] → back to 9    9 reads first
-then head.next = second  [1] → [2] → [3] → [9] → back to 1    9 reads last
+[n] is a node holding value n; the ring is the same in both rows below,
+only the label moves
+
+the ring, after link and swap    [9] → [1] → [2] → [3] → back to [9]
+
+head.next names [9]              reads 9, 1, 2, 3    9 is first
+head.next names [1]              reads 1, 2, 3, 9    9 is last
 ```
 
-Those two lines are the same ring. Not one pointer between nodes differs; only
-`head` changed. This is the card in its sharpest form - a ring has no ends of its
+Not one pointer between nodes differs between those two rows; only `head`
+changed. This is the card in its sharpest form - a ring has no ends of its
 own, so which node is last is a decision rather than a fact, and both O(1)
 variants are just that decision being made differently.
 
@@ -293,12 +277,9 @@ variants are just that decision being made differently.
 
 1. Character for character the same as `insert_begin_constant`, plus one line.
 2. Splice `new` in second, swap the values.
-3. `head.next = new`. **That single line is the entire difference between
-   inserting at the front and at the end.** After the swap, `new` holds the old
-   first value and sits second; naming it the first node rotates the ring so the
-   new value lands at the end.
-4. Worth holding onto: in a circular list, front and back are the same splice
-   seen from two different starting points.
+3. `head.next = new`. After the swap `new` holds the *old* first value and sits
+   second, so **naming it the first node rotates the ring** and the new value
+   lands at the end.
 
 ```python
 def insert_end_constant(head, val):

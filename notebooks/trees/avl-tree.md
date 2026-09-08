@@ -108,19 +108,14 @@ Conventions used here:
 
 1. A `Node` is the BST node plus a stored **`height`**, starting at `1` for a new
    leaf.
-2. `height(node)` is a free function that returns `0` for `None`. **Wrap it
-   rather than reading `node.height` directly, because half the calls are on
-   children that may not exist and the `None` case has to answer `0` rather than
-   raise.**
-3. `update_height(node)` is `1 + max(height(left), height(right))`, the same
-   formula as the plain binary tree, read from the children's stored values
-   instead of recomputing.
+2. `height(node)` is a free function returning `0` for `None`. **Wrap it; never
+   read `node.height` directly**, since half the calls are on children that may
+   not exist.
+3. `update_height(node)` is `1 + max(height(left), height(right))`, read from the
+   children's stored values rather than recomputing them.
 4. `balance_factor(node)` is `height(left) - height(right)`, and `0` for `None`.
-5. **Left minus right, and keep that direction fixed everywhere.** A positive
-   factor means left-heavy for the rest of the notebook; flipping it in one place
-   makes the rotation cases pick the wrong fix.
-6. **Height is stored, not computed on demand.** Recomputing would make every
-   check O(n) and destroy the O(log n) the structure exists for.
+   **Fix that direction once and never flip it** - one reversed subtraction sends
+   every rotation case to the opposite fix.
 
 ```python
 class Node:
@@ -145,7 +140,7 @@ def balance_factor(node):
     return height(node.left) - height(node.right)
 ```
 
-# Rotations
+## Rotations
 
 A rotation is a local, `O(1)` rearrangement of a few pointers that changes the shape of the tree **without breaking the BST ordering**. There are two primitives - left and right - and they are mirror images of each other.
 
@@ -169,17 +164,13 @@ The exact mirror. After either rotation we recompute the heights of the two node
 
 **Recipe**
 
-1. `rotate_right(y)`: name `x = y.left`, the child that is about to move up, and
-   `t2 = x.right`, the only subtree that has to change parents.
+1. `rotate_right(y)`: name `x = y.left` and `t2 = x.right` before touching
+   anything.
 2. Rewire: `x.right = y`, then `y.left = t2`.
-3. **`t2` is the entire subtlety.** It sits between `x` and `y` in sorted order,
-   so when `x` rises above `y` it has to be reattached as `y`'s left child.
-   Every other subtree keeps its parent.
-4. **Update heights `y` first, then `x`.** `y` is now the lower node, and `x`'s
-   new height is computed from `y`'s, so the wrong order leaves `x` with a stale
-   value.
-5. Return `x`, the new subtree root, for the caller to assign back.
-6. `rotate_left` is the mirror image: swap every `left` for `right`. Write one and
+3. **Update heights `y` first, then `x`.** `y` is now the lower node and `x`'s
+   new height reads from it, so the wrong order leaves `x` holding a stale value.
+4. Return `x`, the new subtree root, for the caller to assign back.
+5. `rotate_left` is the mirror image: swap every `left` for `right`. Write one and
    flip it rather than deriving both.
 
 ```python
@@ -214,7 +205,7 @@ def rotate_left(x):
     return y
 ```
 
-# The four imbalance cases
+## The four imbalance cases
 
 When a node becomes unbalanced (`|balance_factor| > 1`), exactly one of four cases applies. They are named by the path from the unbalanced node to the newly-inserted node.
 
@@ -243,9 +234,8 @@ Why one rotation cannot do it: the node that has to end up on top is `y`, the *g
    `rotate_right(node)`.
 4. `bf < -1` mirrors it: check the right child, `rotate_right(node.right)` for
    Right-Left, then `rotate_left(node)`.
-5. **There are only two real cases, not four.** LR and RL are converted into LL
-   and RR by one rotation on the child, so the second rotation is shared. That is
-   why the code has two `if`s rather than four branches.
+5. **Two `if`s, not four branches.** The inner rotation folds LR into LL and RL
+   into RR, so each outer `if` ends with the single rotation it now shares.
 6. Otherwise return `node` untouched.
 7. **A balance factor never exceeds 2 in magnitude here**, because the tree was
    valid before the single insert or delete that disturbed it.
@@ -275,7 +265,7 @@ def rebalance(node):
     return node  # already balanced
 ```
 
-# Insert
+## Insert
 
 Identical to BST insertion, with one addition: as the recursion **unwinds**, every ancestor
 of the inserted node calls `rebalance`.
@@ -312,14 +302,8 @@ after 30        10                    bf(10) = 0 - 2 = -2 → right heavy,
 
 1. An ordinary BST insert: `None` returns a new node, duplicates return `root`,
    otherwise recurse into a side and **assign the result back**.
-2. Then `return rebalance(root)` instead of `return root`.
-3. **That one substitution is the whole difference from the BST.** The recursion
-   already unwinds through every ancestor of the new leaf, so rebalancing on the
-   way out visits exactly the nodes whose heights could have changed.
-4. **`rebalance` returns a possibly different node**, which is why the caller's
-   `root.left = insert(...)` matters even more here than in a plain BST: a
-   rotation genuinely swaps which node sits at the top of the subtree.
-5. One insert needs at most one rotation, so the total is still O(log n).
+2. Then `return rebalance(root)` in place of `return root`. That single
+   substitution is the entire diff from the BST version.
 
 ```python
 def insert(root, data):
@@ -401,7 +385,7 @@ def test_rotation_rl():
 test_rotation_rl()
 ```
 
-# Checking the invariant
+## Checking the invariant
 
 A small helper that recursively verifies every node satisfies `|balance_factor| <= 1`. We use it in the tests below to assert the tree stays balanced no matter the insertion order.
 
@@ -454,7 +438,7 @@ def test_sequential_inserts_stay_log_height():
 test_sequential_inserts_stay_log_height()
 ```
 
-# Delete
+## Delete
 
 Like BST delete (three cases: leaf, one child, two children - replacing with the inorder successor), but every ancestor calls `rebalance` as the recursion unwinds. A deletion can require rebalancing at multiple levels, but each fix is still `O(1)` and the total stays `O(log n)`.
 
@@ -469,10 +453,8 @@ Like BST delete (three cases: leaf, one child, two children - replacing with the
 4. **The early `return root.right` and `return root.left` deliberately skip
    `rebalance`.** Those return a child, not this node, and the parent's own
    `rebalance` on the way up handles the change.
-5. **Delete can need O(log n) rotations, where insert needs at most one.** A
-   deletion can shorten a subtree, and that shortening propagates, so every
-   ancestor may need fixing. That is why the rebalance sits on the unwind path
-   rather than being applied once.
+5. **Delete can need a rotation at every level, where insert needs at most one**,
+   so do not stop after the first fix - the unwind has to run to the root.
 
 ```python
 def min_node(node):
@@ -526,7 +508,7 @@ def test_delete_rebalances():
 test_delete_rebalances()
 ```
 
-# Python Built-in Note
+## Python Built-in Note
 
 Python has **no built-in balanced BST**. The standard-library `bisect` module keeps a plain list sorted with `O(log n)` *search* but `O(n)` *insert/delete* (array shifting) - see the [binary-search](../searching/binary-search.md) and [BST](../trees/binary-search-tree.md) notebooks.
 

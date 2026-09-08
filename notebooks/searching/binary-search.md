@@ -42,7 +42,7 @@ Search a **sorted** array by repeatedly dividing the search interval in half.
 > the comparison.
 
 
-# Iterative Binary Search
+## Iterative Binary Search
 
 Keep a window `[lo, hi]` that is guaranteed to contain the target if it is present at all.
 Look at the middle: one comparison either finds it or discards half the window.
@@ -59,8 +59,8 @@ log₂n. Twenty steps cover a million elements, thirty cover a billion.
 
 1. `lo, hi = 0, len(arr) - 1`. Both ends are real indices, so the range is
    closed on both sides.
-2. Loop while `lo <= hi`. **The `=` belongs here because `lo == hi` is still a
-   live range of one element, and that element has not been compared yet.**
+2. Loop while `lo <= hi`, **including the `=`** - a one-element range still holds
+   an element nobody has compared yet.
 3. `mid = (lo + hi) // 2`. Equal to `target`, return `mid`.
 4. `arr[mid] < target`: the answer is above, so `lo = mid + 1`. Otherwise
    `hi = mid - 1`.
@@ -94,7 +94,7 @@ def test_binary_search():
 test_binary_search()
 ```
 
-# Recursive Binary Search
+## Recursive Binary Search
 
 The same three cases expressed as recursion, with `lo` and `hi` passed down instead of
 reassigned. `lo > hi` - the empty window - is the base case that returns -1.
@@ -108,9 +108,9 @@ version is what you want in practice. (Python does not eliminate the tail call.)
 
 1. Carry `lo` and `hi` as arguments, since there is nothing else to remember
    between calls.
-2. Base case is the empty range, `lo > hi`: return `-1`. **This is the same
-   condition as the loop test in step 2 above, negated. The two versions agree
-   on when to stop or they disagree on the answer.**
+2. Base case is the empty range, `lo > hi`: return `-1` - **the iterative loop
+   test negated.** The two have to match, or the two versions disagree on
+   answers.
 3. `mid = (lo + hi) // 2`. Equal, return `mid`.
 4. Too small, recurse on `(mid + 1, hi)`. Too big, recurse on `(lo, mid - 1)`.
 5. Return the recursive call's result directly. There is nothing to fix up on the
@@ -135,7 +135,7 @@ def test_binary_search_rec():
 test_binary_search_rec()
 ```
 
-# Lower Bound (First Occurrence)
+## Lower Bound (First Occurrence)
 
 Plain binary search returns *some* matching index; with duplicates that is not enough.
 Lower bound answers a sharper question: the **first** index where `arr[i] >= target`.
@@ -163,20 +163,15 @@ The invariant: everything left of `lo` is `< target`, everything at `hi` and bey
 
 **Recipe**
 
-Three changes from plain binary search, and they only work as a set:
+The changes from plain binary search only work as a set:
 
-1. `lo, hi = 0, len(arr)`. **`hi` is one past the end, not `len(arr) - 1`,
-   because "every element is smaller" is a real answer and it needs an index to
-   live at.**
+1. `lo, hi = 0, len(arr)`, with `hi` one past the end.
 2. Loop while `lo < hi`, no `=`. The range is half-open now, so `lo == hi` is
    empty and the search is over.
 3. `arr[mid] < target`: `mid` is ruled out, so `lo = mid + 1`.
-4. Otherwise `hi = mid`, **not `mid - 1`. `mid` satisfies `>= target`, so it is
-   still a candidate answer and discarding it loses the very element you are
-   looking for.** With `hi = mid - 1` a search for 3 in `[1, 3, 3, 3, 5, 7]`
-   returns 0 instead of 1.
-5. Return `lo`. No `-1` case exists: `len(arr)` is the answer when nothing
-   qualifies.
+4. Otherwise `hi = mid`, **not `mid - 1`**. With `hi = mid - 1` a search for 3 in
+   `[1, 3, 3, 3, 5, 7]` returns 0 instead of 1.
+5. Return `lo`; there is no `-1` case here.
 
 ```python
 def lower_bound(arr, target):
@@ -200,7 +195,7 @@ def test_lower_bound():
 test_lower_bound()
 ```
 
-# Upper Bound (First Strictly Greater)
+## Upper Bound (First Strictly Greater)
 
 Identical to lower bound with one character changed: `arr[mid] <= target` instead of
 `<`. That shifts the boundary from "first element not less than target" to "first element
@@ -227,9 +222,8 @@ Copy `lower_bound` and change one character: `arr[mid] < target` becomes
 1. That `=` pushes elements equal to the target into the "go right" branch
    instead of the "keep as candidate" branch, so the boundary lands after the
    run of equals rather than before it.
-2. **Everything else must stay identical.** The pair is only useful because
-   `upper_bound - lower_bound` is the count of the target, and that subtraction
-   is meaningless if the two functions disagree about anything else.
+2. **Everything else must stay identical**, or the `upper_bound - lower_bound`
+   subtraction stops counting anything.
 
 ```python
 def upper_bound(arr, target):
@@ -253,7 +247,7 @@ def test_upper_bound():
 test_upper_bound()
 ```
 
-# Search in Rotated Sorted Array
+## Search in Rotated Sorted Array
 
 A sorted array rotated at some pivot: `[4, 5, 6, 7, 0, 1, 2]`. The array as a whole is no
 longer sorted, so the usual comparison cannot tell you which half to keep.
@@ -294,18 +288,15 @@ half is the trustworthy one - the complexity is unchanged.
 
 1. Same closed range and same loop as plain binary search. Return `mid` on a
    hit.
-2. The one new idea: a rotated array cut at any `mid` always leaves **at least
-   one side sorted**. Work out which, then you can test membership on that side
-   by range alone.
-3. `arr[lo] <= arr[mid]` means the left side is sorted. **The `=` is required,
+2. `arr[lo] <= arr[mid]` means the left side is sorted. **The `=` is required,
    not stylistic. On a two-element range `lo == mid`, and with a strict `<` that
    side is judged unsorted and the search walks off the answer.** `[1, 0]`
    searching for `0` returns `-1` with `<`.
-4. Left sorted: if `arr[lo] <= target < arr[mid]` the target can only be there,
+3. Left sorted: if `arr[lo] <= target < arr[mid]` the target can only be there,
    so `hi = mid - 1`. Otherwise `lo = mid + 1`.
-5. Right sorted: mirror it, `arr[mid] < target <= arr[hi]` gives `lo = mid + 1`,
+4. Right sorted: mirror it, `arr[mid] < target <= arr[hi]` gives `lo = mid + 1`,
    else `hi = mid - 1`.
-6. **Both range tests are half-open, excluding `mid`, because `mid` was already
+5. **Both range tests are half-open, excluding `mid`, because `mid` was already
    compared in step 1.** Include it and the range stops shrinking.
 
 ```python
@@ -340,7 +331,7 @@ def test_search_rotated():
 test_search_rotated()
 ```
 
-# Python Built-in: `bisect` module
+## Python Built-in: `bisect` module
 
 The `bisect` module provides binary search on sorted lists.
 

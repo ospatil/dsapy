@@ -54,7 +54,7 @@ jupyter:
 > be O(1) at both ends.
 
 
-# Stack using Array (list)
+## Stack using Array (list)
 
 A stack needs push and pop at the *same* end, and for a Python `list` that end must be the
 **right** one: `append` and `pop()` are O(1) amortized because they touch only the tail,
@@ -117,7 +117,7 @@ def test_stack():
 test_stack()
 ```
 
-# Queue using Array (list)
+## Queue using Array (list)
 
 A queue removes from the *opposite* end from where it adds, which is exactly what a list is
 bad at: `pop(0)` shifts all n elements left.
@@ -143,17 +143,13 @@ pointing at the same slot, so a lone pair of indices could not tell them apart.
 **Recipe**
 
 1. Store `arr`, `cap`, `front`, and `size`. **Store the size, not the rear.**
-2. Derive the rear when you need it: `rear = (front + size) % cap`. **With
-   `front` and `rear` alone, a full queue and an empty one look identical, since
-   both have the two indices equal. Keeping `size` instead removes the ambiguity
-   with no extra bookkeeping.**
+2. Derive the rear when you need it: `rear = (front + size) % cap`.
 3. `enqueue`: raise if `size == cap`, write at the derived `rear`, then `size +=
    1`.
 4. `dequeue`: raise if empty, read `arr[front]`, advance `front = (front + 1) %
    cap`, then `size -= 1`.
-5. **The `% cap` on every move is what makes it circular.** An index that runs
-   past the end wraps to the front, so the array is reused in place and nothing
-   ever shifts. That is what buys O(1) dequeue over a plain list.
+5. **The `% cap` belongs on every index move**, in both methods - miss one and
+   the queue silently stops wrapping.
 
 ```python
 class Queue:
@@ -203,7 +199,7 @@ def test_queue():
 test_queue()
 ```
 
-# Classic Problem: Balanced Parentheses
+## Classic Problem: Balanced Parentheses
 
 The problem that most obviously *is* a stack. Nesting means the bracket that must close
 first is the one that opened most recently - last in, first out.
@@ -247,8 +243,8 @@ stack), and leftover openers at the end - which is why the return value is
    rejects.
 5. **Check `not stack` first.** Reversing the `or` reads `stack[-1]` on an empty
    list and raises.
-6. At the end, balanced means the stack is **empty**. A string like `"(("` never
-   fails a check and is caught only here.
+6. Return `len(stack) == 0`, not `True`. **`"(("` never fails a check and is
+   caught only here.**
 
 ```python
 def is_balanced(s):
@@ -273,7 +269,7 @@ def test_balanced():
 test_balanced()
 ```
 
-# Python Built-in: `collections.deque`
+## Python Built-in: `collections.deque`
 
 > **Procedural vs class-based:** The `Stack` and `CircularQueue` classes above follow the conventional OOP teaching approach. In practice (and in interviews), you rarely need a wrapper class - Python's `list` already *is* a stack (`append`/`pop`), and `collections.deque` already *is* a queue (`append`/`popleft`). The procedural approach is shown below.
 

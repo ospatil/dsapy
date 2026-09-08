@@ -34,20 +34,16 @@ A list has one obvious order: front to back. A tree has none. Every node offers 
 ways down, so "visit all the nodes" has to be given an order, and the traversals are
 the four answers.
 
-Three of them are one walk. Go down into the left child, come back, go down into the
-right child, come back. That walk is fixed. The only choice left is *when* you write
-the node down: before both trips, between them, or after both. Three choices, three
-names, one algorithm.
-
-1. **Depth-first** - the walk above, named by where the node is recorded.
-   1. **Preorder** - record before both trips - `10 20 40 50 70 80 30 60`
-   2. **Inorder** - record between them - `40 20 70 50 80 10 30 60`
-   3. **Postorder** - record after both - `40 70 80 50 20 60 30 10`
+1. **Depth-first** - one recursive walk. The name says where the *root* falls
+   among the three.
+   1. **Preorder** - root, left, right - `10 20 40 50 70 80 30 60`
+   2. **Inorder** - left, root, right - `40 20 70 50 80 10 30 60`
+   3. **Postorder** - left, right, root - `40 70 80 50 20 60 30 10`
 2. **Breadth-first** i.e Level order - `10 20 30 40 50 60 70 80`. The odd one out. It
    reads 40 then 50 then 60, and 40 lives under 20 while 60 lives under 30, so it has
-   to jump between subtrees. The walk above can't jump - it finishes the left subtree
-   entirely before touching the right. That is why level order needs a queue and the
-   other three need nothing but the call stack.
+   to jump between subtrees. A depth-first walk cannot jump - it finishes the left
+   subtree entirely before touching the right. That is why level order needs a queue
+   and the other three need nothing but the call stack.
 
 ## Variations of tree and uses:
 
@@ -106,11 +102,9 @@ def create_test_tree():
         return root
 ```
 
-### Inorder traversal (left → root → right)
+## Inorder traversal (left → root → right)
 
-The walk is the same in all three depth-first traversals, and it is short: go left,
-come back, go right. The only thing that changes is where the "write this node down"
-line sits.
+All three depth-first traversals are the same walk with a single line moved:
 
 ```
 def walk(node):
@@ -144,14 +138,10 @@ one child.
 
 **Recipe**
 
-1. `if root:` and nothing else. **An empty subtree is the base case, and doing
-   nothing is the correct answer for it, so no explicit `return` is needed.**
+1. `if root:` and nothing else - no `else`, no explicit `return`.
 2. Recurse left, append `root.data`, recurse right.
-3. **The three traversals differ only in where the append sits among these three
-   lines.** Learn the position, not three separate algorithms: append in the
-   middle is inorder, first is preorder, last is postorder.
-4. The list is passed in and mutated rather than returned, so the recursion has
-   nothing to combine on the way back.
+3. **The list is passed in and mutated, never returned**, so the recursion has
+   nothing to combine on the way back up.
 
 ```python
 def inorder(root, ls):
@@ -174,7 +164,7 @@ def test_inorder():
 test_inorder()
 ```
 
-### Preorder traversal (root → left → right)
+## Preorder traversal (root → left → right)
 
 The append moves above both calls, so a node is written down before anything beneath
 it. Parents always come out before their children.
@@ -187,13 +177,6 @@ the identical tree back. Inorder cannot do this - its output starts with `20`, a
 nothing in the sequence tells you which node was the root.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
-
-**Recipe**
-
-1. Same skeleton, append **before** both recursive calls.
-2. Root first means the parent is emitted before anything beneath it, which is
-   what makes preorder the right choice for copying a tree or writing it out to
-   be rebuilt.
 
 ```python
 def preorder(root, ls):
@@ -216,7 +199,7 @@ def test_preorder():
 test_preorder()
 ```
 
-### Postorder traversal (left → right → root)
+## Postorder traversal (left → right → root)
 
 The append moves below both calls, so a node is written down only when everything under
 it is already done. Children before parents, the exact reverse of preorder's guarantee.
@@ -230,16 +213,6 @@ It is also the only one of the three that is not tail-recursive - there is still
 work to do after the last recursive call returns.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
-
-**Recipe**
-
-1. Same skeleton, append **after** both recursive calls.
-2. Children are finished before the parent, which is what you need when a node's
-   work depends on its subtrees: freeing, deleting, or evaluating an expression
-   tree.
-3. **This is the one that is not tail-recursive.** In the other two the last
-   statement is a call that could in principle be replaced by a jump; here real
-   work waits behind both calls, so a frame per level is genuinely required.
 
 ```python
 def postorder(root, ls):
@@ -263,7 +236,7 @@ def test_postorder():
 test_postorder()
 ```
 
-### Size
+## Size
 
 Postorder with `+` as the combiner, and it is the template for nearly every "reduce a
 tree to one number" function: ask both subtrees for their answers, then combine them
@@ -280,10 +253,6 @@ need no case of their own. The value that leaves a combiner unchanged is called 
 
 1. Empty tree, return `0`.
 2. Otherwise `1 + size(left) + size(right)`.
-3. **The shape to notice: every whole-tree question is this same two-line
-   pattern.** Pick the value for the empty tree, then say how a node combines its
-   own contribution with its children's answers. `size`, `get_max` and `height`
-   below are the same function with different choices for those two blanks.
 
 ```python
 def size(root):
@@ -305,7 +274,7 @@ def test_size():
 test_size()
 ```
 
-### Maximum element
+## Maximum element
 
 Same shape as `size`, different combiner: `max` instead of `+`. So the identity has to
 change with it. The empty tree returns `-inf`, because `-inf` loses every comparison and
@@ -323,12 +292,8 @@ node, O(h).
 
 1. Empty tree returns `-math.inf`.
 2. Otherwise `max(root.data, get_max(left), get_max(right))`.
-3. **`-inf` is chosen so it loses every `max` comparison.** That is what lets the
-   empty case take part in the same expression as every other case instead of
-   needing its own branch. Returning `0` or `None` here breaks on negative values
-   or raises.
-4. This visits every node, O(n). Only a BST can do better, which is the point of
-   the next notebook.
+3. **Not `0`, and not `None`.** `0` silently returns the wrong answer on an
+   all-negative tree; `None` raises inside `max`.
 
 ```python
 import math
@@ -352,7 +317,7 @@ def test_get_max():
 test_get_max()
 ```
 
-### Search
+## Search
 
 The same recursion once more, combined with `or`: this node is a hit, or the left subtree
 has one, or the right subtree does. `or` is also the combiner that can stop early, since
@@ -370,9 +335,6 @@ BST solves: give the keys an order and one comparison throws half the tree away.
 
 1. Empty, `False`. Match, `True`.
 2. Otherwise `search(left) or search(right)`.
-3. **`or` short-circuits**, so a hit in the left subtree skips the right one
-   entirely. That is the early exit, and it costs nothing to write.
-4. Still O(n) worst case: with no ordering to exploit, the key could be anywhere.
 
 ```python
 def search(root, data):
@@ -395,7 +357,7 @@ def test_search():
 test_search()
 ```
 
-### Height
+## Height
 
 Postorder again: a node's height is 1 plus the taller of its two children. The whole
 tree's height is just the root's.
@@ -416,10 +378,9 @@ the three-level test tree has height 3 and an empty tree has height 0.
 
 **Recipe**
 
-1. Empty tree, return `0`. **Pick a convention and write it down.** This notebook
-   counts *nodes* on the longest path, so an empty tree is `0` and a single node
-   is `1`. Counting *edges* instead makes those `-1` and `0`, and mixing the two
-   is the usual source of off-by-one bugs in every balance calculation later.
+1. Empty tree, return `0`, matching this notebook's node-counting convention.
+   **Mixing the node and edge conventions is where the off-by-one bugs in AVL
+   balance factors come from**, so commit to one before writing a line.
 2. Otherwise `1 + max(height(left), height(right))`.
 3. **`max`, not `+`.** Height is the longest single path, not a total.
 
@@ -452,7 +413,7 @@ def test_height():
 test_height()
 ```
 
-### Iterative inorder
+## Iterative inorder
 
 To remove the recursion you have to take over the job the call stack was doing, so the
 first question is what it was holding. It was holding the nodes you had walked past but
@@ -489,12 +450,9 @@ That is why this costs the same memory as the recursion it replaces.
 The recursion's call stack, written out by hand.
 
 1. Empty tree, return.
-2. Push `root` and every `left` child from it, walking down to the leftmost node.
-   **Push on the way down without emitting anything: these are nodes whose left
-   subtrees are not yet finished.**
-3. Then loop while the stack is non-empty. Pop `curr` and emit it. **A node
-   coming off the stack has had its entire left subtree emitted already, which is
-   what makes the pop the right moment.**
+2. Push `root` and every `left` child from it, walking down to the leftmost
+   node. **Push on the way down, emit nothing.**
+3. Then loop while the stack is non-empty: pop `curr` and emit it.
 4. Move to `curr.right` and run the same "push all the way left" walk from there.
 5. **Step 2 and step 4 are the same loop, and it has to appear twice.** Every
    time you move to a right child you are starting a fresh subtree, and its left
@@ -535,7 +493,7 @@ def test_inorder_iter():
 test_inorder_iter()
 ```
 
-### Iterative preorder
+## Iterative preorder
 
 Preorder needs no spine trick, because it records a node the moment it arrives at it.
 Nothing is left half-finished, so the stack does not have to remember ancestors - it only
@@ -555,14 +513,12 @@ hold an entire level
 
 1. Empty tree, return. Stack starts holding just `root`.
 2. Loop while the stack is non-empty: pop, emit, push children.
-3. **Push right first, then left.** A stack pops in reverse, so pushing left last
-   is what makes it come out first.
+3. **Push right first, then left**, so left is what comes back off the stack
+   first.
 4. **Swap those two lines and you get a valid traversal of a mirrored tree**,
    which is the kind of bug that passes a symmetric test case.
 5. Guard each push with a `None` check; unlike the recursive version there is no
    base case to absorb empty children.
-6. Preorder is much easier iteratively than inorder because a node is emitted at
-   the moment it is popped, with nothing outstanding.
 
 ```python
 def preorder_iter(root):
@@ -597,7 +553,7 @@ def test_preorder_iter():
 test_preorder_iter()
 ```
 
-### Level order (BFS)
+## Level order (BFS)
 
 This is the traversal the recursive walk cannot do. Reading a tree row by row means
 leaving a subtree half-done to go and read the node beside it in the other subtree, and
@@ -626,16 +582,12 @@ complete tree
 
 1. Empty tree, return.
 2. A `deque` holding just `root`, and `popleft` in the loop.
-3. **`popleft`, not `pop`, is the entire difference between this and
-   `preorder_iter`.** Same loop, same pushes; a queue makes it breadth-first and
-   a stack makes it depth-first.
+3. **`popleft`, not `pop`** - the one call that separates this from
+   `preorder_iter`.
 4. Use `collections.deque`, not a list. `list.pop(0)` is O(n) because every
    remaining element shifts down, quietly making the traversal quadratic.
 5. Push left then right, and note there is no reversal trick here: a queue comes
    out in the order it went in.
-6. Space is O(w) for the widest level, not O(h). For a balanced tree the bottom
-   level holds about half the nodes, so this is the one traversal that can cost
-   O(n) space where the others cost O(log n).
 
 ```python
 from collections import deque

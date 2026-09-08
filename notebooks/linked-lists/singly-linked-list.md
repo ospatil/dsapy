@@ -64,12 +64,10 @@ special cases, since there is always a node in front of the one being changed. T
 > **Procedural vs class-based:** The functions below take a `head` node and operate on it directly - a procedural style closer to how you'd write it in an interview or in C. These can also be organized as a `LinkedList` class with methods like `insert_front()`, `delete()`, etc. The class approach is the conventional OOP teaching style but the underlying logic is identical.
 
 
-### Insert at front
+## Insert at front
 
 Point the new node at the old first node, then point the dummy at the new node.
 Two assignments, no special case for the empty list - the dummy always exists.
-
-Order matters: overwrite `head.next` first and the rest of the list is lost.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
@@ -77,11 +75,9 @@ Order matters: overwrite `head.next` first and the rest of the list is lost.
 
 1. Create the node: `new = ListNode(val)`.
 2. `new.next = head.next` **first**, then `head.next = new`.
-3. **That order is the whole cell.** Assign `head.next = new` first and
-   `head.next` no longer names the old first node, so the next line points `new`
-   at itself and the rest of the list is unreachable.
-4. No empty-list case is needed. `head` is the dummy, so `head.next` is `None`
-   on an empty list and the same two lines still work.
+3. **Reverse those two and `new.next = head.next` reads the pointer you just
+   overwrote**, so `new` ends up pointing at itself and the rest of the list is
+   unreachable.
 
 ```python
 def insert_front(head, val):
@@ -100,7 +96,7 @@ def test_insert_front():
 test_insert_front()
 ```
 
-### Insert at end
+## Insert at end
 
 There is no tail pointer, so the tail has to be found first - that walk is the
 whole cost. `curr.next is None` identifies the tail, and on an empty list the
@@ -115,8 +111,6 @@ dummy head *is* the last node, so the same code handles it.
    **The test is `curr.next`, not `curr`. Stopping on `curr is None` walks off
    the end and leaves nothing to attach to.**
 3. `curr.next = new`.
-4. Starting at the dummy is what removes the empty-list special case: the loop
-   runs zero times and the dummy itself is the node to attach to.
 
 ```python
 def insert_end(head, val):
@@ -138,7 +132,7 @@ def test_insert_end():
 test_insert_end()
 ```
 
-### Delete first
+## Delete first
 
 The dummy head holds the pointer to the first real node, so deleting it is one pointer
 hop - `head.next = head.next.next` - with no traversal and no special case beyond the
@@ -148,10 +142,9 @@ empty list, which the `if head.next` guard covers.
 
 **Recipe**
 
-1. Guard the empty list: nothing to do if `head.next` is `None`.
-2. `head.next = head.next.next`, skipping over the first real node.
-3. Nothing frees the node explicitly; once nothing points at it Python collects
-   it.
+1. Guard the empty list, then `head.next = head.next.next`.
+2. Nothing frees the skipped node explicitly; once nothing points at it Python
+   collects it.
 
 ```python
 def delete_first(head):
@@ -174,7 +167,7 @@ def test_delete_first():
 test_delete_first()
 ```
 
-### Delete last
+## Delete last
 
 To drop the last node you need the node *before* it, and a singly linked list cannot step
 backwards. So walk while `curr.next.next` exists - that parks `curr` on the second-to-last
@@ -186,13 +179,11 @@ The `head.next is None` guard covers the empty list, where `curr.next.next` woul
 
 **Recipe**
 
-1. Empty list, `head.next is None`, return. **This guard has to come first.
-   Without it the loop reads `curr.next.next` on `None` and raises.**
+1. Empty list, `head.next is None`, return. **This guard has to come first**, or
+   the loop reads `curr.next.next` on `None` and raises.
 2. Start `curr` at the dummy.
-3. Walk while **`curr.next.next`** is truthy, so `curr` stops on the
-   *second-to-last* node. Deleting from a singly linked list means editing the
-   pointer that points at the node being removed, and only the node before it
-   holds that pointer.
+3. Walk while **`curr.next.next`** is truthy, which parks `curr` on the
+   *second-to-last* node.
 4. `curr.next = None`.
 5. A one-element list works because `curr` stays on the dummy and the dummy's
    `next` is what gets cleared.
@@ -234,7 +225,7 @@ def test_delete_last():
 test_delete_last()
 ```
 
-### Insert at position
+## Insert at position
 
 This is the card's rule in its general form: to change position `p` you need the node at
 `p-1`, and since you cannot step backwards you have to walk there first. That single
@@ -261,15 +252,12 @@ tail instead of failing.
 **Recipe**
 
 1. Positions are 1-based, and `curr` starts on the dummy.
-2. Move `position - 1` times. **Count from the dummy and the arithmetic comes out
-   right: to insert at position 4 you must be holding node 3, which is three
-   steps from the dummy.**
-3. Inside the loop, break early if `curr.next is None`. **This is what turns an
-   out-of-range position into "append" instead of a crash.**
+2. Move `position - 1` times. **Counting from the dummy is what makes that
+   arithmetic work**: to insert at position 4 you must be holding node 3, three
+   steps along.
+3. Inside the loop, break early if `curr.next is None`.
 4. Then the same two lines as `insert_front`, in the same order: `new.next =
    curr.next`, `curr.next = new`.
-5. Position 1 needs no special case, because zero steps leaves `curr` on the
-   dummy, which is exactly what `insert_front` uses.
 
 ```python
 # Position is 1 based
@@ -321,7 +309,7 @@ def test_insert_at():
 test_insert_at()
 ```
 
-### Search
+## Search
 
 Walk from the first real node, counting as you go. Return the 1-based position on
 a match, -1 if the list runs out. Starting at `head.next` skips the dummy so the
@@ -331,11 +319,11 @@ count lines up with the caller's positions.
 
 **Recipe**
 
-1. `pos, curr = 1, head.next`. **Both halves of that line encode the 1-based
-   convention: skip the dummy, and start the count at 1 rather than 0.**
+1. `pos, curr = 1, head.next` - **both halves encode the 1-based convention**,
+   skipping the dummy and starting the count at 1.
 2. Walk while `curr`, returning `pos` on a match.
-3. Advance `pos` and `curr` together. They must move as a pair or the returned
-   position is off by the number of times they disagreed.
+3. Advance `pos` and `curr` **on every iteration, without exception**, or the
+   returned position drifts by however many times they disagreed.
 4. The loop ended without a match, so return `-1`.
 
 ```python
@@ -374,14 +362,16 @@ def test_search():
 test_search()
 ```
 
-### Sorted insert
+## Sorted insert
 
 The same splice as `insert_at`, but the stopping condition is a comparison instead
 of a counter: stop on the last node whose value is still smaller than `val`, then
 insert after it.
 
-The comparison is strict (`curr.next.val < val`), so a duplicate lands *after* the
-existing equal values - the insert is stable.
+The comparison is strict (`curr.next.val < val`), so the walk stops at the first
+value that is *not* smaller. A duplicate therefore lands in front of the equal
+values already there. Switch to `<=` and the walk steps past them instead, which
+is what you want when equal keys have to keep their insertion order.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
@@ -393,9 +383,9 @@ existing equal values - the insert is stable.
    about to rewrite.
 3. **`curr.next` must be tested first in the `and`.** It short-circuits at the
    end of the list; reverse the two and the walk reads `.val` on `None`.
-4. **The comparison is strict `<`.** Equal values fail the test, so the walk
-   stops before them and a duplicate lands ahead of its equals rather than
-   scanning past the whole run.
+4. **Strict `<` puts a duplicate in front of its equals; `<=` puts it behind.**
+   Choose deliberately - the tests below insert identical values, so neither
+   choice changes a single assertion.
 5. Splice with the usual pair, `new.next = curr.next` then `curr.next = new`.
 
 ```python
@@ -435,11 +425,11 @@ def test_sorted_insert():
 test_sorted_insert()
 ```
 
-### Reverse using a stack
+## Reverse using a stack
 
-Reversing and a stack are the same idea in different clothes: a stack hands things back
-in the opposite order to which they arrived. So just do that literally - push every
-value, then pop them back into the list.
+A stack hands items back in the opposite order to which they arrived: last in, first
+out. Reversing is that property used directly - push every value, then pop them back
+into the list.
 
 The price is O(n) extra memory, and it builds fresh nodes instead of rewiring the
 existing ones. Worth writing once anyway, because the in-place version below is this
@@ -454,12 +444,8 @@ same "push onto the front" motion, with the list's own pointers doing the stack'
 3. Pop until the stack is empty, and for each popped value create a node and
    link it on: `curr.next = ListNode(stack.pop())`, then advance
    `curr = curr.next`.
-4. **This rebuilds rather than rewires.** Every original node is discarded and
-   replaced, so any reference a caller held into the old list now points at
-   nodes that are no longer in it. The two versions below reverse the same list
-   in place instead.
-5. The cost is O(n) for the stack plus O(n) for the new nodes, which is what the
-   next cell is written to avoid.
+4. **Any reference a caller was holding into the old list still points at the
+   discarded nodes**, since every node here is replaced rather than rewired.
 
 ```python
 def reverse_using_stack(head):
@@ -485,37 +471,33 @@ def test_reverse_using_stack():
 test_reverse_using_stack()
 ```
 
-### Reverse in place
+## Reverse in place
 
-At every moment during the walk, the list is in two pieces:
+Split the list into two parts and track the boundary between them:
 
 ```
-   reversed prefix                 untouched suffix
-prev -> ... -> old head -> None    curr -> ... -> None
+1 -> 2 -> 3 -> 4, two iterations in:
+
+     reversed          untouched
+     2 -> 1 -> None    3 -> 4 -> None
+     ^                 ^
+     prev              curr
 ```
 
-The arrows all mean `next`. In the reversed prefix they now run backwards through the original
-order, which is why following them from `prev` ends at the node that used to be the head.
+`prev` is the front of the part already flipped; `curr` is the front of the part not yet
+touched. Every arrow is a `next` pointer. Left of the boundary they now run backward
+through the original order - the list had `1 -> 2`, the prefix has `2 -> 1` - so following
+them from `prev` ends at the node that started out as the head. Right of the boundary they
+still point forward, untouched.
 
-`prev` is not "the previous node" - it is **the head of the part already reversed**, and
-`curr` is the head of the part not yet touched. Every line of the loop follows from that
-split.
+So `prev` is **not** "the previous node", and reading it that way is what makes this loop
+hard to rebuild cold. "Three-pointer technique" undersells it too: there are two *regions*
+and one temporary.
 
-One step moves a single node across the boundary: unhook the first node of the untouched
-suffix and push it onto the front of the reversed prefix. That is a stack push - which is
-why this and the stack version above are the same algorithm. The difference is that here
-the reversed prefix *is* the stack, built out of the very nodes being removed, and that
-is what makes it free.
-
-The temporary `next` isn't step one of a recipe, it's the cost of having one hand tied:
-`curr.next` is the only route to the rest of the suffix, and pushing `curr` onto the
-prefix overwrites it. Save it or lose the list. A doubly linked list needs no temporary
-at all, because the suffix stays reachable from the node just moved.
-
-The loop ends when the untouched suffix is empty, which means the whole list is now the
-reversed prefix. So `prev` is the new head, and the last line hooks the dummy onto it.
-
-"Three-pointer technique" undersells it: there are two *regions* and one temporary.
+Each iteration moves exactly one node across the boundary, from the front of untouched to
+the front of reversed. That is a stack push, which is why this and the stack version above
+are the same algorithm - except that here the prefix *is* the stack, built out of the very
+nodes being moved, and that is what makes it free.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
@@ -556,7 +538,7 @@ def test_reverse():
 test_reverse()
 ```
 
-### Reverse recursively
+## Reverse recursively
 
 The same two regions, except `prev` and `curr` travel as arguments instead of being
 reassigned: each call moves one node across the boundary and hands the new boundary to
@@ -570,11 +552,9 @@ Python keeps every call alive even when that call is the last thing the function
 
 **Recipe**
 
-1. Base case is the empty suffix, `curr is None`: return `prev`. **Return `prev`,
-   not `curr`. `prev` is the part already reversed, and once the suffix is empty
-   that is the whole list.**
-2. Save `next = curr.next` before anything else. **The next line overwrites
-   `curr.next`, and that pointer is the only route into the untouched suffix.**
+1. Base case is the empty suffix, `curr is None`: **return `prev`, not `curr`**.
+   `curr` is `None` here, so returning it hands back an empty list.
+2. Save `next = curr.next` before anything else, exactly as the loop does.
 3. `curr.next = prev` moves one node across the boundary.
 4. Recurse with `(curr, next)`, the new prefix head and the new suffix head, and
    return what it returns unchanged. Nothing happens on the way back up.
@@ -606,7 +586,7 @@ def test_reverse_recursive():
 test_reverse_recursive()
 ```
 
-# Python Built-in Note
+## Python Built-in Note
 
 Python has **no built-in singly linked list**. This is by design - Python's `list` is a dynamic array with O(1) random access, which is more versatile.
 

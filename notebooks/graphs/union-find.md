@@ -53,7 +53,7 @@ Without optimizations: O(n) per operation. With both: O(α(n)) amortized.
 > **Procedural style:** The data structure is just two arrays (`parent` and `rank`). Functions operate on them directly - no wrapper class needed.
 
 
-# Naive Union-Find
+## Naive Union-Find
 
 Each set is a tree of parent pointers. The root is the node that is its own parent, and it
 stands in for the whole set. `find` climbs to the root. `union` finds both roots and points
@@ -97,8 +97,6 @@ second.
 3. `union`: find both roots, and if they differ point one at the other.
 4. **Compare roots, never the elements themselves.** Two elements in the same set
    usually have different parents; only the root identifies the set.
-5. **The flaw is that the tree can grow into a chain.** Union in a bad order and
-   `find` degrades to O(n), which is what the next cell fixes.
 
 ```python
 def make_set_naive(n):
@@ -129,7 +127,7 @@ def test_naive():
 test_naive()
 ```
 
-# Optimized: Union by Rank + Path Compression
+## Optimized: Union by Rank + Path Compression
 
 One repair for each of the two problems above.
 
@@ -161,14 +159,9 @@ as a merge heuristic, never as a measurement.
 
 **Recipe**
 
-Two independent optimisations, and each is a couple of lines.
-
-1. Track a `rank` array alongside `parent`, all zeros. Read rank as a rough upper
-   bound on tree height, not an exact count.
-2. **Path compression** in `find`: after recursing to the root, write it back
-   with `parent[x] = find(parent, parent[x])`. **Every node on the path is
-   re-pointed straight at the root, so the next `find` on any of them is one
-   hop.** The line both returns the answer and flattens the path.
+1. Track a `rank` array alongside `parent`, all zeros.
+2. **Path compression** in `find`: `parent[x] = find(parent, parent[x])`. That
+   one line both returns the answer and flattens the path behind it.
 3. **Union by rank**: attach the shorter tree under the taller. Equal ranks are
    the only case where the new root's rank increases by one.
 4. **Attaching the taller under the shorter is what makes trees deep.** Both
@@ -221,7 +214,7 @@ def test_optimized():
 test_optimized()
 ```
 
-# Application: Cycle Detection in Undirected Graph
+## Application: Cycle Detection in Undirected Graph
 
 Process edges one at a time. If both endpoints already `find` to the same root, an
 earlier chain of edges already connected them, so this edge closes a cycle. Otherwise
@@ -236,9 +229,7 @@ unless it would form a cycle).
 **Recipe**
 
 1. One set per vertex, then walk the edges.
-2. **If the endpoints are already connected, this edge closes a cycle.** They
-   were joined by some earlier path, so adding a second route between them makes
-   a loop.
+2. **Endpoints already connected means this edge closes a cycle.**
 3. Otherwise `union` them and continue.
 4. **Check before uniting.** Do it the other way round and every edge looks like
    a cycle, since `union` has just made the endpoints connected.
@@ -264,7 +255,7 @@ def test_cycle():
 test_cycle()
 ```
 
-# Application: Count Connected Components
+## Application: Count Connected Components
 
 Union every edge, then count the **distinct roots** - one per surviving set. Calling
 `find` inside the count also compresses the last paths, so the roots come back cheaply.
@@ -277,14 +268,16 @@ only needs the edges, one at a time.
 
 **Recipe**
 
-1. Start the count at `n`: with no edges, every vertex is its own component.
-2. For each edge, **decrement only when `union` actually merged**, which is
-   exactly what its `True` return means.
-3. **Counting edges instead of successful merges over-counts.** A second edge
-   between two already-joined vertices merges nothing and must not reduce the
-   count.
-4. No traversal anywhere. Union-find answers this incrementally as edges arrive,
-   which is what it offers over the BFS and DFS versions.
+1. One set per vertex, then `union` every edge, ignoring the return value.
+2. Count the **distinct roots**: `len(set(find(parent, i) for i in range(n)))`.
+3. **Call `find(parent, i)`, never read `parent[i]` directly.** After a merge an
+   interior node still stores a stale parent - union only ever re-points roots -
+   so `parent[i]` can name a node that is no longer a root. Only `find` resolves
+   it, and it compresses the last paths on the way.
+4. The alternative is a running counter: start at `n` and decrement whenever
+   `union` returns `True`, which avoids the final pass. **Decrement per edge
+   rather than per successful merge and it over-counts**, since a repeat edge
+   between two already-joined vertices merges nothing.
 
 ```python
 def count_components(n, edges):

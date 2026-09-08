@@ -47,7 +47,7 @@ property rather than one specific permutation.
 > instead of on exit and the guarantee is gone.
 
 
-### Checking an order
+## Checking an order
 
 A DAG usually has many valid topological orders, so asserting one exact list would
 make the tests brittle and would not really check the property.
@@ -64,10 +64,6 @@ every edge (u, v) the position of u precedes the position of v. Building a
    result cannot pass.
 2. Build `position`, mapping vertex to its index in the order.
 3. Assert `position[u] < position[v]` for **every** edge `u -> v`.
-4. **Assert the defining property, not one specific answer.** Most DAGs have many
-   valid topological orders and the two algorithms below produce different ones,
-   so comparing against a hard-coded list would test the implementation rather
-   than the requirement.
 
 ```python
 def is_topological(adj, order):
@@ -101,7 +97,7 @@ def test_is_topological():
 test_is_topological()
 ```
 
-### DFS-based topological sort
+## DFS-based topological sort
 
 Kahn's version needs a count of incoming edges, which means a pass over the whole graph before
 it can start. DFS needs no such preparation, because the recursion already computes the thing
@@ -127,12 +123,9 @@ place a vertex before its descendants are known and can produce an invalid order
 
 1. Plain DFS with a `visited` list and an outer loop over every vertex.
 2. `stack.append(u)` **after** the neighbour loop, never before.
-3. **Appending on the way out is the entire algorithm.** A vertex is only pushed
-   once everything reachable from it is already pushed, so it always lands
-   *below* its own descendants. Move that line above the loop and you get
-   preorder, which is not a topological order.
-4. Return `stack[::-1]`. The deepest-finishing vertices sit at the bottom, and
-   reversing puts the ones with no prerequisites first.
+3. **Move that append above the loop and you get preorder**, which is not a
+   topological order.
+4. Return `stack[::-1]`.
 5. **This assumes a DAG and cannot tell you otherwise.** Given a cycle it returns
    a confident, wrong answer. Kahn's algorithm below detects that for free.
 
@@ -193,9 +186,7 @@ in-degree above zero forever, so a result shorter than V proves a cycle exists.
 4. **Decrementing is "remove u from the graph".** A vertex becomes available the
    moment its last prerequisite is emitted, and testing `== 0` rather than `<= 0`
    is what enqueues it exactly once.
-5. **`len(order) < n` means a cycle.** Vertices inside a cycle each wait on
-   another one in the same cycle, so their in-degree never falls to zero and they
-   are never emitted. This is the free cycle check the DFS version lacks.
+5. **`len(order) < n` means a cycle** - the free check the DFS version lacks.
 
 ```python
 from collections import deque

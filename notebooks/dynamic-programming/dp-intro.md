@@ -81,24 +81,18 @@ O(m) for the 2-D problems further down.
 
 **Recipe**
 
-Four versions of one function, each removing a cost the previous one paid.
-
 1. **Naive**: base case `n <= 1`, else the sum of two recursive calls. Write this
-   first, always. It is the definition, and every later version is a mechanical
-   transformation of it.
-2. **Memoised**: same code, plus "if the answer is cached return it, otherwise
-   compute and cache". **`memo=None` in the signature and a fresh `{}` inside.
-   A `memo={}` default is created once at definition time and shared by every
-   call, so results leak between unrelated calls.**
-3. **Tabulated**: allocate `dp[0..n]`, seed `dp[0]` and `dp[1]`, then fill
-   upward. **The loop runs in the order the recursion would have returned, which
-   is what lets the recursion disappear.**
-4. **Optimised**: the row only ever reads `i - 1` and `i - 2`, so keep two
-   variables instead of the array. `a, b = b, a + b` updates both at once;
-   sequential assignment would feed the new `a` into `b`.
-5. **The path is always the same:** write the honest recursion, cache it, turn
-   the cache into a table, then discard the parts of the table nothing reads.
-   Steps 3 and 4 are optional; step 1 is not.
+   first, always - every later version is a mechanical transformation of it.
+2. **Memoised**: same code, plus "if cached return it, otherwise compute and
+   cache". **`memo=None` in the signature and a fresh `{}` inside. A `memo={}`
+   default is created once at definition time and shared by every call, so
+   results leak between unrelated calls.**
+3. **Tabulated**: allocate `dp[0..n]`, seed `dp[0]` and `dp[1]`, fill upward.
+4. **Optimised**: two variables instead of the array. **`a, b = b, a + b` updates
+   both at once**; assigning on separate lines feeds the new `a` into `b`.
+5. **The path is always the same:** honest recursion, cache it, turn the cache
+   into a table, discard what nothing reads. Steps 3 and 4 are optional; step 1
+   is not.
 
 ```python
 def fib_naive(n):
@@ -197,8 +191,7 @@ Optimal sub-answers do not have to build on the *largest* coin, only on some coi
 
 **Recipe**
 
-1. `dp[i]` means **"fewest coins to make exactly `i`"**. Name the cell before
-   writing any loop; everything else is forced by it.
+1. **Name the cell before writing any loop**; everything else is forced by it.
 2. Fill with `math.inf` for "impossible", and `dp[0] = 0`. **`inf` rather than
    `-1` so the `+ 1` and the `<` comparison work without special cases.**
 3. For each amount `i` upward, try each coin: if `coin <= i`, the candidate is
@@ -207,9 +200,8 @@ Optimal sub-answers do not have to build on the *largest* coin, only on some coi
    already final by the time you read it.** That is what makes the single forward
    pass correct.
 5. `dp[amount]` still `inf` means no combination exists, so return `-1`.
-6. Amount outer, coins inner. **This ordering counts minimum coins correctly for
-   any coin set. The greedy "take the biggest coin first" fails on sets like
-   `[1, 3, 4]` making 6.**
+6. Amount outer, coins inner, and **no early exit from the inner loop** - that
+   shortcut is exactly the greedy mistake.
 
 ```python
 import math
@@ -248,12 +240,8 @@ order, but not necessarily adjacent.
 > **Load-bearing:** the extra row and column of zeros. They say "an empty string shares
 > nothing with anything", which is the only place the recursion can stop.
 
-Compare the last characters of the two prefixes. There are only two situations:
-
-- **They match.** That character can safely be part of the LCS, so the answer is 1 plus the
-  LCS of both prefixes with that character removed → `dp[i-1][j-1] + 1`
-- **They differ.** At least one of the two characters is not in the LCS, so try dropping
-  each and keep the better outcome → `max(dp[i-1][j], dp[i][j-1])`
+**Recurrence:** `dp[i][j] = dp[i-1][j-1] + 1` when the last two characters match, else
+`max(dp[i-1][j], dp[i][j-1])`.
 
 `dp[i][j]` is the LCS length of the first i characters of `s1` and the first j of `s2`. The
 table is `(m+1) × (n+1)` so that row 0 and column 0 exist to hold the empty-string case.
@@ -277,21 +265,14 @@ filled in a single pass - and why O(n) space is possible by keeping just one row
 
 **Recipe**
 
-1. `dp[i][j]` means **"the LCS length of the first `i` characters of `s1` and the
-   first `j` of `s2`"**. Prefix lengths, not indices.
-2. Allocate `(m + 1) x (n + 1)`. **The extra row and column are the empty-prefix
-   cases, and they are already `0`, which removes every boundary check from the
-   loops.**
+1. The two indices are **prefix lengths, not positions** in the strings.
+2. Allocate `(m + 1) x (n + 1)`. The zero row and column **remove every boundary
+   check from the loops**.
 3. **`s1[i - 1]` and `s2[j - 1]` inside the loops.** Row `i` is about the first
-   `i` characters, so the character it just added is at index `i - 1`. This
-   off-by-one is the usual bug and it produces plausible wrong answers.
-4. Characters match: `dp[i-1][j-1] + 1`. Both prefixes shrink by one, and the
-   matched pair is safely counted because no longer subsequence could use either
-   character better.
-5. No match: `max(dp[i-1][j], dp[i][j-1])`. Drop one character from either string
-   and take the better outcome.
-6. Answer is `dp[m][n]`. Every cell reads only up and left, so filling row by row
-   left to right always has what it needs.
+   `i` characters, so the one it just added sits at index `i - 1`. This
+   off-by-one produces plausible wrong answers rather than an error.
+4. Characters match: `dp[i-1][j-1] + 1`. Otherwise `max(dp[i-1][j], dp[i][j-1])`.
+5. Answer is `dp[m][n]`, filling row by row, left to right.
 
 ```python
 def lcs(s1, s2):
@@ -329,12 +310,8 @@ Each item may be taken at most once - hence "0/1".
 > the entire reason an item cannot be used twice. Read `dp[i][...]` instead and you have
 > silently solved a different problem, the unbounded knapsack, where items may repeat.
 
-For each item there are only two choices, so the recurrence is a two-way max:
-
-- **Skip it:** the value is whatever the previous items achieved at this capacity →
-  `dp[i-1][w]`
-- **Take it** (only if it fits): its value plus the best achievable with the *remaining*
-  capacity and the *previous* items → `val[i-1] + dp[i-1][w - wt[i-1]]`
+**Recurrence:** `dp[i][w] = max(dp[i-1][w], val[i-1] + dp[i-1][w - wt[i-1]])` - skip the
+item, or take it if it fits.
 
 `dp[i][w]` = best value using the first i items within capacity w.
 
@@ -358,18 +335,12 @@ Item 4 is the most valuable single item (7) and still is not part of the answer 
 
 **Recipe**
 
-1. `dp[i][w]` means **"best value using the first `i` items with capacity `w`"**.
-2. Same `+ 1` padding for the empty cases, all zeros.
-3. Start each cell with `dp[i-1][w]`, the **skip** case. That is always legal, so
-   it makes a safe default.
-4. If the item fits (`wt[i-1] <= w`), compare against **taking** it: `val[i-1] +
+1. Same `+ 1` padding for the empty cases, all zeros.
+2. Start each cell with `dp[i-1][w]`, the **skip** case - always legal, so it is
+   a safe default to `max` against.
+3. If the item fits (`wt[i-1] <= w`), compare against **taking** it: `val[i-1] +
    dp[i-1][w - wt[i-1]]`.
-5. **Both terms of the take case read row `i - 1`, not row `i`.** That is what
-   makes it 0/1 rather than unbounded: reading `dp[i][...]` would allow the same
-   item to be taken again, which is a different problem with a one-index fix.
-6. **Each item asks one yes/no question, and the answer is the better of two
-   fully-solved subproblems.** Capacity has to drop by the item's weight in the
-   take branch, because that space is now spent.
+4. **Both terms read row `i - 1`, never row `i`.**
 
 ```python
 def knapsack(wt, val, capacity):

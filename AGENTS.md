@@ -1,14 +1,16 @@
 # dsapy - agent instructions
 
-Conventions for anyone, human or agent, working in this repo. Diagram authoring
-lives in a separate on-demand skill (`skills/diagrams/SKILL.md`), because it is
-long and only matters when you are actually drawing something.
+Conventions for anyone, human or agent, working in this repo. Two things live in
+separate on-demand skills under `skills/`, because each is long and only matters
+some of the time: diagram authoring (`skills/diagrams/SKILL.md`) and the
+explanation style for study answers (`skills/dsa-explanation-style/SKILL.md`).
 
 Each file here has exactly one copy; the per-tool paths are symlinks to it, so
 there is no second version to keep in sync. `CLAUDE.md` points at this file
-(Claude Code reads `CLAUDE.md`, not `AGENTS.md`), and `.claude/skills/diagrams/`
-and `.kiro/skills/diagrams/` both point at the canonical skill. Edit the real
-file - `AGENTS.md` or `skills/diagrams/SKILL.md` - never a link.
+(Claude Code reads `CLAUDE.md`, not `AGENTS.md`), and every skill has a
+`SKILL.md` symlink under both `.claude/skills/<name>/` and `.kiro/skills/<name>/`
+pointing at the canonical file in `skills/<name>/`. Edit the real file, never a
+link. A new skill needs both links, or the tool that lacks one will not see it.
 
 `HANDOFF.md` carries what this file does not: why the repo is set up the way it
 is, the traps behind it, and whatever is still open. Read it before starting
@@ -129,13 +131,28 @@ A notebook reads top to bottom as a lesson:
 2. Optional diagram cell - `![Alt text](images/name.png)`.
 3. Alternating markdown/code pairs: the markdown explains the idea and states
    **Time** and **Space**, the code implements it plus its tests.
-4. A closing `# Python Built-in: ...` section mapping the hand-rolled structure
+4. A closing `## Python Built-in: ...` section mapping the hand-rolled structure
    to its stdlib counterpart (`bisect`, `heapq`, `deque`, `defaultdict`,
    `lru_cache`).
+
+**Heading levels.** `#` is the notebook title, `##` a section, `###` a
+subsection, and no level is skipped. There is no hand-written table of contents:
+JupyterLab's ToC panel, VS Code's outline over the paired `.py`, and GitHub's
+outline on the `.md` all build one from these headings for free, so the headings
+being right *is* the table of contents. The one exception to a single `#` is a
+notebook holding several major algorithms, where each algorithm section is also
+`#` - `scripts/build-recall.py` attaches each mental-model card to the nearest
+preceding `#`, so demoting one of those silently mislabels its card in
+`RECALL.md`. In those notebooks the closing built-in section stays `#` too, since
+it is a peer of the algorithms.
 
 Also:
 
 - Notebook filenames are lowercase kebab-case: `binary-search-tree.md`.
+- Close a fenced block at column 0. A fence indented to line up with surrounding
+  prose still renders, but it desynchronises every line-anchored tool that walks
+  the file - one stray ` ``` ` in `binary-search-tree.md` hid nine headings from
+  a heading audit, because everything after it looked like code.
 - Functions and variables are `snake_case`; classes are `PascalCase`.
 - Prefer plain functions taking the structure as the first argument (procedural,
   interview style) over wrapper classes, matching the existing notebooks.
@@ -149,6 +166,11 @@ Also:
 - Add a `LEARNING_PATH.md` entry in the right phase for every new notebook.
 
 ## Explanation style
+
+`skills/dsa-explanation-style/SKILL.md` takes precedence over this section.
+Where the two disagree, follow the skill. What is below still governs the parts
+the skill does not speak to, chiefly the recipe that sits above each code cell,
+and it stays the reference for prose written into a notebook.
 
 The reader is the author returning cold after months, and they need two
 different things. The prose explains why the algorithm is correct; the **recipe**

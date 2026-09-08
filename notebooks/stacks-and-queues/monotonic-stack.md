@@ -44,7 +44,7 @@ below lays out both axes.
 > reverts to quadratic.
 
 
-# Next Greater Element
+## Next Greater Element
 
 **Problem:** Given an array, for each element find the first element to its **right** that is
 greater than it. Report -1 where no such element exists.
@@ -80,41 +80,25 @@ result: [5, 25, 25, -1]
 stack:  [25, 5, 4]      still decreasing upward, as it was the whole way
 ```
 
-The inner loop looks like it should make this quadratic, but count the work across the whole
-scan rather than at a single position. Every element is pushed exactly once, when the scan
-reaches it, so there are n pushes in total. And a discarded element is gone permanently -
-once it loses out it never returns to the stack. Every pop therefore consumes a distinct push,
-which caps the total pops, and with them the total inner-loop work, at n:
+The inner loop looks like it should make this quadratic, so count the work across the whole
+scan rather than at a single position. Every element is pushed exactly once, and a discarded
+element is gone permanently, so every pop consumes a distinct push:
 
 ```
 total pops  <=  total pushes  =  n
 ```
 
-So the scan costs n steps plus at most n pops - O(n). The two loops don't multiply because
-they're coupled through the stack: a position can only discard many elements if earlier
-positions piled them up, and that cost was already paid when they were pushed. The pops are
-pre-paid.
-
-The extremes make it concrete. An increasing array never discards anything, while an array
-that forces repeated discarding can only afford one pop per position:
+The two loops don't multiply because the stack couples them. A position can only discard a
+lot if earlier positions piled it up, and doing so leaves the stack short for the next one:
 
 ```
-[1, 2, 3, 4, 5]   each arriving element is smaller than the top, so nothing
-                  is ever discarded                        → 0 pops
-
-[1, 1, 1, 1, 9]   each arriving 1 discards the previous 1 and takes its place
-                                                           → 3 pops, 1 per position
+[1, 2, 3, 4, 5]   nothing is ever discarded                  → 0 pops
+[1, 1, 1, 1, 9]   each arriving 1 discards the previous one  → 3 pops, 1 per position
 ```
 
-A position that discards a lot leaves the stack short, so the next position finds little left
-to discard. You can pay heavily at one position or lightly at many, but the budget for the
-whole scan is capped at n.
-
-This is the same accounting as the [dynamic array
-analysis](../analysis/05-amortized-analysis.md) - a single append may trigger an O(n)
-resize, yet n appends still cost O(n) because the cheap appends pre-pay for it. The argument
-rests on that invariant: if a discarded element could ever return to the stack, or the scan
-could revisit a position, "popped at most once" fails and the bound reverts to O(n²).
+Pay heavily at one position or lightly at many; the budget for the whole scan is n. This is
+the [dynamic array analysis](../analysis/05-amortized-analysis.md) again, with the pops
+pre-paid the way cheap appends pre-pay for a resize.
 
 **Time:** O(n) &nbsp; **Space:** O(n)
 
@@ -122,18 +106,17 @@ could revisit a position, "popped at most once" fails and the bound reverts to O
 
 1. `result = [-1] * n`, so "nothing greater exists" is the default and never has
    to be written.
-2. Iterate **right to left**. Everything to the right has already been processed,
-   so the answer for `i` is sitting on the stack when you get there.
+2. Iterate **right to left**.
 3. **The stack holds indices, not values.** Values would be enough here, but the
    index version is what the other three cells need, so it is worth writing the
    same way every time.
-4. Pop while `arr[stack[-1]] <= arr[i]`. **`<=`, not `<`. An equal element is not
-   *greater*, so it can never be anyone's answer and must go too.**
-5. Whatever survives on top is the nearest greater element; read it into
-   `result[i]`. Empty stack means nothing greater lies to the right.
-6. Push `i`. **One push per element is the entire complexity argument: an index
-   can only be popped once, so the inner `while` totals O(n) across the whole
-   run even though any single pass may pop many.**
+4. Pop while `arr[stack[-1]] <= arr[i]` - **`<=`, not `<`**, since an equal
+   element is not *greater* and can never be anyone's answer.
+5. Read whatever survives on top into `result[i]`; an empty stack leaves the
+   `-1` standing.
+6. Push `i` unconditionally, on every iteration - including the ones that just
+   popped. **A push that gets skipped or made conditional is what breaks the
+   one-push-per-element budget the complexity rests on.**
 
 ```python
 def next_greater(arr):
@@ -158,7 +141,7 @@ def test_next_greater():
 test_next_greater()
 ```
 
-# Next Smaller Element
+## Next Smaller Element
 
 **Problem:** Given an array, for each element find the first element to its **right** that is
 smaller than it. Report -1 where no such element exists.
@@ -207,12 +190,9 @@ other way round.
 **Recipe**
 
 1. Identical to `next_greater` with the pop test flipped: `arr[stack[-1]] >=
-   arr[i]`.
-2. **That one comparison is the entire difference**, and it inverts what the
-   stack means. Values decreased upward before; now they increase upward.
-3. Getting the boundary wrong is the usual bug. **`>=` and not `>`, for the same
-   reason as before: an equal element is not strictly smaller, so it is useless
-   as an answer and has to be discarded.**
+   arr[i]`. Nothing else in the function changes.
+2. **`>=` and not `>`**, for the same reason as before: an equal element is not
+   strictly smaller, so it can never be an answer.
 
 ```python
 def next_smaller(arr):
@@ -236,7 +216,7 @@ def test_next_smaller():
 test_next_smaller()
 ```
 
-# Application: Daily Temperatures
+## Application: Daily Temperatures
 
 **Problem:** Given daily temperatures, return for each day **how many days you must wait** for
 a warmer temperature. Report 0 for days with no warmer day ahead.
@@ -279,19 +259,13 @@ result: [1, 1, 4, 2, 1, 1, 0, 0]
 **Recipe**
 
 1. `result = [0] * n`, since a day that never warms up keeps `0`.
-2. Iterate **left to right** and **write answers at pop**, where `next_greater`
-   went right to left and read at push. **Both still compute "next". Direction
-   alone would have flipped this to "previous"; it is the move to writing at pop
-   that flips it back.**
-3. **The answer here is a distance, which forces that choice.** A distance needs
-   both endpoints at once, and only the pop has them: the evicted day and the day
-   evicting it.
-4. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
+2. Iterate **left to right**, **writing answers at pop** - the third row of the
+   table above, not the first.
+3. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
    everything it pops.
-5. `result[j] = i - j` for each popped `j`. **This is why the stack stores
-   indices. Values could not tell you how far apart the two days are.**
-6. Push `i` and continue. Anything still on the stack at the end never warmed up
-   and keeps its `0`.
+4. `result[j] = i - j` for each popped `j`. **This is why the stack stores
+   indices**; values could not tell you how far apart the two days are.
+5. Push `i` and continue.
 
 ```python
 def daily_temperatures(temps):
@@ -314,7 +288,7 @@ def test_daily_temps():
 test_daily_temps()
 ```
 
-# Application: Largest Rectangle in Histogram
+## Application: Largest Rectangle in Histogram
 
 **Problem:** Given bar heights in a histogram, each bar one unit wide, find the **area of the
 largest rectangle** that fits inside. The rectangle must span contiguous bars and cannot exceed
@@ -358,14 +332,6 @@ shorter bar that stopped us, `stack[-1]` is the bar now exposed on the left, and
 fits strictly between the two - hence the `- 1`. When the stack empties there is nothing
 shorter to the left at all, so the width is the whole span up to `i`.
 
-Two details that are easy to get wrong:
-
-- The zero-height bar appended to the end is shorter than every real bar, so it forces every
-  survivor off the stack to be measured. Without it, a rising histogram like `[1, 2, 3]` would
-  finish with bars still on the stack and their rectangles never computed
-- When the stack empties during a pop, the bar just removed was the shortest seen so far, so
-  nothing bounds it on the left and its rectangle stretches all the way back to the first bar
-
 **Time:** O(n) &nbsp; **Space:** O(n)
 
 **Recipe**
@@ -373,25 +339,21 @@ Two details that are easy to get wrong:
 1. Append a sentinel `0` to the input. **It is shorter than every real bar, so it
    forces the stack to drain and every pending bar gets its right boundary. Skip
    it and any bar still on the stack at the end is never measured.**
-2. Left to right, **writing at pop**, the same idiom as `daily_temperatures` and
-   for the same reason: a width needs both boundaries, so the answer can only be
-   settled at the moment of eviction. This one needs *three* indices at once, the
-   popped bar and both bars flanking it, which is why nothing simpler works.
+2. Left to right, **writing at pop**, as in `daily_temperatures` - except this
+   one needs *three* indices at once, the popped bar and both bars flanking it.
 3. Stack holds indices of bars whose right boundary is not yet known, heights
    increasing upward.
 4. For each `i, h`: pop while `heights[stack[-1]] > h`. `h` is the first shorter
    bar to the right of the top, which fixes that bar's right edge at `i`.
 5. For each popped bar, its height is the rectangle's height, and the width is
    `i - stack[-1] - 1` after the pop, or `i` if the stack is now empty.
-6. **The `- 1` is because `stack[-1]` is the first shorter bar on the *left*, and
-   it is not part of the rectangle. The rectangle spans strictly between the two
-   shorter bars.** An empty stack means nothing shorter exists to the left, so
-   the rectangle reaches all the way back to index `0` and the width is just `i`.
-7. **Pop before reading `stack[-1]` for the width.** The left boundary is the bar
+6. **Pop before reading `stack[-1]` for the width.** The left boundary is the bar
    the pop exposes, not the bar being measured.
-8. The comparison is strict `>`, so equal bars are not popped by each other. The
-   earlier of two equal bars settles for too narrow a rectangle, but the later
-   one measures the full span, so the maximum is still found.
+7. The comparison is strict `>`, so equal bars never pop each other and pile up
+   instead. They then unwind newest first, so the **later** bar still finds its
+   twin sitting underneath it and settles for width 1, while the **earlier** one
+   pops against a genuinely shorter bar and measures the full span. The maximum
+   comes out right either way.
 
 ```python
 def largest_rectangle(heights):

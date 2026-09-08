@@ -46,7 +46,7 @@ jupyter:
 > short runs rather than to either of the other two.
 
 
-# Bubble Sort
+## Bubble Sort
 
 Compare each adjacent pair and swap when they are out of order. One pass over the array
 drags the largest remaining element all the way to the right - it "bubbles" up - so after
@@ -59,17 +59,13 @@ is already sorted, so there is no point continuing.
 
 **Recipe**
 
-1. Outer pass `i` from `0` to `n - 2`. After pass `i` the largest `i + 1`
-   elements are in their final positions at the end.
-2. Inner loop `j` over `range(n - i - 1)`. **The `- i` is the whole point: the
-   tail is already final, so skipping it is the difference between this and a
-   pure quadratic.**
+1. Outer pass `i` from `0` to `n - 2`.
+2. Inner loop `j` over `range(n - i - 1)` - **the `- i` skips the tail that is
+   already final.**
 3. Compare neighbours, `l[j] > l[j + 1]`, and swap.
 4. Set `swapped = True` inside the `if`, and reset it at the top of every outer
    pass.
-5. A pass that swapped nothing means sorted, so return. **This flag is the only
-   reason bubble sort is O(n) on already-sorted input. Drop it and the best case
-   becomes the worst case.**
+5. A pass that swapped nothing means sorted, so return.
 
 ```python
 def bubble_sort(l):
@@ -96,7 +92,7 @@ def test_bubble_sort():
 test_bubble_sort()
 ```
 
-# Selection Sort
+## Selection Sort
 
 Scan the unsorted remainder for the smallest element and swap it into place. After i
 rounds the first i positions hold the i smallest values, permanently.
@@ -120,8 +116,8 @@ one.
 3. Track the **index**, not the value. You have to swap with it later, and a
    value cannot tell you where it lives.
 4. Swap `l[i]` with `l[min_idx]` once, after the scan.
-5. **No early exit exists here.** Unlike bubble sort, a sorted array still costs
-   a full scan per slot, because nothing is learned until the scan finishes.
+5. **There is no early exit to add here**, however tempting - nothing is known
+   until each scan finishes.
 
 ```python
 def selection_sort(l):
@@ -146,7 +142,7 @@ def test_selection_sort():
 test_selection_sort()
 ```
 
-# Insertion Sort
+## Insertion Sort
 
 Think of sorting a hand of cards. The left part of the array is the sorted hand; take the
 next card and slide it left past every card larger than it, then drop it in.
@@ -212,7 +208,7 @@ def test_insertion_sort():
 test_insertion_sort()
 ```
 
-# Python Built-in: `sorted()` and `list.sort()`
+## Python Built-in: `sorted()` and `list.sort()`
 
 Python uses **Timsort** - a hybrid of merge sort + insertion sort.
 

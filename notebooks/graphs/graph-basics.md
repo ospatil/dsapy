@@ -111,11 +111,7 @@ each edge twice is also why the degrees sum to 2·|E|, which the test checks.
    aliases a single list into every slot and makes every vertex share one
    neighbour list.**
 2. `add_edge` appends **both ways**, `adj[u].append(v)` and `adj[v].append(u)`.
-3. **An undirected edge is two directed entries.** This representation has no
-   single undirected link, and writing only one direction gives a graph that
-   traverses correctly from one end and not the other.
-4. For a directed graph, delete the second append. That is the only change.
-5. Space is O(V + E), and listing a vertex's neighbours is O(degree).
+3. For a directed graph, delete the second append. That is the only change.
 
 ```python
 def add_edge(adj, u, v):
@@ -166,9 +162,8 @@ everything else favours the list.
    required, for the same aliasing reason as before.**
 2. Set both `matrix[u][v]` and `matrix[v][u]` for an undirected edge, so the
    matrix is symmetric about the diagonal.
-3. **The trade against the adjacency list: "are u and v adjacent" is O(1) here
-   and O(degree) there, but space is O(V^2) regardless of how few edges
-   exist.** Choose by density, and most real graphs are sparse.
+3. Adding an edge is O(1) here, but **clearing or scanning the structure is
+   O(V^2)** no matter how few edges it holds.
 
 ```python
 def build_matrix(n, edges):
@@ -206,7 +201,7 @@ test_build_matrix()
 print_graph(build_adj(4, [(0, 1), (0, 2), (0, 3), (1, 3)]))
 ```
 
-# Python Built-in: Graph Representation
+## Python Built-in: Graph Representation
 
 Python has no built-in graph type, but `defaultdict(list)` is the idiomatic way
 to build adjacency lists.

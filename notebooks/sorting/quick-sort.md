@@ -70,7 +70,7 @@ When pivot is always min/max, recurrence is T(n) = T(n-1) + Θ(n). Expanding: T(
 On average, pivot splits array into roughly balanced parts, giving same recurrence as merge sort: T(n) = 2T(n/2) + Θ(n) → **O(n log n)**.
 
 
-# Partition Algorithms
+## Partition Algorithms
 
 Partitioning is the whole of quick sort: pick a pivot and rearrange so that everything ≤
 pivot sits left of everything > pivot. The pivot lands in its final position, and the two
@@ -92,13 +92,7 @@ and Hoare schemes that follow do the same job in place, with a single pass.
 3. Pass two: append every element `> pivot` to the same list.
 4. Pass three: `a[:] = temp` to copy back. **`a[:] =` rather than `a = `, or the
    caller sees no change at all.**
-5. **This is stable**, since both passes preserve the original relative order,
-   and that is its one advantage over the two schemes below.
-6. **The cost is O(n) extra space and three passes**, which is exactly what
-   Lomuto and Hoare remove by swapping in place. Nobody uses this in a real
-   quicksort; it is here to make the in-place versions look like a repair rather
-   than a fact.
-7. `is_partitioned` checks the defining property, not a specific arrangement:
+5. `is_partitioned` checks the defining property, not a specific arrangement:
    once a value greater than the pivot has been seen, nothing smaller may follow.
 
 ```python
@@ -153,12 +147,14 @@ def test_partition_naive():
 test_partition_naive()
 ```
 
-# Lomuto Partition Scheme
+### Lomuto Partition Scheme
 
 One pass, one extra index, no auxiliary array. Take the last element as pivot and keep the
 array divided into three regions:
 
 ```
+bars separate regions here; i, j and h are indices into the array
+
 | < pivot | >= pivot | unprocessed | pivot |
          i          j                    h
 ```
@@ -167,8 +163,9 @@ array divided into three regions:
 element smaller than the pivot, the small region grows by one and the newcomer is swapped
 into it. The test is strict (`a[j] < pivot`), so elements *equal* to the pivot stay in the
 right-hand region - which is what keeps an all-equal array from piling everything on one
-side. The pivot itself waits at `h`, outside the scanned range, until the end. When the scan ends, swapping the pivot into `i + 1` puts it exactly between the
-two regions - its final sorted position.
+side. The pivot itself waits at `h`, outside the scanned range, until the end. When the
+scan ends, swapping the pivot into `i + 1` puts it exactly between the two regions - its
+final sorted position.
 
 Returning the pivot's true index is what lets `qsort_lomuto` recurse on `[l, p-1]` and
 `[p+1, h]` and leave the pivot out of both.
@@ -178,13 +175,10 @@ Returning the pivot's true index is what lets `qsort_lomuto` recurse on `[l, p-1
 **Recipe**
 
 1. Pivot is the **last** element, `a[h]`.
-2. `i = l - 1`. Read `i` as "index of the last element known to be smaller than
-   the pivot", so starting one before the window means "none yet".
+2. `i = l - 1`, meaning "no small region yet".
 3. Scan `j` from `l` to `h - 1`, stopping short of the pivot itself.
-4. `a[j] < pivot`: advance `i`, then swap `a[j]` into `a[i]`. This grows the
-   small region by one and pushes a large element out to where `j` was.
-5. After the scan, swap the pivot into `a[i + 1]`. **`i + 1` is the first slot of
-   the large region, which is exactly the pivot's sorted position.**
+4. `a[j] < pivot`: advance `i` **first**, then swap `a[j]` into `a[i]`.
+5. After the scan, swap the pivot into `a[i + 1]`.
 6. Return `i + 1`, **the pivot's final index**. Remember which of the two schemes
    returns this, because the driver depends on it.
 
@@ -234,7 +228,7 @@ def test_partition_lomuto():
 test_partition_lomuto()
 ```
 
-# Hoare Partition Scheme
+### Hoare Partition Scheme
 
 Two pointers walking toward each other instead of one scanning forward. `i` advances while
 elements are smaller than the pivot, `j` retreats while they are larger; when both stop,
@@ -243,11 +237,11 @@ When the pointers cross, the array is partitioned.
 
 ```
 a = [7, 8, 6, 12, 10, 3]   pivot = 7 (the first element)
-                           `|` marks the returned boundary, NOT the pivot's position
-                           (in the Lomuto trace above the same bar meant the opposite)
+                           `|` sits just after the index the partition returns
 
 after partitioning:   [3, 6 | 8, 12, 10, 7]   returns j = 1
-                            ^ boundary        the pivot value 7 ended up at index 5
+                                              nothing is in its final place - the
+                                              pivot value 7 ended up at index 5
 ```
 
 The catch, and the reason `qsort_hoare` differs from `qsort_lomuto`: the returned index is
@@ -272,10 +266,8 @@ prefer it.
    comparisons are strict, so both pointers stop on a value equal to the pivot.
    **That is what stops one pointer from running off the end on an array of
    equal values.**
-4. Crossed, `i >= j`: return `j`.
+4. Crossed, `i >= j`: return `j` - **a boundary, not the pivot's position**.
 5. Otherwise swap `a[i]` and `a[j]` and go round again.
-6. Return `j`, which is **a boundary, not the pivot's position**. Nothing is
-   guaranteed to be in its final place, unlike Lomuto.
 
 ```python
 def partition_hoare(a, l, h):
@@ -330,9 +322,9 @@ def test_partition_hoare():
 test_partition_hoare()
 ```
 
-# Quick Sort Implementation
+## Quick Sort Implementation
 
-## Lomuto-based Quick Sort
+### Lomuto-based Quick Sort
 
 Partition, then recurse on each side. There is no combine step - the pivot is already
 final and the two halves are already in the right region, so when the recursion unwinds the
@@ -340,7 +332,8 @@ array is sorted.
 
 ```
 qsort_lomuto([8, 4, 7, 9, 3, 10, 5])
-                      `|` marks where the pivot finished, in its final place
+                      `|` sits just after the index the partition returns, as above -
+                      but Lomuto's returned index holds the pivot, in its final place
 
 partition around 5    -> [4, 3, 5 | 9, 8, 10, 7]   pivot lands at index 2
   left  [4, 3]        -> partition around 3 -> [3, 4]
@@ -361,9 +354,7 @@ shrinks the range by at least one element, which is what guarantees termination.
 
 1. Do nothing unless `l < h`.
 2. `p = partition_lomuto(a, l, h)`.
-3. Recurse on `(l, p - 1)` and `(p + 1, h)`. **`p` is excluded from both, because
-   Lomuto leaves the pivot in its final sorted position and it never needs
-   moving again.**
+3. Recurse on `(l, p - 1)` and `(p + 1, h)`, **excluding `p` from both**.
 4. **Using `(l, p)` here recurses forever.** The subproblem never shrinks when
    the pivot is the smallest element.
 
@@ -409,7 +400,7 @@ def test_qsort_lomuto():
 test_qsort_lomuto()
 ```
 
-## Hoare-based Quick Sort
+### Hoare-based Quick Sort
 
 The same shape with the boundary difference carried through: `qsort_hoare(a, l, p)` keeps
 index `p` in the left call, because Hoare's return value is a partition boundary and not a
@@ -422,11 +413,9 @@ never get sorted, or the recursion fails to shrink and overflows the stack.
 
 **Recipe**
 
-1. Same shape, one crucial difference.
-2. `p = partition_hoare(a, l, h)`, then recurse on `(l, p)` and `(p + 1, h)`.
-3. **`p` is included in the left half.** Hoare returns a boundary, not a sorted
-   position, so the element at `p` still has to be sorted by someone.
-4. **Copying Lomuto's `(l, p - 1)` here silently drops elements.** It does not
+1. `p = partition_hoare(a, l, h)`, then recurse on `(l, p)` and `(p + 1, h)` -
+   **`p` included in the left half**, unlike Lomuto.
+2. **Copying Lomuto's `(l, p - 1)` here silently drops elements.** It does not
    crash and it passes on plenty of inputs; `[2, 0, 1]` is the smallest array
    that comes back unsorted.
 

@@ -39,7 +39,7 @@ See [Graph Basics](graph-basics.md) for representations.
 ![BFS vs DFS Traversal Order](images/bfs-vs-dfs.png)
 
 
-### Test graph helper
+## Test graph helper
 
 Each notebook is executed standalone by `make test`, so this rebuilds the adjacency
 list locally rather than importing it from the basics notebook.
@@ -110,10 +110,8 @@ by total cost repairs exactly that, and the repair is [Dijkstra](dijkstra.md).
 2. A `deque` seeded with `s`, and mark `s` visited immediately.
 3. Loop: `popleft`, append to the order, then for each unvisited neighbour
    **mark it visited and enqueue it**.
-4. **Mark on enqueue, not on dequeue.** Two vertices already in the queue can
-   both list the same neighbour, so marking late lets it be queued twice and it
-   comes out of the traversal twice. On the triangle `[[1,2],[0,2],[0,1]]` the
-   late version returns `[0, 1, 2, 2]`.
+4. **Mark on enqueue, not on dequeue.** On the triangle `[[1,2],[0,2],[0,1]]`
+   the late version returns `[0, 1, 2, 2]`.
 5. `popleft` is O(1) on a deque; `list.pop(0)` is O(n) and makes this quadratic.
 
 ```python
@@ -175,11 +173,8 @@ processed twice and the total work stays O(V + E) however many components there 
 1. Build **one** `visited` list up front and keep it across every call.
 2. Loop over all vertices; for each still-unvisited one, run `bfs` from it and
    concatenate the result.
-3. **The outer loop is the whole idea.** A single BFS only reaches what is
-   reachable from its source, so an unvisited vertex after a run means a
-   component that has not been touched yet.
-4. **The shared `visited` is what stops the second run re-walking the first
-   component.** Create it inside the loop instead and vertices repeat.
+3. **Create `visited` inside the loop instead and vertices repeat** across
+   components.
 
 ```python
 def bfs_disconnected(adj):
@@ -216,9 +211,6 @@ does, that is one more component.
 
 1. Identical loop to `bfs_disconnected`, but count instead of collecting.
 2. `count += 1` **once per restart**, not once per vertex.
-3. **The number of times the outer loop has to start a fresh traversal is the
-   number of components.** That is the entire algorithm; the traversal itself is
-   only there to mark off everything reachable so it is not counted again.
 
 ```python
 def count_components_bfs(adj):
@@ -282,13 +274,8 @@ graph
 **Recipe**
 
 1. Mark `u` and append it, then recurse into every unvisited neighbour.
-2. **No explicit stack and no base case.** The call stack is the stack, and the
-   `if not visited[v]` guard is what terminates it. A graph has cycles, so
-   without that check the recursion never ends.
-3. **BFS and DFS are the same traversal with a different container.** Queue means
-   explore the nearest first; the call stack means follow one path to its end.
-4. Depth is bounded by the number of vertices, so a long path can hit Python's
-   recursion limit where the iterative version below would not.
+2. **No base case.** The `if not visited[v]` guard is the only thing terminating
+   this - a graph has cycles, so without it the recursion never ends.
 
 ```python
 def dfs_rec(adj, u, visited, order):
@@ -347,8 +334,6 @@ you walk it.
 1. The same shared-`visited` outer loop as the BFS pair.
 2. `count_components_dfs` passes an unused `[]` for the order, since only the
    restart count matters.
-3. **BFS or DFS makes no difference to the answer here.** Components are about
-   reachability, and both traversals reach exactly the same set. Pick either.
 
 ```python
 def dfs_disconnected(adj):
@@ -392,18 +377,10 @@ pays for it. Python allows only about 1000 nested calls, and recursive DFS needs
 per vertex on the current path, so a long chain crashes it. The test walks a 2000-vertex
 path graph for exactly that reason.
 
-Two details look like fuss and are not.
-
-Neighbours are pushed in **reverse** because a stack hands back the last thing pushed.
-Push them in their listed order and the *last* neighbour gets explored first. Reversing
-lines the iterative order up with the recursive one. It is not needed for correctness,
-only for the two to agree - which is what lets the test compare them directly.
-
-`visited` is checked again *after* popping. The recursive version marks a vertex when it
-enters it, and "enters" here means pop, not push, so this version marks at pop too. The
-price is that a vertex found from two branches can be sitting in the stack twice before
-either copy is popped. The check after popping is what throws the stale copy away. Mark at
-push instead and the duplicates disappear, but so does the match with the recursive order.
+Two choices exist only to make this traversal agree with the recursive one, not to make
+it correct: neighbours are pushed in reverse, and `visited` is checked after popping
+rather than before pushing. Marking at push would remove the duplicate stack entries, but
+it would also change the visit order, and the test compares the two traversals directly.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
@@ -412,15 +389,12 @@ push instead and the duplicates disappear, but so does the match with the recurs
 1. A list as a stack, seeded with `s`.
 2. Pop, and **if the vertex is already visited, `continue`.**
 3. **Mark on pop here, unlike BFS which marks on enqueue.** A vertex can be
-   pushed several times before it is ever popped, so the same vertex arrives at
-   the top more than once and the guard is what discards the repeats. Drop it
-   and vertex 6 in the notebook's test graph is emitted twice.
+   pushed several times before it is popped even once. Drop the guard and vertex
+   6 in this section's test graph is emitted twice.
 4. Mark, append to the order, then push all unvisited neighbours.
-5. Push `reversed(adj[u])`. **A stack reverses whatever it is given, so pushing
-   the neighbours backwards makes the first one pop first and matches
-   `dfs_rec`'s order.** Without it the traversal is still a valid DFS, just a
-   different one, which makes the bug invisible to any test that only checks the
-   set of vertices.
+5. Push `reversed(adj[u])` so the first neighbour pops first. **Without it the
+   traversal is still a valid DFS, just a different one** - invisible to any test
+   checking only which vertices were reached.
 
 ```python
 def dfs_iterative(adj, s):

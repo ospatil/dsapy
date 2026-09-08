@@ -38,7 +38,7 @@ Non-comparison sorts break this barrier by exploiting properties of the data (e.
 > pass has to cover is always 10.
 
 
-# Counting Sort
+## Counting Sort
 
 A comparison answers one yes-or-no question, which is why comparison sorts cannot get below
 O(n log n). Counting sort asks none. It counts how many times each value appears, then adds
@@ -50,7 +50,7 @@ Adding up counts like this is called a *prefix sum*.
 
 ![Counting Sort Steps](images/counting-sort-steps.png)
 
-## Why is it Stable?
+### Why is it Stable?
 
 Because the input is walked **backwards**. After the prefix sums, `count[x] - 1` is the
 *last* position available to value x, so the last occurrence in the input is placed
@@ -77,15 +77,11 @@ this subroutine being stable, would silently produce wrong answers.
    itself needs a slot; indices run `0..k`.**
 3. Tally: `count[x] += 1` for every element.
 4. Turn the tally into a prefix sum, `count[i] += count[i - 1]` from `1` upward.
-   **`count[i]` now means "how many elements are `<= i`", which is the same thing
-   as "one past the last slot where an `i` belongs".** This reinterpretation is
-   the whole idea.
 5. Walk the input **in reverse**, and for each `x`: decrement `count[x]` first,
    then write `x` at that index.
-6. **Decrement before writing**, because the prefix sum points one past the slot.
-   **Reverse, because taking the last equal element first and filling backwards
-   is what makes the sort stable.** Iterating forward still sorts plain integers,
-   so this bug is invisible here and fatal in radix sort, which is built on it.
+6. **Decrement before writing**, because the prefix sum points one past the
+   slot. Iterating forward still sorts plain integers, so a lost `reversed`
+   is invisible here and fatal in radix sort, which is built on it.
 
 ```python
 def counting_sort(arr):
@@ -120,7 +116,7 @@ def test_counting_sort():
 test_counting_sort()
 ```
 
-# Radix Sort
+## Radix Sort
 
 Counting sort needs a small value range, which fails for something like `[170, 45, 802]` -
 k would be 802. Radix sort fixes that by sorting one **digit** at a time: each pass only
@@ -157,14 +153,13 @@ digit, and a fixed count array of size 10.
    runs it repeatedly over the same list.
 3. `radix_sort` walks `exp = 1, 10, 100, ...` while `max_val // exp > 0`, one
    pass per digit of the largest number.
-4. **Least significant digit first.** Sorting by the most significant digit first
-   with this same stable pass returns garbage: on 40 random three-digit numbers
-   it produced `[310, 430, 940, 150, ...]`.
+4. **Least significant digit first.** Run the same stable passes most-significant
+   first and the last pass simply reorders by the smallest digit, undoing the
+   others: `[12, 21, 30]` comes back as `[30, 21, 12]`.
 5. **Every pass must be stable, and that is the only reason counting sort is the
-   one used here.** Each pass preserves the order the previous passes
-   established, so after the last digit the whole array is sorted. Swap the
-   `reversed(arr)` in the helper for a forward loop and radix sort stops working
-   entirely, even though counting sort alone looked fine without it.
+   one used here.** Swap the `reversed(arr)` in the helper for a forward loop and
+   radix sort stops sorting, even though counting sort alone looked fine without
+   it.
 
 ```python
 def _counting_sort_by_digit(arr, exp):

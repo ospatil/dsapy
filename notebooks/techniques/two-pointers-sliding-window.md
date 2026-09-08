@@ -46,7 +46,7 @@ Maintain a window (subarray/substring) that expands or shrinks.
 ![Sliding Window](images/sliding-window.png)
 
 
-# Two Sum (Sorted Array)
+## Two Sum (Sorted Array)
 
 Checking every pair is O(n²). Sortedness lets each comparison eliminate a whole *family* of
 pairs instead of one.
@@ -74,11 +74,8 @@ O(n), but O(n) space rather than O(1).
 1. `lo, hi = 0, len(arr) - 1`, at the two ends.
 2. Loop while `lo < hi`, **strictly**, since an element may not pair with itself.
 3. Sum too small: `lo += 1`. Too large: `hi -= 1`.
-4. **Why discarding is safe, which is the only hard part.** If the sum is too
-   small, `arr[lo]` paired with the largest remaining value is still too small,
-   so `arr[lo]` cannot pair with *anything* left and every pair using it can be
-   discarded. That argument needs the array sorted; on unsorted input this is
-   wrong, not just slow.
+4. **On unsorted input this is wrong, not merely slow.** The discard argument
+   rests entirely on `hi` already being the largest remaining partner.
 5. The pointers met without a match, so return `(-1, -1)`.
 
 ```python
@@ -103,7 +100,7 @@ def test_two_sum():
 test_two_sum()
 ```
 
-# Remove Duplicates In-Place
+## Remove Duplicates In-Place
 
 Two pointers moving in the *same* direction with different jobs: `fast` reads every element,
 `slow` marks the last position written. Because the input is sorted, duplicates are adjacent,
@@ -127,15 +124,12 @@ shortened without moving memory.
 **Recipe**
 
 1. Empty input, return `0`.
-2. `slow = 0`. Read it as **"the index of the last value already kept"**, which
-   is what makes the rest fall out.
-3. `fast` runs from `1` to the end, reading every element once.
-4. `arr[fast] != arr[slow]`: a new value. Advance `slow` first, then write
+2. `slow = 0`; `fast` runs from `1` to the end, reading every element once.
+3. `arr[fast] != arr[slow]`: a new value. Advance `slow` first, then write
    `arr[slow] = arr[fast]`.
-5. **Advance before writing.** `slow` points at a value being kept, so writing at
+4. **Advance before writing.** `slow` points at a value being kept, so writing at
    `slow` would overwrite it.
-6. Return `slow + 1`, converting a last-used index into a count.
-7. Works only on sorted input, where duplicates are adjacent.
+5. Return `slow + 1`, converting a last-used index into a count.
 
 ```python
 def remove_duplicates(arr):
@@ -161,7 +155,7 @@ def test_remove_dups():
 test_remove_dups()
 ```
 
-# Container With Most Water
+## Container With Most Water
 
 **Problem:** each number is the height of a vertical line standing on the x-axis. Pick two
 lines; together with the axis they hold water. The amount is limited by the *shorter* of the
@@ -186,15 +180,11 @@ whatever survived.
 **Recipe**
 
 1. Two pointers at the ends, `best = 0`.
-2. Area is `min(heights[lo], heights[hi]) * (hi - lo)`. The shorter wall sets the
-   depth; the gap sets the width.
+2. Area is `min(heights[lo], heights[hi]) * (hi - lo)`.
 3. **Always move the shorter side in.** That is the entire algorithm.
-4. **Why discarding the shorter wall is safe:** any pair using it must have a
-   width smaller than the current one, and a depth still capped by that same
-   short wall. So every remaining pair involving it is strictly worse than the
-   one just measured, and all of them can be discarded.
-5. Moving the taller side instead would discard pairs that might beat the current
-   best, which is why the comparison decides the move.
+4. **Ties go either way.** `heights[lo] < heights[hi]` sends an equal pair down
+   the `hi` branch, and either choice is safe, since both walls cap the depth
+   identically.
 
 ```python
 def max_water(heights):
@@ -216,7 +206,7 @@ def test_max_water():
 test_max_water()
 ```
 
-# Fixed-Size Sliding Window: Max Sum of k Elements
+## Fixed-Size Sliding Window: Max Sum of k Elements
 
 Recomputing each window from scratch re-adds the k-1 elements the previous window already
 counted - O(n × k) for information you already had.
@@ -244,12 +234,9 @@ window [1, 4, 2, 10]      sum 17
 2. Compute the first window directly with `sum(arr[:k])`. **This is the only full
    sum in the whole function.**
 3. For each `i` from `k` to `n - 1`, slide: `window_sum += arr[i] - arr[i - k]`.
-4. **Add the entering element and subtract the leaving one in one step.** Every
-   window shares all but two elements with the previous one, so recomputing the
-   sum redoes k-1 additions you already have. That is the difference between O(n)
-   and O(n*k).
-5. `arr[i - k]` is the element falling out of the back. An off-by-one here
-   returns plausible wrong numbers rather than crashing.
+4. `arr[i - k]` is the element falling out of the back. **An off-by-one here
+   returns plausible wrong numbers rather than crashing**, so it survives a
+   casual test.
 
 ```python
 def max_sum_k(arr, k):
@@ -278,7 +265,7 @@ def test_max_sum_k():
 test_max_sum_k()
 ```
 
-# Variable-Size Sliding Window: Smallest Subarray with Sum ≥ Target
+## Variable-Size Sliding Window: Smallest Subarray with Sum ≥ Target
 
 The window no longer has a fixed size, so it breathes: `right` expands it until the sum
 qualifies, then `left` contracts it as far as it can while still qualifying. Every time the
@@ -334,7 +321,7 @@ def test_min_subarray():
 test_min_subarray()
 ```
 
-# Longest Substring Without Repeating Characters
+## Longest Substring Without Repeating Characters
 
 Same breathing window, with "valid" redefined: the window must hold no duplicates. A `set`
 tracks its contents so the check is O(1).
@@ -366,10 +353,8 @@ right=5 'w'   duplicate → drop 'w' (left=3)
 3. **Shrink first, then add.** Adding the duplicate before shrinking makes the
    loop condition true forever, since the set would already hold the character
    being searched for.
-4. The shrink stops exactly when the old copy is gone, because the only way
-   `s[right]` leaves the set is `left` passing it.
-5. Add `s[right]`, then `best = max(best, right - left + 1)`.
-6. Same skeleton as `min_subarray_sum` with the validity test inverted: there the
+4. Add `s[right]`, then `best = max(best, right - left + 1)`.
+5. Same skeleton as `min_subarray_sum` with the validity test inverted: there the
    window shrinks while it *is* valid, to find a minimum; here it shrinks while
    it is *not* valid, to find a maximum.
 

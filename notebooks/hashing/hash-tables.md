@@ -223,9 +223,8 @@ the table size.
 2. **`[[] for _ in range(size)]`, never `[[]] * size`.** The multiplication makes
    one list and stores that same object `size` times, so appending to any bucket
    appends to all of them. It looks right until the first collision.
-3. A bucket holds `(key, value)` pairs, not bare values. The hash sends different
-   keys to the same bucket, so a stored record has to carry the key that proves
-   which one it is.
+3. Store `(key, value)` pairs, not bare values - a record has to carry the key
+   that proves which of the bucket's occupants it is.
 
 ```python
 class ChainHash:
@@ -254,11 +253,9 @@ Missing keys return `None` rather than raising.
    an arbitrarily large hash into a valid index, and it is repeated in every one
    of these three methods.**
 2. Scan the bucket linearly for a record whose stored key equals `key`.
-3. **The key comparison is not redundant with the hash.** Two different keys land
-   in the same bucket all the time; the hash narrows the search to a bucket, and
-   only `==` confirms a hit.
-4. Not found, return `None`. Note this cannot distinguish a missing key from one
-   stored with the value `None`.
+3. Not found, return `None`. **That cannot distinguish a missing key from one
+   stored with the value `None`**, which is why a real dict raises `KeyError`
+   instead.
 
 ```python
 def get_val(self, key):
@@ -291,9 +288,8 @@ for one key, and `get` would return whichever it met first.
 **Recipe**
 
 1. Find the bucket the same way.
-2. **Scan for the key before appending.** Insert and update are the same call, so
-   a blind `append` gives one key two records, and `get_val` then returns
-   whichever happens to come first.
+2. **Scan for the key before appending** - insert and update are the same call
+   here.
 3. Found: overwrite that slot with `(key, val)` and **return immediately**, or
    the append below runs too.
 4. Not found: `append` the new pair.
@@ -338,7 +334,6 @@ Deleting a key that isn't present is a silent no-op.
 3. **The `break` is not an optimisation.** Removing from a list while iterating
    over it makes the loop skip the next element, so continuing after a `pop` walks
    a list that has shifted underneath it.
-4. Missing key is not an error here; the loop simply ends.
 
 ```python
 def delete_val(self, key):
@@ -372,16 +367,9 @@ Two sentinels share the array with real values:
 | `-1` | never used - a probe may stop here |
 | `-2` | deleted (tombstone) - a probe must keep going |
 
-`insert` walks forward until it finds a slot holding `-1` or `-2`, so deleted slots
-get reused. It refuses to insert into a full table (which would loop forever) and
-refuses duplicates.
-
 **Time:** O(1) average, degrading as the load factor approaches 1
 
 **Recipe**
-
-No buckets at all: one flat array, and colliding keys move along to the next free
-slot.
 
 1. `buckets = [-1] * cap` with **two** sentinels: `-1` empty, `-2` deleted. This
    is a plain list of ints, so `[-1] * cap` is safe here in a way `[[]] * cap`
@@ -442,16 +430,14 @@ The `i == h` check is what stops a full table from spinning forever.
 **Recipe**
 
 1. Start at `h = hash(x)` and probe forward.
-2. Continue while `t[i] != -1`. **Only an empty slot ends the search; the probe
-   must continue past a tombstone.**
-3. **This is the load-bearing line of the whole scheme.** A deleted entry sitting
-   in the middle of a probe chain is the only thing keeping the rest of that chain
-   reachable. Write `-1` on delete instead of `-2` and the search stops in the
-   hole: insert 10, 17 and 24 into a table of 7, remove 17, and `search(24)`
-   returns `False` even though 24 is right there in the array.
+2. Continue while `t[i] != -1`, so only an empty slot ends the search.
+3. **Write `-1` on delete instead of `-2` and the search stops in the hole.**
+   Insert 10, 17 and 24 into a table of 7 and they land in slots 3, 4 and 5.
+   Blank slot 4 by removing 17, and `search(24)` returns `False` with 24 sitting
+   untouched in slot 5.
 4. Match, return `True`.
-5. `if i == h: return False` after each step. **A table with no empty slot left
-   would otherwise loop forever, because the `-1` test never fires.**
+5. `if i == h: return False` after each step, **because on a table with no empty
+   slot the `-1` test never fires** and the probe circles forever.
 
 ```python
 def search(self, x):
@@ -495,10 +481,8 @@ implementation rehashes the table periodically to clear them out.
 1. Probe exactly like `search`, with the same `-1` stop and the same full-circle
    guard.
 2. Found: write **`-2`, the tombstone, not `-1`**.
-3. That is the whole method. See the search recipe for why the distinction
-   matters; this is the line that creates the situation search has to survive.
-4. Tombstones accumulate and never get cleaned up here, so a table churned
-   through many insert and delete cycles slows down until it is rebuilt.
+3. That is the whole method - it is the one line that creates the situation
+   `search` has to survive.
 
 ```python
 def remove(self, x):
@@ -525,7 +509,7 @@ def test_open_address_remove():
 test_open_address_remove()
 ```
 
-# Python Built-in Hash Structures
+## Python Built-in Hash Structures
 
 Python's `dict` uses open addressing. Average O(1) for get/set/delete. Since 3.7 iteration
 follows insertion order, which comes from records being kept in a separate compact array
@@ -566,11 +550,11 @@ print(freq)              # Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
 print(freq.most_common(2))  # [('a', 5), ('b', 2)]
 ```
 
-# Sets
+## Sets
 
 A set is a hash table that stores only keys (no values). Same O(1) average for add, remove, and membership test.
 
-## Hash Set (`set`)
+### Hash Set (`set`)
 
 | Operation | Time | Notes |
 |-----------|------|-------|
@@ -598,7 +582,7 @@ fs = frozenset([1, 2, 3])
 d = {fs: 'value'}  # works because frozenset is hashable
 ```
 
-## Sorted Set
+### Sorted Set
 
 Python has no built-in sorted set. Java has `TreeSet` (Red-Black tree) and C++ has `std::set` (also RB tree).
 

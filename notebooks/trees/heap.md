@@ -79,7 +79,7 @@ a complete tree is the shortest a binary tree can be, so the height is log n.
 ![Heap Array to Tree Mapping](images/heap-array-tree.png)
 
 
-### Building the heap (constructor)
+## Building the heap (constructor)
 
 You have a pile of unordered values and want a heap out of them. Sorting works, since
 a sorted array obeys the order rule, but it costs O(n log n) and buys ordering you
@@ -90,10 +90,9 @@ heap, so every leaf is finished before you start. Work upwards from there. Every
 you step to a lower index you land on a node whose two subtrees are already finished
 heaps, so a single sift down settles that node and finishes its subtree too.
 
-That is why the loop starts at the last node that has any children at all (the parent
-of the last element, index `(n - 2) // 2`) and counts down to index 0. The direction
-is the algorithm. It is what guarantees `heapify` is only ever handed one bad node
-sitting on top of two good heaps, which is the only situation `heapify` can repair.
+The direction is the algorithm. Working upwards is what guarantees `heapify` is only
+ever handed one bad node sitting on top of two good heaps, which is the only situation
+it can repair.
 
 Top down would not work. Sifting the root first tells you nothing, because the
 subtrees you are comparing it against are still unordered.
@@ -113,15 +112,9 @@ that is true is worked out at the end of the notebook.
    `+ 1` are easy to misplace and the errors are silent.**
 3. To build from an existing list: start at the **last non-leaf node** and
    `heapify` every index down to `0`, in reverse.
-4. The last non-leaf is the parent of the last element, `((n - 1) - 1) // 2`.
-   **Everything after it is a leaf, and a leaf is already a valid heap of one, so
-   starting anywhere later than this wastes work and starting earlier is
-   impossible.**
-5. **Reverse order is what makes `heapify` legal at every step.** It needs both
-   children to be valid heaps already, and going bottom-up is exactly what
-   guarantees that.
-6. This costs O(n), not O(n log n). Most nodes are near the bottom and sift down
-   only a level or two.
+4. The last non-leaf is the parent of the last element, `((n - 1) - 1) // 2`,
+   which the code folds to `(n - 2) // 2`. **Start any later and you only
+   heapify leaves; start any earlier and real non-leaves never get heapified.**
 
 ```python
 import math
@@ -129,22 +122,7 @@ import math
 
 class MinHeap:
     def __init__(self, ls=None):
-        """
-        When ls is provided, build a heap out of it.
-        Naive approach: Sort the array and then build heap
-        Time complexity: O(n log n)
-
-        Efficient approach: find the position of the bottom-most, right-most
-        non-leaf node and perform the heapify operation on each non-leaf node in
-        reverse level order. The assumption for that node is the left and right
-        children are already heapified.
-        The last non-leaf node is the parent of the last node,
-        i.e. the parent of the node at index (len(ls) - 1),
-        i.e. the node at index ((len(ls) - 1) - 1) // 2.
-
-        Time complexity: O(n)
-        https://www.geeksforgeeks.org/building-heap-from-array/
-        """
+        """Build a heap out of ls in place, bottom-up. Time: O(n)."""
         self.arr = [] if ls is None else ls
         i = (len(self.arr) - 2) // 2
         while i >= 0:
@@ -182,7 +160,7 @@ def test_is_min_heap():
 test_is_min_heap()
 ```
 
-### Heapify (sift down)
+## Heapify (sift down)
 
 One node may be too big for the spot it is in. Both of its subtrees are already valid
 heaps. Where does that node belong?
@@ -196,38 +174,28 @@ children are larger, or until it has no children left.
 Swapping with the *smaller* child is not a detail. Promote the larger one and it
 becomes the parent of the smaller one, which breaks the very rule you were repairing.
 
-The precondition is the part to remember: `heapify` cannot sort out a scrambled array.
-It fixes exactly one bad node standing on two good heaps. Every other operation here
-is arranged to hand it that situation.
-
 **Time:** O(log n) - one comparison pair per level of descent &nbsp;
 **Space:** O(log n) recursion depth
 
 **Recipe**
 
 1. Precondition: both children already head valid heaps, and only `i` may be out
-   of place. **Nothing here repairs a scrambled array. Every caller is arranged
-   to hand `heapify` exactly this situation.**
+   of place. **Nothing here repairs a scrambled array.** Every caller is
+   arranged to hand `heapify` exactly this situation.
 2. `smallest = i`, so "the node is already in the right place" is the default
    answer.
 3. Left child: if `lt < n` and `arr[lt] < arr[smallest]`, set `smallest = lt`.
    The bounds test comes first, since a leaf has no children to read.
-4. Right child: the same test against `arr[smallest]`. **Against `arr[smallest]`,
-   not `arr[i]`. That comparison is the whole reason `smallest` ends up holding
-   the smaller of the two children rather than whichever one happened to beat
-   the parent last.**
+4. Right child: the same test, but **against `arr[smallest]`, not `arr[i]`**.
+   That is what leaves `smallest` holding the smaller of the two children rather
+   than whichever one happened to beat the parent last.
 5. `smallest == i` means the node is where it belongs and everything under it was
    already valid, so stop. Otherwise swap and recurse on `smallest`, the slot the
    node just moved into.
 
 ```python
 def heapify(self, i):
-    """
-    Fixes min heap whose root might be violating min heap property
-
-    Time complexity: O(log n)
-    Aux space: O(log n)
-    """
+    """Sift arr[i] down until both children are larger. Time: O(log n)."""
     arr = self.arr
     lt = self.lchild(i)
     rt = self.rchild(i)
@@ -271,7 +239,7 @@ def test_create_heap():
 test_create_heap()
 ```
 
-### Insert (sift up)
+## Insert (sift up)
 
 The shape rule picks the slot before you even look at the value. The only position
 that keeps the tree complete is the next free one at the end, and appending to the end
@@ -289,30 +257,17 @@ already sat above, including the child it just displaced.
 
 **Recipe**
 
-1. `arr.append(x)` and start at `i = len(arr) - 1`. **Appending is the only O(1)
-   place to add, and the array must stay a complete tree, so the new element has
-   exactly one legal position.**
+1. `arr.append(x)`, then start the walk at `i = len(arr) - 1`, the slot it
+   landed in.
 2. Sift up: while `i > 0 and arr[parent(i)] > arr[i]`, swap with the parent and
    set `i = parent(i)`.
 3. **`i > 0` has to be tested first.** At the root `parent(0)` is `-1`, and
-   Python reads `arr[-1]` without error, so a missing guard compares against the
-   last element of the array instead of raising.
-4. Stop as soon as the parent is not larger. Everything above is already ordered,
-   so one satisfied comparison ends it.
-5. Only one path is touched, root to leaf, hence O(log n).
+   Python reads `arr[-1]` without error, so a missing guard silently compares
+   against the last element of the array instead of raising.
 
 ```python
 def insert(self, x):
-    """
-    Time complexity: O(log n)
-
-    The idea is to append x to the end of the array - O(1) operation.
-    But if it is smaller than its parent, it will violate the min heap property.
-    Therefore, we travel the height of the binary heap, and keep swapping x with
-    its parent (and grandparent etc.) as needed till it's in its intended place.
-    This operation is O(log n) since traveling across the height of a binary
-    heap is a log of size operation.
-    """
+    """Append x, sift up while smaller than its parent. Time: O(log n)."""
     arr = self.arr
     arr.append(x)
     i = len(arr) - 1
@@ -360,7 +315,7 @@ def test_insert():
 test_insert()
 ```
 
-### Extract min
+## Extract min
 
 The value you want is at index 0, and index 0 is the worst place to delete from in an
 array: every remaining element shifts down a slot, O(n), which would throw away the
@@ -382,32 +337,18 @@ An empty heap returns `math.inf` as a sentinel rather than raising.
 **Recipe**
 
 1. Empty heap, return `math.inf`, the value that loses every min comparison.
-2. Save `arr[0]`, the answer.
-3. **Move the last element into the root, then `pop` the end.** Removing from the
-   front directly would shift every element, which is O(n); removing from the end
-   is free. So the array is repaired by moving the hole rather than closing it.
-4. Call `heapify(0)`. The new root is very likely wrong, but both its subtrees
-   are untouched and still valid, which is exactly `heapify`'s precondition.
-5. Return the saved value.
-6. **Steps 3 and 4 together are the pattern: swap the element being removed to
-   the end, shrink, then sift down.** `delete` and `heap_sort` are both built
-   out of it.
+2. Save `arr[0]` **before anything overwrites it**; that saved value is the
+   return.
+3. `arr[0] = arr[-1]`, then `arr.pop()`, in that order.
+4. `heapify(0)`, then return the saved value.
+5. **Steps 3 and 4 are a pattern, not a one-off: overwrite from the end, shrink,
+   sift down.** `delete` and `heap_sort` are both built out of it.
 
 ```python
 def extract_min(self):
-    """
-    Remove min from the heap and use heapify to make sure the min heap property
-    holds true for the rest of the array
+    """Move the last element to the root, pop, then sift the root down.
 
-    Time complexity: O(log n)
-
-    If we remove an element from anywhere other than the last position in an
-    array, we'll need to move all other elements and it will be a linear
-    operation. To achieve "log n" time, removing the last element is constant
-    time, so that's what we do.
-        1. swap min with last (constant)
-        2. pop last (constant)
-        3. then heapify (log n).
+    Time: O(log n).
     """
     arr = self.arr
     if len(arr) == 0:
@@ -445,7 +386,7 @@ def test_extract_min():
 test_extract_min()
 ```
 
-### Decrease key
+## Decrease key
 
 Making a value *smaller* can only break the rule in one direction: against its parent.
 Its children were already larger than the old value, so they are larger than the new
@@ -461,22 +402,14 @@ Dijkstra notebook pushes a duplicate entry and skips stale pops instead.
 **Recipe**
 
 1. Overwrite `arr[i] = x`, then sift up with the identical loop from `insert`.
-2. **Only sifting up is needed, and only because the key got *smaller*.** A
-   smaller key can violate the rule against its parent but never against its
-   children, since they were already larger than the old, bigger value.
-3. Increasing a key would need `heapify` instead. Calling this with a larger `x`
-   silently corrupts the heap; nothing here checks.
-4. `insert` is really `append` plus this loop, which is why the two bodies match
+2. **Increasing a key would need `heapify` instead.** Calling this with a
+   larger `x` silently corrupts the heap; nothing here checks.
+3. `insert` is really `append` plus this loop, which is why the two bodies match
    line for line.
 
 ```python
 def decrease_key(self, i, x):
-    """
-    Time complexity: O(log n)
-
-    Replace the key at index i with x and then swap it with its parent
-    (and grandparent etc.) as needed till it's in its intended place.
-    """
+    """Overwrite arr[i] with x, then sift up. Time: O(log n)."""
     arr = self.arr
     arr[i] = x
     while i != 0 and arr[self.parent(i)] > arr[i]:
@@ -511,7 +444,7 @@ def test_decrease_key():
 test_decrease_key()
 ```
 
-### Delete
+## Delete
 
 Pulling a value out of the middle of the array is the one thing the shape forbids. But
 there is a position you already know how to remove from: the root.
@@ -527,21 +460,17 @@ Two O(log n) passes instead of one, in exchange for no extra code.
 
 **Recipe**
 
-1. Guard `i >= len(arr)` and return.
-2. `decrease_key(i, -math.inf)`. **`-inf` beats every real key, so the node sifts
-   all the way to index 0 and nothing else has to be worked out.**
-3. `extract_min()` then removes it, and repairs the heap on the way.
-4. **This is composition, not a new algorithm.** Two operations you already have,
-   picked so that the second one's precondition is arranged by the first.
-5. O(log n) up plus O(log n) down.
+1. Guard `i >= len(arr)` and return; nothing else validates the index.
+2. `decrease_key(i, -math.inf)`, then `extract_min()`, in that order.
+3. **Discard what `extract_min` returns here.** It is the `-inf` this function
+   just wrote, not the key that was deleted, so putting a `return` in front of
+   it hands the caller a value that was never in the heap.
 
 ```python
 def delete(self, i):
-    """
-    Time complexity: O(log n)
+    """Decrease arr[i] to -inf so it rises to the root, then extract it.
 
-    Delete the key at index i by decreasing it to -infinity so it rises to the
-    root, then extracting the root.
+    Time: O(log n).
     """
     if i >= len(self.arr):
         return
@@ -585,7 +514,7 @@ def test_delete():
 test_delete()
 ```
 
-# Time complexity of build heap operation
+## Time complexity of build heap operation
 
 n nodes, each sifted down at O(log n), so build heap should be O(n log n). It is O(n).
 The error is in what a sift down actually costs.
@@ -632,7 +561,7 @@ have paid it are outnumbered.
 > <https://stackoverflow.com/questions/9755721/how-can-building-a-heap-be-on-time-complexity/62177336#62177336>
 
 
-# Heap Sort
+## Heap Sort
 
 Heap sort is selection sort with the slow part swapped out.
 
@@ -655,7 +584,7 @@ heap from reaching back into the sorted tail it is already done with.
 **Time complexity:** O(n log n)  
 **Aux space:** O(1) (or O(log n) if we use recursion)
 
-## Notes:
+### Notes:
 
 - It's not stable
 - Heapsort is 2-3 times slower than quicksort because quicksort has better locality of reference than heapsort
@@ -672,14 +601,10 @@ Max-heap versions of the same code, plus the sort they enable.
    bottom-up sweep as the constructor.
 3. `heap_sort`: build a max heap, then for `i` from `n - 1` down to `1`, swap
    `arr[0]` with `arr[i]` and call `max_heapify(arr, i, 0)`.
-4. **A max heap for an ascending sort.** The largest element is at the root, and
-   the swap moves it to the last unsorted index, which is its final position, so
-   the sorted region grows backwards from the right.
-5. **Pass `i`, not `n`, to `max_heapify` after the swap.** `i` is the new,
+4. **Pass `i`, not `n`, to `max_heapify` after the swap.** `i` is the new,
    shorter heap length, and it excludes the element just placed. Pass `n` and
    sifting pulls already-placed elements back into the heap.
-6. Stop at `i = 1`; a heap of one is already sorted.
-7. In place, so O(1) extra space, which is what heapsort buys over merge sort.
+5. Stop at `i = 1`; a heap of one is already sorted.
 
 ```python
 def build_heap(arr):
@@ -771,7 +696,7 @@ test_build_heap()
 test_heap_sort()
 ```
 
-# Python Built-in: `heapq` module
+## Python Built-in: `heapq` module
 
 Python's `heapq` implements a **min-heap** on a regular `list`.
 
