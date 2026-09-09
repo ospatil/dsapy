@@ -160,9 +160,9 @@ test_search()
 ## Search, iteratively
 
 The recursion is tail-recursive - nothing happens after the recursive call - so it
-collapses into a `while` loop that reassigns `root`. From here on `root` stops
+collapses into a `while` loop that reassigns `root`. From here on, `root` stops
 meaning "the tree's root" and starts meaning "wherever the walk currently
-stands," overwritten one step at a time. Identical comparisons and identical
+stands", overwritten one step at a time. Identical comparisons and identical
 path, but O(1) space instead of a frame per level.
 
 This is the form to prefer in practice; the recursive one just reads better as an
