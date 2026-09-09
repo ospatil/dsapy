@@ -211,7 +211,28 @@ def test_optimized():
     assert connected(p, 0, 3)
     assert not (connected(p, 0, 5))
 
+
+def test_union_by_rank():
+    p, r = make_set(6)
+    for value in range(1, 6):
+        assert union(p, r, 0, value)
+
+    # The first equal-rank merge raises root 0 to rank 1. Every singleton
+    # after that hangs directly under the taller tree instead of making a chain.
+    assert p == [0, 0, 0, 0, 0, 0]
+    assert r == [1, 0, 0, 0, 0, 0]
+
+
+def test_path_compression():
+    # Build the chain by hand because union by rank deliberately prevents it.
+    p = [1, 2, 3, 4, 4]
+    assert find(p, 0) == 4
+    assert p == [4, 4, 4, 4, 4]
+
+
 test_optimized()
+test_union_by_rank()
+test_path_compression()
 ```
 
 ## Application: Cycle Detection in Undirected Graph

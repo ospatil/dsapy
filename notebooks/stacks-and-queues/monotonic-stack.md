@@ -378,4 +378,16 @@ def test_largest_rect():
     assert largest_rectangle([6, 2, 5, 4, 5, 1, 6]) == 12  # 4×3
 
 test_largest_rect()
+
+
+def test_duplicate_tie_handling():
+    # Equal values are not strictly greater, smaller, or warmer.
+    assert next_greater([2, 2, 3]) == [3, 3, -1]
+    assert next_smaller([2, 2, 1]) == [1, 1, -1]
+    assert daily_temperatures([70, 70, 71]) == [2, 1, 0]
+    # Equal-height bars still combine into one full-width rectangle.
+    assert largest_rectangle([3, 3, 3]) == 9
+
+
+test_duplicate_tie_handling()
 ```

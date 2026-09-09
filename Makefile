@@ -10,6 +10,14 @@ sync:
 recall:
 	@python3 scripts/build-recall.py
 
+# Prototype only: generate one practice notebook at hint/cold/blank level.
+# WARNING: rerunning this overwrites work under practice/searching/.
+LEVEL ?= hint
+practice-binary-search:
+	@printf '%s\n' 'WARNING: overwriting generated binary-search practice files'
+	@python3 scripts/build-practice.py --level "$(LEVEL)"
+	@uv run jupytext --sync practice/searching/binary-search.md
+
 diagrams:
 	bash scripts/build-diagrams.sh
 
@@ -28,4 +36,4 @@ test:
 	python3 scripts/build-recall.py --check || fail=1; \
 	exit $$fail
 
-.PHONY: start sync recall diagrams test
+.PHONY: start sync recall practice-binary-search diagrams test

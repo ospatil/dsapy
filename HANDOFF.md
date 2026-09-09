@@ -39,15 +39,17 @@ That is everything below.
   content.
 - **`config/jupyter_notebook_config.py` is unformatted.** It is the one file
   `black` would rewrite. Reformatting it is safe but nobody has needed to.
-- **Practice mode is specced but not built.** `docs/practice-mode.md` carries the
-  design: a generator that strips the implementation bodies out of the notebooks and
-  keeps the 118 `test_*` functions as the grader, plus a ledger deciding what to drill
-  today. Written up rather than built because the two rules that make it correct are
-  not guessable - strip targets resolve by name across the whole notebook (a per-cell
-  rule hands you the AVL rotations already written), and the test-helper allowlist is
-  keyed by `(notebook, function)` because `build_heap`, `make_set` and `is_balanced`
-  are lessons, not scaffolding, while `build_adj` is a lesson in one notebook and
-  plumbing in another. Deferred siblings and their reasons are in the same file.
+- **Practice mode has a binary-search prototype, not the full generator.**
+  `scripts/build-practice.py` strips the five lesson functions in
+  `binary-search.md`, preserves its graders and built-in cell, and renders
+  `hint`, `cold` and `blank`. `make practice-binary-search LEVEL=<level>` writes
+  and pairs the gitignored output; `scripts/test-build-practice.py` pins the
+  transformation. The full design remains in `docs/practice-mode.md`: resolve
+  strip targets by name across each whole notebook, add the per-notebook helper
+  allowlist, generate all eligible notebooks, and build the drill ledger. Those
+  two rules are still not guessable - a per-cell rule hands you the AVL rotations
+  already written, while a global `is_*` helper rule preserves lessons such as
+  `is_balanced`.
 
 ## Decisions and traps
 

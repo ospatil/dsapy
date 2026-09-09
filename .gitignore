@@ -254,3 +254,7 @@ pip-selfcheck.json
 # .md; both are local build artifacts.
 notebooks/**/*.ipynb
 notebooks/**/*.py
+
+
+# Practice notebooks and drill logs are generated local study artifacts.
+practice/

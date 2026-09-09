@@ -133,6 +133,27 @@ def test_dijkstra():
     # single vertex
     assert dijkstra([[]], 0) == [0]
 
+    class CountedEdges(list):
+        def __init__(self, edges):
+            super().__init__(edges)
+            self.scans = 0
+
+        def __iter__(self):
+            self.scans += 1
+            return super().__iter__()
+
+    # Vertex 1 is first discovered at 10, then improved to 2 through vertex 2.
+    # Its old (10, 1) heap entry must not scan vertex 1's edges a second time.
+    edges_from_one = CountedEdges([(3, 1)])
+    with_stale_entry = [
+        [(1, 10), (2, 1)],
+        edges_from_one,
+        [(1, 1)],
+        [],
+    ]
+    assert dijkstra(with_stale_entry, 0) == [0, 2, 1, 3]
+    assert edges_from_one.scans == 1
+
 
 test_dijkstra()
 

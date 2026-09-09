@@ -471,6 +471,10 @@ Writing `-1` would be a bug: it would cut every probe chain that runs through th
 slot, hiding keys that are still in the table. The tombstone keeps the chain intact
 while marking the slot as reusable by `insert`.
 
+`size` counts live values, not occupied-looking slots. Deletion must decrement it
+when the value becomes a tombstone. Otherwise a table that was once full stays
+logically full forever, and `insert` rejects the tombstone it is supposed to reuse.
+
 The cost is that tombstones accumulate and lengthen probes over time, so a real
 implementation rehashes the table periodically to clear them out.
 
@@ -481,8 +485,8 @@ implementation rehashes the table periodically to clear them out.
 1. Probe exactly like `search`, with the same `-1` stop and the same full-circle
    guard.
 2. Found: write **`-2`, the tombstone, not `-1`**.
-3. That is the whole method - it is the one line that creates the situation
-   `search` has to survive.
+3. Decrement `size`, because it counts live values. **Leave it unchanged and a
+   once-full table can never insert again, even though a tombstone is free.**
 
 ```python
 def remove(self, x):
@@ -491,7 +495,8 @@ def remove(self, x):
     i = h
     while t[i] != -1:
         if t[i] == x:
-            t[i] = -2  # mark as deleted
+            t[i] = -2  # mark as deleted without cutting the probe chain
+            self.size -= 1
             return True
         i = (i + 1) % self.cap
         if i == h:
@@ -501,10 +506,21 @@ def remove(self, x):
 OpenAddressHash.remove = remove
 
 def test_open_address_remove():
-    oa_hash = OpenAddressHash(7)
-    oa_hash.insert(10)
-    assert oa_hash.remove(10)
-    assert not (oa_hash.search(10))
+    # All three values collide, so 7 sits beyond 4 in the same probe chain.
+    oa_hash = OpenAddressHash(3)
+    for value in (1, 4, 7):
+        assert oa_hash.insert(value)
+    assert oa_hash.size == 3
+    assert not oa_hash.insert(10)  # genuinely full
+
+    assert oa_hash.remove(4)
+    assert oa_hash.size == 2
+    assert not oa_hash.search(4)
+    assert oa_hash.search(7)  # search walks through 4's tombstone
+
+    assert oa_hash.insert(10)  # the once-full table reuses that tombstone
+    assert oa_hash.size == 3
+    assert oa_hash.search(10)
 
 test_open_address_remove()
 ```

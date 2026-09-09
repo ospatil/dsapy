@@ -490,6 +490,20 @@ def delete(root, data):
     return rebalance(root)
 
 def test_delete_rebalances():
+    # Insertion leaves 3 balanced; deleting 4 makes it left-heavy and forces
+    # a right rotation. Checking the shape proves delete actually rebalanced.
+    rotating = None
+    for v in [3, 2, 4, 1]:
+        rotating = insert(rotating, v)
+    assert rotating.data == 3
+
+    rotating = delete(rotating, 4)
+    assert rotating.data == 2
+    assert rotating.left.data == 1
+    assert rotating.right.data == 3
+    assert rotating.height == 2
+    assert is_avl_balanced(rotating)
+
     root = None
     for v in [10, 20, 30, 40, 50, 25]:
         root = insert(root, v)

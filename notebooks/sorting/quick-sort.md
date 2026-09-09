@@ -162,10 +162,12 @@ bars separate regions here; i, j and h are indices into the array
 `i` marks the end of the "small" region and `j` scans forward. Every time `j` finds an
 element smaller than the pivot, the small region grows by one and the newcomer is swapped
 into it. The test is strict (`a[j] < pivot`), so elements *equal* to the pivot stay in the
-right-hand region - which is what keeps an all-equal array from piling everything on one
-side. The pivot itself waits at `h`, outside the scanned range, until the end. When the
-scan ends, swapping the pivot into `i + 1` puts it exactly between the two regions - its
-final sorted position.
+right-hand region. On an all-equal array, `i` never moves: the pivot lands at the first
+position and leaves the other `n - 1` elements on the right. The partition is correct but
+maximally unbalanced, so repeated equal values can drive this version to O(n squared).
+The pivot itself waits at `h`, outside the scanned range, until the end. When the scan ends,
+swapping the pivot into `i + 1` puts it exactly between the two regions - its final sorted
+position.
 
 Returning the pivot's true index is what lets `qsort_lomuto` recurse on `[l, p-1]` and
 `[p+1, h]` and leave the pivot out of both.
@@ -220,9 +222,11 @@ def test_partition_lomuto():
     assert partition_lomuto(a, 0, 3) == 3
     assert a == [1, 2, 3, 4]
 
-    # all equal: nothing is strictly less than the pivot
-    a = [5, 5, 5]
-    assert partition_lomuto(a, 0, 2) == 0
+    # all equal: a 0 versus n-1 split, the maximally unbalanced case
+    a = [5, 5, 5, 5, 5]
+    pivot_pos = partition_lomuto(a, 0, len(a) - 1)
+    assert (pivot_pos, len(a) - pivot_pos - 1) == (0, 4)
+    assert a == [5, 5, 5, 5, 5]
 
 
 test_partition_lomuto()

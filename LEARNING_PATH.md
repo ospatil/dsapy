@@ -65,3 +65,42 @@ Algorithmic techniques that appear across many problems.
 - [ ] [Two Pointers & Sliding Window](notebooks/techniques/two-pointers-sliding-window.md) - pair sum, remove duplicates, max subarray, longest unique substring
 - [ ] [Monotonic Stack](notebooks/stacks-and-queues/monotonic-stack.md) - next greater/smaller element, daily temperatures, largest rectangle
 - [ ] [Dynamic Programming](notebooks/dynamic-programming/dp-intro.md) - fibonacci, coin change, LCS, knapsack, `lru_cache`
+
+## Quick pass: practical first
+
+Use this 15-notebook route when you want the working toolkit before the deeper
+analysis and specialized variants. It is deliberately half the full path: learn
+one representative version of each core structure or technique, then return to
+the phases above for the skipped material.
+
+1. [Complexity Quick Reference](notebooks/analysis/00-quick-reference.md) - skim
+   the lookup tables; do not stop to derive every bound yet
+2. [Stacks and Queues](notebooks/stacks-and-queues/stacks-and-queues.md) - the two
+   frontier shapes used throughout the repo
+3. [Singly Linked List](notebooks/linked-lists/singly-linked-list.md) - pointer
+   updates, deletion, and reversal
+4. [Binary Search](notebooks/searching/binary-search.md) - invariants,
+   lower/upper bound, and boundary traps
+5. [Basic Sorts](notebooks/sorting/basic-sorts.md) - focus on insertion sort and
+   what stability means
+6. [Merge Sort](notebooks/sorting/merge-sort.md) - divide, solve, and merge
+7. [Quick Sort](notebooks/sorting/quick-sort.md) - partition boundaries and
+   worst-case splits
+8. [Hash Tables](notebooks/hashing/hash-tables.md) - collisions, chaining, and
+   open addressing
+9. [Binary Tree](notebooks/trees/binary-tree.md) - recursive and level-order
+   traversal
+10. [Binary Search Tree](notebooks/trees/binary-search-tree.md) - ordered search,
+    insertion, and deletion
+11. [Binary Heap](notebooks/trees/heap.md) - priority queues and `heapq`
+12. [Graph Basics](notebooks/graphs/graph-basics.md) - representations and their
+    costs
+13. [Graph Traversal](notebooks/graphs/graph-traversal.md) - BFS, DFS, and
+    connected components
+14. [Two Pointers & Sliding Window](notebooks/techniques/two-pointers-sliding-window.md) -
+    reusable array and substring patterns
+15. [Dynamic Programming](notebooks/dynamic-programming/dp-intro.md) - define
+    state, write the recurrence, and choose evaluation order
+
+After this pass, use [RECALL.md](RECALL.md) once before filling the gaps in the
+full phase order. Retrieval will show which core ideas actually stuck.

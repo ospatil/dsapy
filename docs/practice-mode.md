@@ -1,19 +1,30 @@
 # Practice mode - spec
 
-Not built. This is the design, the reasoning behind it, and what "done" means, so
-the work can start cold without re-deriving any of it.
+A one-notebook prototype now exists for binary search:
+
+```bash
+make practice-binary-search             # hint level
+make practice-binary-search LEVEL=cold  # or blank
+```
+
+It proves the three rendering levels, AST body stripping, verbatim graders,
+Jupytext pairing and generated-output contract. It deliberately stops before
+the hard repo-wide parts: cross-cell name resolution, the per-notebook helper
+allowlist, all-notebook generation and the drill ledger. Everything below is the
+design and acceptance criteria for that full version.
 
 ## The gap
 
 The repo has 30 notebooks, 174 Python cells, **118 `test_*` functions**, 170
-implementation functions and 33 mental-model cards. Between them they support two
-of the three things memory needs, and neither of the two is the one that rots:
+implementation functions and 33 mental-model cards. At course scale they support
+two of the three things memory needs; the prototype covers the third for one
+notebook only:
 
 | Mode | Supported by | Trains |
 |---|---|---|
 | Recognition | the notebooks, `LEARNING_PATH.md` | "yes, I have seen this" |
 | Recall of the idea | `RECALL.md`, cards behind `<details>` | "I can say why it works" |
-| **Production of the code** | **nothing** | **"I can write it from an empty cell"** |
+| **Production of the code** | **binary-search prototype only** | **"I can write it from an empty cell"** |
 
 The card tells you `hi` starts at `len(arr)` and not `len(arr) - 1` for
 `lower_bound`. It does not catch that your fingers wrote `len(arr) - 1` anyway.

@@ -2,6 +2,21 @@
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ospatil/dsapy/HEAD)
 
+## Start learning
+
+The Markdown notebooks render directly on GitHub, so installation is optional.
+Choose the route that matches what you need:
+
+- **Fast first pass:** follow the
+  [15-notebook practical route](LEARNING_PATH.md#quick-pass-practical-first).
+- **Complete course:** work through the
+  [full learning path](LEARNING_PATH.md) in dependency order.
+- **Returning after a gap:** test yourself with [RECALL.md](RECALL.md), then
+  open only the notebooks behind the ideas you missed.
+
+Use the Binder badge above for an interactive session without local setup, or
+continue below to run the notebooks locally.
+
 ## Prerequisites
 
 * **mise** - manages Python version and activates the virtual environment automatically
