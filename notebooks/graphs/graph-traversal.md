@@ -327,6 +327,26 @@ the ways the marking discussion predicts: a vertex is emitted twice, and on a de
 the queue swells with copies of vertices already claimed. There is no recipe here: this is
 the version not to write.
 
+The queue is where it goes wrong on this four-vertex graph:
+`build_adj(4, [(0, 1), (0, 2), (1, 3), (1, 2)])`:
+
+```
+front of the queue on the left; a vertex is marked only as it leaves the front
+
+after 0 leaves:  queue [1, 2]     order [0]
+after 1 leaves:  queue [2, 3, 2]  order [0, 1]        <- 1 enqueues 2 again
+after 2 leaves:  queue [3, 2]     order [0, 1, 2]
+after 3 leaves:  queue [2]        order [0, 1, 2, 3]
+after 2 leaves:  queue []         order [0, 1, 2, 3, 2]
+```
+
+The second row is the whole defect: 0 left the queue having claimed only itself,
+so when 1 scans its neighbours, 2 is still unmarked and goes in a second time.
+Both symptoms fall out of that last line at once - 2 is emitted twice, and the
+second copy is a **distance-1 vertex coming out behind distance-2 vertex 3**, so
+the order no longer sorts by distance. The triangle below pins the duplicate
+emission, and the complete graph on eight vertices pins the space cost.
+
 ```python
 def bfs_late_mark(adj, s):
     """BFS marking on dequeue. Returns (order, number of enqueues)."""

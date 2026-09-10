@@ -261,6 +261,23 @@ the code states which one it means purely by *where it reads* - a cell of the ro
 built, rather than a copy of the row from before this coin was on offer. The single row is
 not a space trick, it is the claim that coins are unlimited.
 
+One denomination is enough to see it. The row below holds `dp[i]` under each amount `i`,
+and each arrow points from a cell to the cell it read:
+
+```
+coins = [2]
+
+amount   0    1  2    3  4    5  6
+dp       0  inf  1  inf  2  inf  3
+
+dp[6] → dp[4] → dp[2] → dp[0]
+```
+
+Every arrow strips off the same 2, so the answer for 6 hands over that one denomination
+three times. No rule grants the repeat: `dp[4]` already counts the two earlier 2s, and
+`dp[6]` reads it from the row currently being filled. The odd amounts stay `inf` because
+no chain of 2s reaches them, and `inf` is what refuses to be built on.
+
 **Time:** O(amount × len(coins)) &nbsp; **Space:** O(amount)
 
 `amount` is a magnitude, not a length, so this is not polynomial in the size of the input:
@@ -463,16 +480,23 @@ Item 4 is the most valuable single item (7) and still is not part of the answer 
 
 **Fill order.** Both reads sit in row `i - 1`, at column `w` or lower, so any order that
 finishes row `i-1` before starting row `i` works, and *within* a row the columns are
-independent: `w` may ascend, descend, or be shuffled. That freedom is a property of keeping
-the previous row separate, and it disappears the moment the table is collapsed onto one row,
-where `w` must run downward.
+independent. Collapse the table onto one row, though, and direction decides whether a read
+still sees the previous item or one written during this item's own pass.
 
-**Reuse and one-time use.** Both lookups read row `i - 1`, the row as it stood before item
-`i` was offered, so the item cannot appear inside its own subproblem: offered once, answered
-once. Point either lookup at row `i` and the item can be taken again out of the capacity it
-has already eaten, which is the unbounded knapsack, a different problem with different
-answers. With one item of weight 2 and value 3 in a sack of 5, this code says 3, and that one
-says 6. The whole distinction is one index.
+One item of weight 2 and value 3 in capacity 5 makes the difference visible:
+
+```
+capacity index                 0  1  2  3  4  5
+descending final              [0, 0, 3, 3, 3, 3]
+
+ascending after w = 2         [0, 0, 3, 0, 0, 0]
+ascending after w = 4         [0, 0, 3, 3, 6, 0]   dp[4] = 3 + dp[2]
+ascending final               [0, 0, 3, 3, 6, 6]
+```
+
+Descending `w` reaches `dp[4]` before `dp[2]` has been changed for this item, so the
+item can contribute only once. Ascending `w` reaches `dp[4]` after writing `dp[2] = 3`,
+then adds the same value again. **Downward is how one row preserves the previous row.**
 
 **Time:** O(n × W) &nbsp; **Space:** O(n × W), reducible to O(W) with a single row
 

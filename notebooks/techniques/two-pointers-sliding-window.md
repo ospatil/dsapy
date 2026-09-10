@@ -256,6 +256,21 @@ while the width strictly shrinks, and the pairs being thrown away were never bou
 anyway and the sweep walks straight past the answer: on the array above, always moving the
 taller wall returns `8` instead of `49`.
 
+The failure is quiet because every step still scores a legal pair:
+
+```
+wrong rule: always move the taller wall
+
+lo=0, h=1   hi=8, h=7   width 8   area 8
+lo=0, h=1   hi=7, h=3   width 7   area 7
+                        ...
+lo=0, h=1   hi=1, h=8   width 1   area 1
+```
+
+`lo` never moves because its height 1 is shorter than every partner. It caps every
+area at the shrinking width, so the areas are `8, 7, ..., 1` and `best` stays 8.
+The true pair, indices 1 and 8, is never considered.
+
 Ties settle themselves. Equal walls cap the depth identically, so the argument above holds for
 each of them and either may go. The code tests `heights[lo] < heights[hi]`, which sends a tie
 down the `else` branch and moves `hi`; writing `<=` moves `lo` instead and the answer is

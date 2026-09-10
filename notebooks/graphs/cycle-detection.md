@@ -185,6 +185,29 @@ still inside `x`'s call, which is while `x` is still colour 1. **The closing edg
 is always examined from below, while the top of the cycle is still on the stack**, so a
 colour-2 vertex can only belong to a cycle that this rule has already caught.
 
+Both halves of that, the safe skip and the catch, happen in one walk on
+`adj = [[1, 2, 3], [2], [], [0]]`, which is `0 → 1`, `0 → 2`, `0 → 3`, `1 → 2`, and
+`3 → 0`:
+
+```
+each row shows the whole colour array after the step, vertex 0 leftmost
+indentation is recursion depth
+
+dfs(0)                [1, 0, 0, 0]
+  dfs(1)              [1, 1, 0, 0]   edge 0 → 1 finds colour 0
+    dfs(2)            [1, 1, 1, 0]   edge 1 → 2 finds colour 0
+    2 finishes        [1, 1, 2, 0]   no outgoing edges, so 2 turns colour 2
+  1 finishes          [1, 2, 2, 0]
+edge 0 → 2 sees 2     [1, 2, 2, 0]   skipped, not re-explored, not reported
+  dfs(3)              [1, 2, 2, 1]   edge 0 → 3 finds colour 0
+  edge 3 → 0 sees 1   [1, 2, 2, 1]   ancestor still on stack, cycle 0 → 3 → 0
+```
+
+Vertex 0 holds colour 1 across every row, which is what makes `3 → 0` readable as a back
+edge at the moment it is scanned. Vertex 2 is reached twice by two different parents and is
+not on the stack for the second visit, so its colour 2 is exactly the distinction a boolean
+`visited` cannot draw.
+
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
 **Recipe**

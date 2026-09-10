@@ -291,7 +291,19 @@ the returned `j` is always strictly below `h`, and `(l, p)` is a strictly smalle
 
 The strict comparisons pay off on duplicates, and this is where the two schemes part company.
 Equal values stop both pointers, so they get swapped past each other and the split lands near
-the middle. On an all-equal array of 16 elements Hoare recurses 5 levels deep; Lomuto, which
+the middle:
+
+```
+a = [5, 5, 5, 5]   pivot = 5,  i starts at -1, j at 4
+
+i = 0, j = 3   neither scan advances (5 < 5 and 5 > 5 are both false)  swap
+i = 1, j = 2   same, one step further in                               swap
+i = 2, j = 1   crossed, i >= j                                         return 1
+```
+
+Each pointer moves exactly one place per round, because the strict comparison stops it on the
+first element it reads, and they cross after two rounds. The returned `1` splits four elements
+two and two. On an all-equal array of 16 elements Hoare recurses 5 levels deep; Lomuto, which
 sweeps every equal element into the right-hand region, recurses 16. The two all-equal asserts
 below and in the Lomuto tests pin exactly that difference.
 

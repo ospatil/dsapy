@@ -225,13 +225,13 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 > then puts it straight where it belongs. Insertion sort compares only until it meets
 > something smaller, and stops there.
 >
-> **Load-bearing:** that "stops there". Insertion sort is the only one of the three that is
-> genuinely fast on nearly-sorted input, because a value that is already close to its place
-> stops after one or two comparisons - Θ(n) for the whole array. Bubble sort's `swapped` flag
-> only spots an array that is *already* sorted and does nothing for one that is merely close,
-> and selection sort has no fast case at all, since the scan always covers the entire
-> remainder. That is why real library sorts, Timsort included, fall back to insertion sort on
-> short runs rather than to either of the other two.
+> **Load-bearing:** that "stops there". Insertion sort's work tracks how far values still
+> need to move, because each value stops as soon as it reaches its place. Bubble sort's
+> `swapped` flag helps only after a whole pass changes nothing. A small value moves left
+> one slot per pass, so one misplaced tail value can still force every pass. Selection
+> sort has no fast case at all, since the scan always covers the entire remainder. That
+> is why real library sorts, Timsort included, fall back to insertion sort on short runs
+> rather than to either of the other two.
 
 </details>
 

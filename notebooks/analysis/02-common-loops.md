@@ -347,6 +347,23 @@ $\Theta(n^2)$, and *that* is the trap: multiplying gives $n \times n = n^2$ and 
 right answer by luck, so the mistake goes unnoticed. Make the inner loop logarithmic in `i`, or
 the outer range something other than $n$, and the two methods part company.
 
+They can also disagree outright. Let `i` set the inner loop's *step* instead of its
+bound, and the passes shrink as `i` grows:
+
+```python
+for i in range(1, n + 1):
+    for j in range(0, n, i):    # step i, so about n/i passes
+        # some constant work
+```
+
+For `n = 6` the outer passes cost `6, 3, 2, 2, 2, 1`, which is $16$ - not the $36$
+that $n \times n$ predicts. The exact total is
+$\sum_{i=1}^{n}\lceil n/i\rceil$. Its main part is
+$n(1 + \frac{1}{2} + \frac{1}{3} + \dots + \frac{1}{n})$; rounding each pass up
+adds at most another $n$. The bracketed *harmonic* sum grows like $\log n$, so
+the loop is $\Theta(n \log n)$. Multiplying $n$ by $n$ is not merely lucky here,
+it is wrong.
+
 The rule: **add the passes** whenever the inner count moves, and multiply only when it is
 genuinely fixed.
 <!-- #endregion -->

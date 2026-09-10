@@ -572,11 +572,28 @@ right would pop the right child first and the entire right subtree would come ou
 ahead of the left. Push **right first**.
 
 Pushing two children per pop looks like it should cost more memory than the spine did,
-and it does not. At any moment `roots` holds the not-yet-emitted siblings of the nodes
-on the path back to the root - at most one per level - so it stays Θ(h). On a complete
-31-node tree it peaks at 5 entries. Width is paid for by level order below, not here.
+and it does not. `roots` holds the next node to emit, plus the right siblings deferred
+along the path that led to it. A complete seven-node tree shows the shape; the stack
+top is on the right:
 
-**Time:** Θ(n) &nbsp; **Space:** Θ(h) - at most one pending sibling per level
+```
+        1
+      /   \
+     2     3
+    / \   / \
+   4   5 6   7
+
+after emitting 1   roots [3, 2]
+after emitting 2   roots [3, 5, 4]   peak: next 4, with pending siblings 5 and 3
+after emitting 4   roots [3, 5]
+after emitting 5   roots [3]
+after emitting 3   roots [7, 6]      level 3 has four nodes; at most two wait here
+```
+
+The stack grows with depth, not with the number of nodes on a level, so it stays
+Θ(h). Width is paid for by level order below, not here.
+
+**Time:** Θ(n) &nbsp; **Space:** Θ(h) - next node plus pending siblings on one path
 
 **Recipe**
 
@@ -594,19 +611,13 @@ on the path back to the root - at most one per level - so it stays Θ(h). On a c
 def preorder_iter(root):
     """
     Time complexity: 𝛳(n)
-    Aux Space: 𝛳(h) - roots holds at most one pending sibling per level
+    Aux Space: 𝛳(h) - next node plus deferred siblings along one path
     """
     if root is None:
         return []
     roots = [root]  # to-do list: discovered but not yet emitted
     result = []
-    # consider a simple tree
-    #   10
-    # 20  30
-    # We need to print 10, then 20 and then 30
-    # we are using stack which is LIFO, therefore, in the code below,
-    # we push 30 i.e right first and then 20 i.e left so that left
-    # is popped first.
+    # Push right first so left is popped first.
     while roots:
         curr = roots.pop()
         result.append(curr.data)

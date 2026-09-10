@@ -73,6 +73,23 @@ heap. It pushes a second one and leaves the first behind. That stale copy carrie
 bigger than the `dist[u]` that superseded it, which is exactly what `if d > dist[u]:
 continue` tests when it surfaces.
 
+Four vertices are enough to watch one stale note appear and be discarded:
+
+```
+directed graph: 0->1 (10), 0->2 (1), 2->1 (1), 1->3 (1)
+heap notes are (distance, vertex), shown in pop order
+
+pop (0, 0)   dist[1] inf->10, dist[2] inf->1  heap (1, 2) (10, 1)
+pop (1, 2)   dist[1] 10->2                   heap (2, 1) (10, 1)
+pop (2, 1)   dist[3] inf->3                  heap (3, 3) (10, 1)
+pop (3, 3)   nothing improves                heap (10, 1)
+pop (10, 1)  10 > dist[1] = 2, discard it
+```
+
+The route through 2 improves vertex 1 but cannot delete its old `(10, 1)` note.
+When that note surfaces, its distance no longer matches the best known distance,
+so the stale check prevents vertex 1 from being processed twice.
+
 ## Why the first pop is final
 
 Popping is committing: the loop never revisits a vertex, so the distance it pops has to be
@@ -338,6 +355,18 @@ shortest-path **tree** rooted at the source.
 One back-pointer per vertex is what makes this free. Storing whole paths would copy up to V
 vertices on every improvement; a predecessor is a single write, and the route is rebuilt
 once, at the end, by walking backwards from the destination and reversing.
+
+On the four-vertex graph above, vertex 1 first gets distance 10 through 0, then
+distance 2 through 2. The same two improvements write `parent[1]` as `0`, then
+replace it with `2`:
+
+```
+parent [None, 2, 0, 1]
+back from 3:  3 <- 1 <- 2 <- 0   reverse to get [0, 2, 1, 3]
+```
+
+The parent changes exactly when the distance changes, so it always describes the
+route responsible for the current best distance.
 
 `parent[src]` is never written, so it stays `None` and that is what stops the walk. An
 unreachable destination is caught before the walk starts, by its infinite distance.

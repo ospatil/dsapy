@@ -200,6 +200,23 @@ Direction then only decides which of those two reads as "next":
 So `next_greater` (right to left, at push) and `daily_temperatures` (left to right, at pop)
 sit in different rows and both compute *next*. Direction on its own settles nothing.
 
+Hold the direction fixed, left to right, on `[2, 5, 3]`. The stack below holds
+indices, with its top on the right; the two answer rows hold values:
+
+```
+i=0, value 2   push 0                         stack [0]
+i=1, value 5   pop 0, then push 1             stack [1]
+i=2, value 3   keep 1, then push 2            stack [1, 2]
+
+read at push:  [-1, -1, 5]   previous greater
+write at pop:  [ 5, -1, -1]  next greater
+```
+
+At `i=2`, reading the surviving index 1 gives this arrival its previous-greater
+answer, 5. At `i=1`, writing while index 0 is popped gives the earlier 2 its
+next-greater answer, also 5. **The same pop answers a different endpoint depending
+on when the write happens.**
+
 **Which one to reach for:** read at push when the answer is the other element's *value*, since
 you only need the survivor. Switch to write at pop when the answer needs *both* endpoints - a
 distance, or a width - because only then do you hold the popped element and the arriving one

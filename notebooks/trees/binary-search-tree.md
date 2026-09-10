@@ -594,6 +594,23 @@ Both functions obey one rule, which is easier to hold than two sets of compariso
 `val`.** Floor banks when the node is below `val` and steps up; ceil banks when it
 is above and steps down.
 
+Both functions walk the same nodes of the test tree, so one trace serves both.
+Each row is a node the walk stands on, and the two right-hand columns are what
+`floor(26)` and `ceil(26)` do with it:
+
+```
+      10             node   floor              ceil
+     /  \            ----   ----------------   ----------------
+    5   30           10     10 < 26  bank 10   10 < 26  no bank
+   /    / \          30     30 > 26  no bank   30 > 26  bank 30
+  2    25 40         25     25 < 26  bank 25   25 < 26  no bank
+                     ----   returns 25         returns 30
+```
+
+The descent is the same, `10 -> 30 -> 25`. Only the banking differs because
+"allowed" means opposite things. Floor replaces 10 with the better candidate 25;
+ceil keeps 30 when 25 falls below the target.
+
 Floor and ceil together answer "nearest neighbours of a key that may not be in the
 tree" - the BST counterpart of `bisect_right(a, x) - 1` and `bisect_left(a, x)`.
 

@@ -371,6 +371,16 @@ Calling it `prev` would put the local and the *field* `curr.prev` in the same tw
 meaning different things, and `curr = curr.prev` is already the line most likely to be
 misread here.
 
+Take the middle node of `1 <-> 2 <-> 3`:
+
+```
+node 2   before   (prev=1, next=3)
+         after    (prev=3, next=1)     the old next moved into prev
+         advance    curr = curr.prev  ->  3, the node next used to point at
+```
+
+The swap does not lose the route forward. It changes which field holds it.
+
 **Time:** O(n) &nbsp; **Space:** O(1)
 
 **Recipe**

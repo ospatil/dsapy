@@ -225,6 +225,20 @@ is already in the output". Seed the queue with the vertices that start that way,
 one is emitted, decrement its neighbours: a neighbour hitting 0 has just had its last
 prerequisite satisfied and joins the queue.
 
+The counts are the invisible part. On the existing six-vertex DAG, arrays are
+indexed by vertex and the queue pops from the left:
+
+```
+start    in_degree [2, 2, 1, 1, 0, 0]   queue [4, 5]
+emit 4   in_degree [1, 1, 1, 1, 0, 0]   queue [5]
+emit 5   in_degree [0, 1, 0, 1, 0, 0]   queue [0, 2]
+```
+
+Vertex 0 waits after 4 removes one incoming edge. Only 5 removes its last one,
+changing its count from 1 to 0 and making it ready. Vertex 2's count reaches 0 in
+that same step. **The queue receives a vertex at the exact moment its final
+prerequisite disappears.**
+
 Cycle detection comes out of the same count rather than being bolted on. A vertex on a cycle
 has a prerequisite that is itself downstream of that vertex, so its count never reaches 0, and
 neither does the count of anything fed by it. The vertices missing from the result are exactly

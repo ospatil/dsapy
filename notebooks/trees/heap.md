@@ -227,8 +227,10 @@ the work is finished. If it is a child, swap the two, and the node now faces the
 question one level lower, against a smaller subtree. It sinks until both of its
 children are larger, or until it has no children left.
 
-Swapping with the *smaller* child is not a detail. Promote the larger one and it
-becomes the parent of the smaller one, which breaks the very rule you were repairing.
+Swapping with the *smaller* child is not a detail. On `[5, 3, 4]`, both children
+beat the parent, but only 3 belongs on top. Choosing it gives `[3, 5, 4]`.
+Compare each child only with the original 5, and the right child 4 wins by accident,
+giving `[4, 3, 5]`, which still has 3 below a larger parent.
 
 **Time:** O(log n) - one comparison pair per level of descent &nbsp;
 **Space:** O(log n) recursion depth
@@ -244,11 +246,8 @@ becomes the parent of the smaller one, which breaks the very rule you were repai
 4. Left child: `if lt < n and arr[lt] < arr[smallest]: smallest = lt`. **The
    bounds test comes first**, and `and` short-circuits, so a leaf never reads past
    the end. Reversed, `arr[lt]` raises `IndexError` on every leaf.
-5. Right child: the same test, but **against `arr[smallest]`, not `arr[i]`**.
-   That is what leaves `smallest` holding the smaller of the two children rather
-   than whichever one happened to beat the parent last. Comparing both against
-   `arr[i]` and taking the last winner is the standard bug here, and it produces a
-   heap that is wrong only when the right child is the larger of the two.
+5. Right child: the same test, but **against `arr[smallest]`, not `arr[i]`**,
+   so `smallest` remains the smallest of every value inspected so far.
 6. `smallest == i` means the node is where it belongs and everything under it was
    already valid, so stop - this is the base case, and there is no separate
    `if i >= n` guard anywhere.

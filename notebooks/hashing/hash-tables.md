@@ -154,6 +154,26 @@ a free slot is guaranteed to be found. Outside that, probing can cycle over a su
 slots forever while empty ones sit unvisited - which is why the load factor is a
 requirement here, not just a performance tip.
 
+A table of 8 shows how little the probe can reach. Each column is one attempt `i`, and
+the row below it is the slot that attempt lands on for a key whose home slot is 0:
+
+```
+i           0  1  2  3  4  5  6  7  8  ...
+(0 + i²)%8  0  1  4  1  0  1  4  1  0  ...
+```
+
+The path only ever touches slots 0, 1 and 4, then repeats forever. Fill those three and
+the table is 3/8 full - comfortably under the α < 0.5 line - yet a fourth key with home
+slot 0 can never be placed, while slots 2, 3, 5, 6 and 7 sit empty. The squares collapse
+onto three values because 8 is not prime.
+
+Prime `m` is what widens that set: for an odd prime, the first (m+1)/2 attempts land on
+(m+1)/2 *distinct* slots. That is the entire guarantee, and it is why both requirements
+are listed together - the distinct slots are just over half the table, so only a table
+under half full is certain to have a free one among them. Neither half stands alone: a
+prime `m` past half full can still fail to place a key, and the trace above is α < 0.5
+failing on an `m` that is not prime.
+
 ### 3. Double Hashing
 
 - **Formula:** `h(key, i) = (h1(key) + i*h2(key)) % m`
