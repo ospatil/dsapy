@@ -66,18 +66,27 @@ special cases, since there is always a node in front of the one being changed. T
 
 ## Insert at front
 
-Point the new node at the old first node, then point the dummy at the new node.
-Two assignments, no special case for the empty list - the dummy always exists.
+Decide the finished shape before writing anything: `dummy -> new -> old first -> ...`.
+Two arrows differ from the current shape, and the pointer that has to be *read* to build
+one of them, `head.next`, is the same pointer the other one *overwrites*. That collision
+is the whole content of this function.
+
+The way out is to write into the arrow nothing else depends on yet. `new.next` is
+uninitialised, so it can take the copy for free; the instant it holds that copy there are
+two routes into the old first node and `head.next` is safe to clobber. There is no cursor
+here at all, and no empty-list branch either, because the dummy is a real node whether or
+not anything follows it.
 
 **Time:** O(1) &nbsp; **Space:** O(1)
 
 **Recipe**
 
-1. Create the node: `new = ListNode(val)`.
+1. `new = ListNode(val)`.
 2. `new.next = head.next` **first**, then `head.next = new`.
-3. **Reverse those two and `new.next = head.next` reads the pointer you just
-   overwrote**, so `new` ends up pointing at itself and the rest of the list is
-   unreachable.
+3. **Reversed, `new.next = head.next` reads the pointer it has just overwritten**, so
+   `new` points at itself and every real node becomes unreachable.
+4. No guard. On an empty list `head.next` is `None`, and `None` is exactly the right
+   `next` for the only node in a one-element list.
 
 ```python
 def insert_front(head, val):
@@ -98,19 +107,26 @@ test_insert_front()
 
 ## Insert at end
 
-There is no tail pointer, so the tail has to be found first - that walk is the
-whole cost. `curr.next is None` identifies the tail, and on an empty list the
-dummy head *is* the last node, so the same code handles it.
+The target shape is `... -> old tail -> new -> None`, so the pointer that changes belongs
+to the tail. Nothing in a singly linked list points at the tail, so it has to be found
+first, and that search is the entire O(n) - the splice after it is one assignment.
+
+`curr` is the node the walk currently takes to be the tail, and `curr.next` is the
+disproof: a node with a successor was never the tail, so step onto the successor and
+believe that instead. Starting that belief on the dummy is what erases the empty-list
+case, since with no real nodes the dummy is never disproved and is itself the node to
+attach to.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
 **Recipe**
 
-1. Start `curr` at the **dummy**, not at `head.next`.
+1. Create the node, then start `curr` at the **dummy**, not at `head.next`.
 2. Walk while `curr.next` is truthy, so `curr` finishes on the last real node.
    **The test is `curr.next`, not `curr`. Stopping on `curr is None` walks off
    the end and leaves nothing to attach to.**
-3. `curr.next = new`.
+3. `curr.next = new`. `new.next` is already `None`, which is what a tail needs.
+4. No guard: the empty list is just the run where `curr` never moves.
 
 ```python
 def insert_end(head, val):
@@ -143,7 +159,11 @@ empty list, which the `if head.next` guard covers.
 **Recipe**
 
 1. Guard the empty list, then `head.next = head.next.next`.
-2. Nothing frees the skipped node explicitly; once nothing points at it Python
+2. **The guard is not decoration**: `head.next.next` on an empty list reads a
+   field off `None`.
+3. Returns nothing, and on an empty list it is a silent no-op rather than an
+   error - the caller cannot tell whether anything was removed.
+4. Nothing frees the skipped node explicitly; once nothing points at it Python
    collects it.
 
 ```python
@@ -169,11 +189,16 @@ test_delete_first()
 
 ## Delete last
 
-To drop the last node you need the node *before* it, and a singly linked list cannot step
-backwards. So walk while `curr.next.next` exists - that parks `curr` on the second-to-last
-node - then cut with `curr.next = None`.
+The target shape is `... -> second-to-last -> None`, so the pointer that changes belongs
+to the second-to-last node. That is the general shape of every deletion here: the node
+being removed is never the node being edited, its predecessor is, and a singly linked list
+cannot step backwards to reach one. So the predecessor is found by walking, and `curr` is
+the node the walk currently takes to be it.
 
-The `head.next is None` guard covers the empty list, where `curr.next.next` would raise.
+`curr.next.next` is the disproof this time, one link further ahead than `insert_end` needs,
+because the walk has to stop one node earlier. That extra dereference is also what forces
+the guard: on an empty list the dummy's `next` is `None` and `curr.next.next` reads a field
+off it.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
@@ -185,19 +210,18 @@ The `head.next is None` guard covers the empty list, where `curr.next.next` woul
 3. Walk while **`curr.next.next`** is truthy, which parks `curr` on the
    *second-to-last* node.
 4. `curr.next = None`.
-5. A one-element list works because `curr` stays on the dummy and the dummy's
-   `next` is what gets cleared.
+5. A one-element list needs no branch of its own: the loop never runs, `curr` is
+   still the dummy, and the dummy's `next` is exactly the pointer to clear.
 
 ```python
 def delete_last(head):
-    if head.next is None: # this is an empty list
+    if head.next is None: # empty list, nothing to drop
         return
-    else:
-      curr = head
-      # we need to stop at second-last node, therefore curr.next.next check
-      while curr.next.next:
+    curr = head
+    # we need to stop at second-last node, therefore curr.next.next check
+    while curr.next.next:
         curr = curr.next
-      curr.next = None
+    curr.next = None
 
 
 def test_delete_last():
@@ -359,6 +383,11 @@ def test_search():
     assert search(head, 4) == 4
     assert search(head, 5) == -1
 
+    # duplicates: the walk returns on the first match, so the later one is invisible
+    insert_end(head, 2)
+    assert to_list(head) == [1, 2, 3, 4, 2]
+    assert search(head, 2) == 2
+
 test_search()
 ```
 
@@ -384,8 +413,8 @@ is what you want when equal keys have to keep their insertion order.
 3. **`curr.next` must be tested first in the `and`.** It short-circuits at the
    end of the list; reverse the two and the walk reads `.val` on `None`.
 4. **Strict `<` puts a duplicate in front of its equals; `<=` puts it behind.**
-   Choose deliberately - the tests below insert identical values, so neither
-   choice changes a single assertion.
+   Values alone cannot tell those two apart, so the test below pins it by node
+   *identity* instead - which is the only way this claim can fail loudly.
 5. Splice with the usual pair, `new.next = curr.next` then `curr.next = new`.
 
 ```python
@@ -418,8 +447,13 @@ def test_sorted_insert():
     assert to_list(head) == [1, 2, 3, 5]
 
     # test insertion of duplicate
+    existing_3 = head.next.next.next  # the node already holding 3
     sorted_insert(head, 3)
     assert to_list(head) == [1, 2, 3, 3, 5]
+    # strict < stopped before the equal value, so the new node landed in front of
+    # it. With <= the walk would step past and these two asserts would flip.
+    assert head.next.next.next is not existing_3
+    assert head.next.next.next.next is existing_3
 
 
 test_sorted_insert()
@@ -444,8 +478,13 @@ same "push onto the front" motion, with the list's own pointers doing the stack'
 3. Pop until the stack is empty, and for each popped value create a node and
    link it on: `curr.next = ListNode(stack.pop())`, then advance
    `curr = curr.next`.
-4. **Any reference a caller was holding into the old list still points at the
-   discarded nodes**, since every node here is replaced rather than rewired.
+4. **No guard, and nothing to terminate by hand.** An empty list pushes nothing,
+   so the second loop never runs and `head.next` keeps its `None`; otherwise the
+   last node built is fresh, so its `next` is already `None`.
+5. **Any reference a caller was holding into the old list still points at the
+   discarded nodes**, since every node here is replaced rather than rewired. The
+   old chain stays intact and walkable, just detached - which is worse than a
+   crash, because it looks like a list.
 
 ```python
 def reverse_using_stack(head):
@@ -465,8 +504,27 @@ def test_reverse_using_stack():
     insert_end(head, 1)
     insert_end(head, 2)
     insert_end(head, 3)
+    old_first = head.next  # the node holding 1
     reverse_using_stack(head)
     assert to_list(head) == [3, 2, 1]
+    # every node was rebuilt, so the caller's old reference is not in the new list
+    assert old_first is not head.next.next.next
+    assert old_first.val == 1 and old_first.next is not None  # still walkable, detached
+
+    # empty list, and a single element
+    head = ListNode(-1)
+    reverse_using_stack(head)
+    assert to_list(head) == []
+    insert_end(head, 7)
+    reverse_using_stack(head)
+    assert to_list(head) == [7]
+
+    # duplicates survive as duplicates
+    head = ListNode(-1)
+    for v in (1, 2, 2, 3):
+        insert_end(head, v)
+    reverse_using_stack(head)
+    assert to_list(head) == [3, 2, 2, 1]
 
 test_reverse_using_stack()
 ```
@@ -492,7 +550,9 @@ still point forward, untouched.
 
 So `prev` is **not** "the previous node", and reading it that way is what makes this loop
 hard to rebuild cold. "Three-pointer technique" undersells it too: there are two *regions*
-and one temporary.
+and one temporary. The temporary is the untouched region *minus the node about to leave it*,
+which is why it is called `rest` below - it is what remains to be done once `curr` has
+moved across.
 
 Each iteration moves exactly one node across the boundary, from the front of untouched to
 the front of reversed. That is a stack push, which is why this and the stack version above
@@ -507,23 +567,25 @@ nodes being moved, and that is what makes it free.
    prefix is empty, and that `None` becomes the new tail's `next`, terminating
    the list.**
 2. Loop while `curr`.
-3. `next = curr.next` before anything else. **The following line overwrites
+3. `rest = curr.next` before anything else. **The following line overwrites
    `curr.next`, which is the only route into the untouched suffix.**
 4. `curr.next = prev` moves one node across the boundary.
-5. Advance the pair, `prev = curr` then `curr = next`. **In that order. Assign
+5. Advance the pair, `prev = curr` then `curr = rest`. **In that order. Assign
    `curr` first and `prev = curr` copies the new value, losing the prefix.**
 6. Loop ends with `curr is None`, so the suffix is empty and `prev` is the head
    of the whole reversed list. Attach it to the dummy: `head.next = prev`.
+7. Empty list: the loop never runs, `prev` is still `None`, and `head.next = None`
+   is correct rather than an accident.
 
 ```python
 def reverse(head):
-    # three pointers technique: prev, curr, next
+    # two regions, prev and curr, plus one temporary: rest
     prev, curr = None, head.next
     while curr:
-        next = curr.next # store reference to next node
+        rest = curr.next # the untouched part, minus the node about to move
         curr.next = prev
-        prev = curr # prev becomes curr
-        curr = next # curr becomes next
+        prev = curr # curr joins the reversed prefix, and is now its head
+        curr = rest # the untouched region shrinks by one
     head.next = prev
 
 
@@ -532,8 +594,27 @@ def test_reverse():
     insert_end(head, 1)
     insert_end(head, 2)
     insert_end(head, 3)
+    old_first = head.next  # the node holding 1
     reverse(head)
     assert to_list(head) == [3, 2, 1]
+    # nodes were rewired, not rebuilt: the old head is the same object, now the tail
+    assert head.next.next.next is old_first
+    assert old_first.next is None  # prev's starting None became the new terminator
+
+    # empty list, and a single element
+    head = ListNode(-1)
+    reverse(head)
+    assert to_list(head) == []
+    insert_end(head, 7)
+    reverse(head)
+    assert to_list(head) == [7]
+
+    # duplicates survive as duplicates
+    head = ListNode(-1)
+    for v in (1, 2, 2, 3):
+        insert_end(head, v)
+    reverse(head)
+    assert to_list(head) == [3, 2, 2, 1]
 
 test_reverse()
 ```
@@ -552,25 +633,32 @@ Python keeps every call alive even when that call is the last thing the function
 
 **Recipe**
 
-1. Base case is the empty suffix, `curr is None`: **return `prev`, not `curr`**.
+1. Base case is the empty **suffix**, `curr is None`: **return `prev`, not `curr`**.
    `curr` is `None` here, so returning it hands back an empty list.
-2. Save `next = curr.next` before anything else, exactly as the loop does.
-3. `curr.next = prev` moves one node across the boundary.
-4. Recurse with `(curr, next)`, the new prefix head and the new suffix head, and
-   return what it returns unchanged. Nothing happens on the way back up.
-5. The outer function starts the walk past the dummy and assigns the returned
-   head back: `head.next = reverse_recursive_util(None, head.next)`.
+2. **Say "empty suffix", never "empty list".** Phrase the base case as "if the list
+   is empty, return `None`" and a one-element list breaks: the single node is
+   `curr` on the first call, not `None`, and the frame that finally sees `None` is
+   the one holding that node in `prev`.
+3. Save `rest = curr.next` before anything else, exactly as the loop does.
+4. `curr.next = prev` moves one node across the boundary.
+5. Recurse with `(curr, rest)`, the new prefix head and the new suffix head, and
+   return what it returns unchanged. Nothing happens on the way back up, which is
+   what makes the recursion pure plumbing here.
+6. The outer function returns nothing. It starts the walk past the dummy and
+   assigns the returned head back:
+   `head.next = reverse_recursive_util(None, head.next)`.
 
 ```python
 def reverse_recursive(head):
     # the idea is we reverse the first link and then make recursive call to reverse next link
     def reverse_recursive_util(prev, curr):
         if curr is None:
-            # base case, compare to iterative reverse above. We reached to the end of list and prev points to the last node that is new head
+            # base case: the untouched suffix is empty, so prev is the head of the
+            # fully reversed prefix - the node that used to be last
             return prev
-        next = curr.next # store reference to next node
+        rest = curr.next # the untouched part, minus the node about to move
         curr.next = prev # reverse the link
-        return reverse_recursive_util(curr, next)
+        return reverse_recursive_util(curr, rest)
 
     head.next = reverse_recursive_util(None, head.next)
 
@@ -580,8 +668,29 @@ def test_reverse_recursive():
     insert_end(head, 1)
     insert_end(head, 2)
     insert_end(head, 3)
+    old_first = head.next  # the node holding 1
     reverse_recursive(head)
     assert to_list(head) == [3, 2, 1]
+    assert head.next.next.next is old_first  # rewired, not rebuilt
+    assert old_first.next is None
+
+    # empty list: the base case fires on the very first call and returns None
+    head = ListNode(-1)
+    reverse_recursive(head)
+    assert to_list(head) == []
+
+    # single element: the case that catches a base case phrased as "empty list"
+    insert_end(head, 7)
+    reverse_recursive(head)
+    assert to_list(head) == [7]
+    assert head.next.next is None
+
+    # duplicates survive as duplicates
+    head = ListNode(-1)
+    for v in (1, 2, 2, 3):
+        insert_end(head, v)
+    reverse_recursive(head)
+    assert to_list(head) == [3, 2, 2, 1]
 
 test_reverse_recursive()
 ```

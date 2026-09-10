@@ -38,8 +38,8 @@ Let's consider some examples:
 ## Example 1
 
 ```python
-    def sum(n):
-        return n * (n + 1)//2
+def sum1(n):
+    return n * (n + 1) // 2
 ```
 
 The space complexity is $\Theta(1)$ since only 1 variable is needed.
@@ -125,7 +125,11 @@ Let's see how the call stack looks like for `fib(4)` execution:
 
 ![Fibonacci Recursion Call Stack](images/space-complexity-call-stack.png)
 
-As we can see, the maximum number of active stack frames is $4$ i.e. height of tree.
+As we can see, the maximum number of active stack frames is $4$ - one for each call on the deepest
+path, `fib(4) → fib(3) → fib(2) → fib(1)`. That is the tree's height counted in **nodes**, the
+convention used throughout this repo (a single node is a tree of height 1, an empty tree height 0).
+Count edges instead and the same tree is height 3, which is off by one against the frames actually
+on the stack - so it is the node count that matters here.
 
 That gap is worth pausing on: `fib(n)` makes about $2^n$ calls, yet only $n$ frames are ever
 alive at once. The reason is that siblings never coexist - `fib(n-2)` does not start until
@@ -135,13 +139,15 @@ counts only the ones alive simultaneously, which is one root-to-current path. So
 
 Therefore aux space = $\Theta(n)$.
 
-> The simple rule to find out the aux space for recursion: **it's always equal to the height of the recursion tree**.
+> The simple rule to find out the aux space for recursion: **it's the number of frames on the deepest
+> path**, i.e. the height of the recursion tree, nodes counted.
 
 ### Example 3
 
 Consider the following non-recursive implementation for fibonacci:
 
-> **Note:** This implementation assumes $n \geq 2$.
+> **Note:** This implementation assumes $n \geq 1$. For $n = 0$ the list has a single slot, so
+> `f[1] = 1` raises `IndexError` before the loop is ever reached.
 
 ```python
 def fib2(n):

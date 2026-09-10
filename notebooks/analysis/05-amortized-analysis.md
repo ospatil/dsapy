@@ -114,7 +114,9 @@ T(n) = n  +  (sum of copy costs)
 Copies happen at i = 2, 3, 5, 9, 17, ... (i.e. when i = 2^k + 1). The copy at i = 2^k + 1
 moves the 2^k elements already in the array.
 
-How many times can this happen? At most floor(log2(n)) + 1 times, since 2^k <= n means k <= log2(n).
+How many times can this happen? The copy at i = 2^k + 1 only occurs if that append exists at all,
+i.e. 2^k + 1 <= n, so 2^k < n and k <= log2(n). Counting from k = 0, that is at most
+floor(log2(n)) + 1 copies.
 
 Each copy is twice the size of the one before, so the last copy is bigger than everything
 before it put together. A sum that keeps doubling like this is called a **geometric series**,
@@ -200,15 +202,15 @@ honest: n appends really did cost at most n times the charge.
 
 **Rule:** The bank balance must never go negative.
 
-### Why charge $3?
+### Why charge \$3?
 
-Between two expensive operations (at i = 2^(k-1) + 1 and i = 2^k + 1), there are 2^(k-1) - 1 cheap operations. Each cheap operation costs $1, so if we charge $3, we bank $2 per cheap operation.
+Between two expensive operations (at i = 2^(k-1) + 1 and i = 2^k + 1), there are 2^(k-1) - 1 cheap operations. Each cheap operation costs \$1, so if we charge \$3, we bank \$2 per cheap operation.
 
 Savings from cheap operations: 2 x (2^(k-1) - 1) = 2^k - 2
 
 Cost of the next expensive operation: 2^k + 1
 
-We pay $3 for the expensive operation itself, plus withdraw 2^k - 2 from the bank:
+We pay \$3 for the expensive operation itself, plus withdraw 2^k - 2 from the bank:
 
 ```
 3 + (2^k - 2) = 2^k + 1  ✓  exactly enough!
@@ -237,7 +239,7 @@ lie. Staying at or above zero means the real total never exceeded what was charg
 balance is drained back to a small floor by each resize and built up again by the cheap appends
 before the next one, which is the pre-paying made visible.
 
-**Amortized cost = $3 = O(1)**
+**Amortized cost = \$3 = O(1)**
 
 The accounting method is more flexible than aggregate - it can assign different charges to different operation types (useful when analyzing data structures with multiple operations like push/pop on a stack).
 
@@ -297,7 +299,9 @@ that collapses like that is said to **telescope**:
 sum of a(i) = sum of t(i) + Phi(final) - Phi(initial)
 ```
 
-If Phi(final) >= Phi(initial) (which we ensure by choosing Phi >= 0), then sum of a(i) >= sum of t(i), so the amortized cost is an upper bound on the real cost.
+The telescoped sum is an upper bound on the real cost as long as Phi(final) >= Phi(initial). Here
+that holds for a stated reason rather than by assumption: Phi >= 0 always, and Phi(initial) = 0 at
+an empty array (checked below), so sum of a(i) >= sum of t(i).
 
 ### Applied to Dynamic Array
 
@@ -314,7 +318,8 @@ a(i) = t(i) + Phi(after) - Phi(before)
      = 3
 ```
 
-**Expensive operation** (resize at i = 2^k): length goes from 2^k to 2^k + 1, capacity goes from 2^k to 2^(k+1).
+**Expensive operation** (the resize, which happens on append i = 2^k + 1 - the append that *arrives*
+at a full array): length goes from 2^k to 2^k + 1, capacity goes from 2^k to 2^(k+1).
 
 ```
 Phi(before) = 2(2^k) - 2^k + 1 = 2^k + 1
@@ -345,7 +350,7 @@ This makes the potential method more powerful for complex data structures where 
 |---------------------------|-----------|-----------|-----|
 | Dynamic array `append` | O(n) | O(1) | Doubling strategy |
 | Hash table `insert` | O(n) | O(1) | Resizing when load factor exceeded |
-| [Union-Find](../graphs/union-find.md) `find`/`union` | O(log n) | O(α(n)) | Path compression flattens over time |
+| [Union-Find](../graphs/union-find.md) `find`/`union` | O(log n) | O(α(n)) | Path compression + union by rank flatten the trees over time |
 | Splay tree operations | O(n) | O(log n) | Frequent nodes move to root |
 | [Stack with multipop](../stacks-and-queues/monotonic-stack.md) | O(n) | O(1) | Each element pushed/popped at most once |
 

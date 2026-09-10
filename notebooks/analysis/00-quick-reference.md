@@ -50,10 +50,16 @@ $O(n)$ - one class, differing only by constants we can't measure portably anyway
 > ones. $O(n^2)$ with tiny constants beats $O(n \log n)$ at $n = 20$ - which is exactly why Timsort
 > drops to insertion sort on short runs.
 
-> **Rough sizing.** Python runs $\approx 10^7$ simple operations per second. So $n \leqslant 10^5$
-> rules out $O(n^2)$ and points at $O(n \log n)$; $n \leqslant 3000$ leaves room for $O(n^2)$;
-> $n \leqslant 20$ invites exponential search. Read that backwards and the stated input limit tells
-> you the complexity to aim for.
+> **Rough sizing.** Two numbers make this work, and the second one usually goes unsaid: Python
+> runs $\approx 10^7$ simple operations per second, and the budget being assumed is
+> **about one second**. So the question is always "does the operation count stay near $10^7$?"
+> - $n \leqslant 10^5$ rules out $O(n^2)$ ($10^{10}$ operations, about $17$ minutes) and points at
+>   $O(n \log n)$ ($\approx 1.7 \times 10^6$)
+> - $n \leqslant 3000$ leaves room for $O(n^2)$ ($\approx 10^7$, right at the budget)
+> - $n \leqslant 20$ invites exponential search ($2^{20} \approx 10^6$)
+>
+> Read that backwards and the stated input limit tells you the complexity to aim for. Change the
+> budget and every threshold moves with it, which is why it is worth stating.
 
 
 ## Case vs notation - two independent axes
@@ -153,11 +159,18 @@ once the constant drops.
 
 ```python
 i = 1
-while i < n:
-    i *= 2      # or i //= 2
+while i < n:      # multiply up
+    i *= 2
+
+i = n
+while i > 1:      # or divide down
+    i //= 2
 ```
 
-$\log_2 n$ iterations → $O(\log n)$.
+$\lceil \log_2 n \rceil$ iterations for the first, $\lfloor \log_2 n \rfloor$ for the second →
+$O(\log n)$ either way. **The two forms are not interchangeable inside one loop:** `i //= 2` starting
+from `i = 1` lands on `0` and never reaches `n`, so the halving form has to start at `n` and count
+down.
 
 > **Multiplicative step is the log signal; additive step (`i += c`) is the linear signal.**
 
@@ -195,8 +208,8 @@ for i in range(2, n):
     if n % i == 0: ...
 ```
 
-$O(n)$ - the loop runs $n$ times whatever the body does. Trial division only up to $\sqrt{n}$ is
-$O(\sqrt{n})$.
+$O(n)$ - the loop runs $n - 2$ times, so $\Theta(n)$ iterations of whatever the body costs. Trial
+division only up to $\sqrt{n}$ is $O(\sqrt{n})$.
 
 > Careful with the meaning of $n$ here: it's the input *value*, not the input's size in bits. An
 > algorithm linear in a numeric value is *pseudo-polynomial* - knapsack's $O(n \cdot W)$ is the
@@ -305,8 +318,10 @@ Depth $\approx n$, width roughly doubles each level → $\approx 2^n$ nodes → 
 > shrinks fast enough to cancel the branching (merge sort, where the two collapse to $n \log n$).
 >
 > The tight bound for `fib` is actually $\Theta(\varphi^n)$ where
-> $\varphi = \frac{1 + \sqrt{5}}{2} \approx 1.618$, since the tree is incomplete. Assuming a full
-> tree is what gives the (correct, slightly loose) upper bound $O(2^n)$.
+> $\varphi = \frac{1 + \sqrt{5}}{2} \approx 1.618$, since the tree is incomplete - the $n-2$
+> branch bottoms out before the $n-1$ branch does. Rounding it up to a full binary tree of
+> height $n$ prices calls that were never made, which is why that route yields the (correct,
+> slightly loose) upper bound $O(2^n)$ and never a $\Theta$.
 
 ### The most useful mental shortcut
 
@@ -547,9 +562,14 @@ holds**. That's what makes it the stronger guarantee.
 | Dynamic array append (`list`, `vector`) | resize + copy - $O(n)$ | $O(1)$ |
 | Dynamic array pop from end | occasional shrink | $O(1)$ |
 | Hash table insert | resize + rehash - $O(n)$ | $O(1)$ |
-| Union-Find with path compression | occasional long path traversal | $O(\alpha(n))$, practically $O(1)$ |
+| Union-Find with path compression + union by rank | occasional long path traversal | $O(\alpha(n))$ |
 | Incrementing a binary counter | occasional long carry chain | $O(1)$ |
 | Monotonic stack pass | inner while loop pops many | $O(1)$ per element |
+
+$\alpha(n)$ is the **inverse Ackermann function**: the smallest $m$ with $A(m, m) \geqslant n$. Since
+$A$ grows unimaginably fast, its inverse crawls - $\alpha(n) \leqslant 4$ for every $n$ that fits in
+a real machine. So read $O(\alpha(n))$ as "constant for any input you will meet, but provably not
+quite constant". [01 Notation](01-notation.md) derives it.
 
 > **One-sentence version:** don't judge an operation by its worst moment - judge it by its fair
 > share of the total cost across a long sequence, and if expensive moments become rare fast enough,

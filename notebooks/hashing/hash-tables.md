@@ -23,7 +23,8 @@ index straight from the key, so finding a key is arithmetic instead of searching
 | Insert | O(1) | O(n) |
 | Lookup | O(1) | O(n) |
 | Delete | O(1) | O(n) |
-| Min, max, sorted order | O(n) | O(n) |
+| Min, max | O(n) | O(n) |
+| Sorted order | O(n log n) | O(n log n) |
 
 **Use it when** the only questions are "is this key here?" and "what is stored under
 this key?". Anything about order - smallest, next largest, everything between a and b -
@@ -80,6 +81,12 @@ is bad in advance - that is *universal hashing*.
 Two keys hash to the same slot, and the second value still has to be stored. There are
 only two places it can go: in with the first value, or in a different slot. Those two
 answers are the two families of hash table.
+
+Both families are costed in one number, so it needs a definition before it gets
+used: the **load factor** is α = n/m, for n keys stored in m slots. It is
+fullness as a fraction, so α = 0.5 is a half-full table and α = 1 is as many keys
+as slots. Every cost below is quoted in α rather than in n, because what a table
+costs depends on how full it is and not on how much it holds.
 
 ![Chaining vs Open Addressing](images/hash-chaining-vs-open.png)
 
@@ -165,9 +172,8 @@ because it can never come out as 0.
 
 ## Why the load factor decides everything
 
-The load factor is how full the table is: α = n/m, for n keys in m slots. It, not the
-number of keys, is what sets the cost of an operation. A table with a million keys in
-two million slots is fast. A table with ten keys in ten slots is not.
+α, not the number of keys, is what sets the cost of an operation. A table with a
+million keys in two million slots is fast. A table with ten keys in ten slots is not.
 
 A failed search is the honest measure, because it is the one that cannot stop early on
 a match.
@@ -214,6 +220,19 @@ in the same list instead of needing anywhere else to go.
 bucket - that is expected, not an error - so every operation below has the same
 shape: find the bucket in O(1), then scan that one short list.
 
+That shape comes from one invariant, and the three operations are just readings
+of it: **a key that is in the table is in bucket `hash(key) % size`, exactly
+once.** Lookup is therefore "scan that bucket and report the record's value",
+update is "scan that bucket and overwrite the record", delete is "scan that
+bucket and drop the record". None of them has anywhere else it could look.
+
+Collisions cannot hide a key from that scan, because a record is identified by
+comparing keys and not by where it sits in the list. `append` puts a colliding
+record after the ones already there without disturbing them, and `pop` shifts
+later records down one, which changes nobody's identity. Position carries no
+information here, which is what makes deletion trivial, and it is exactly what
+open addressing gives up.
+
 A prime `size` (7 here) spreads keys more evenly when hash values share factors with
 the table size.
 
@@ -239,9 +258,9 @@ Hash to the bucket, then linearly scan that bucket comparing keys. The hash narr
 n keys down to one short list; the scan resolves which record in the list is the one
 asked for.
 
-Cost is `1 + α` where α = n/size is the load factor - one hash plus the average
-chain length. Keep α around 1 and this is O(1) on average; a table that is never
-resized degrades to O(n) as chains grow.
+Cost is `1 + α`: one hash, plus a walk of a chain that is n/size long on average.
+Keep α around 1 and this is O(1); a table that is never resized degrades to O(n)
+as chains grow.
 
 Missing keys return `None` rather than raising.
 
@@ -252,9 +271,10 @@ Missing keys return `None` rather than raising.
 1. `bucket = self.buckets[hash(key) % self.size]`. **`% self.size` is what turns
    an arbitrarily large hash into a valid index, and it is repeated in every one
    of these three methods.**
-2. Scan the bucket linearly for a record whose stored key equals `key`.
-3. Not found, return `None`. **That cannot distinguish a missing key from one
-   stored with the value `None`**, which is why a real dict raises `KeyError`
+2. `for rec_key, rec_val in bucket:` and `return rec_val` when
+   `rec_key == key` - the comparison is on the stored key, not on position.
+3. Fell off the end, `return None`. **That cannot distinguish a missing key from
+   one stored with the value `None`**, which is why a real dict raises `KeyError`
    instead.
 
 ```python
@@ -269,7 +289,13 @@ ChainHash.get_val = get_val
 
 def test_chainhash_get():
     chain_hash = ChainHash()
-    assert chain_hash.get_val(2) is None
+    assert chain_hash.get_val(2) is None  # empty bucket, nothing to scan
+    # 3, 10 and 17 all hash to bucket 3, so only the key comparison can tell
+    # them apart, and a hit may sit anywhere in the list.
+    chain_hash.buckets[hash(3) % chain_hash.size] = [(3, "three"), (10, "ten")]
+    assert chain_hash.get_val(3) == "three"
+    assert chain_hash.get_val(10) == "ten"
+    assert chain_hash.get_val(17) is None  # same bucket, absent from it
 
 test_chainhash_get()
 ```
@@ -280,21 +306,22 @@ Same scan as `get`, with two outcomes: if the key is already in the bucket, repl
 its record in place (a dict assigns, it does not accumulate duplicates); otherwise
 append a new record.
 
-Skipping the scan and always appending would be faster but would leave two records
-for one key, and `get` would return whichever it met first.
+The invariant is what forces the scan. "Exactly once" is not something the bucket
+maintains on its own, it is something `put` has to keep true on every call.
 
-**Time:** O(1) average &nbsp; **Space:** O(n) across all buckets
+**Time:** O(1) average, O(n) worst case &nbsp; **Space:** O(n) across all buckets
 
 **Recipe**
 
 1. Find the bucket the same way.
 2. **Scan for the key before appending** - insert and update are the same call
-   here.
-3. Found: overwrite that slot with `(key, val)` and **return immediately**, or
-   the append below runs too.
-4. Not found: `append` the new pair.
-5. Enumerate to get `i` alongside the record, since the tuple has to be replaced
-   by index.
+   here. **Skip the scan and one key ends up with two records; `get_val` then
+   returns the older one, because it stops at the first match.**
+3. Found: `bucket[i] = (key, val)` and **`return` immediately**, or the append
+   below runs too.
+4. Not found: `bucket.append((key, val))`.
+5. `enumerate(bucket)` to get `i` alongside the record, since the tuple is
+   immutable and has to be replaced by index.
 
 ```python
 def put_val(self, key, val):
@@ -311,21 +338,34 @@ def test_chainhash_put():
     chain_hash = ChainHash()
     chain_hash.put_val("name", "frodo")
     assert chain_hash.get_val("name") == "frodo"
-    chain_hash.put_val("name", "gandalf")
+    chain_hash.put_val("name", "gandalf")  # update, not a second record
     assert chain_hash.get_val("name") == "gandalf"
+    chain_hash.put_val("nil", None)
+    assert chain_hash.get_val("nil") is None  # same answer as a missing key
+    # 3 and 10 collide, so updating one must neither disturb the other nor add
+    # a duplicate record to the shared bucket.
+    collide = ChainHash()
+    collide.put_val(3, "three")
+    collide.put_val(10, "ten")
+    assert len(collide.buckets[3]) == 2
+    collide.put_val(3, "THREE")
+    assert len(collide.buckets[3]) == 2
+    assert collide.get_val(3) == "THREE"
+    assert collide.get_val(10) == "ten"
 
 test_chainhash_put()
 ```
 
 ### Chaining: delete
 
-Find the record in the bucket and pop it out of the list. Nothing else has to
-move - this is where chaining is genuinely simpler than open addressing, which
-cannot just remove an entry (see the tombstone note below).
+Find the record in the bucket and pop it out of the list. Every other key is in
+the bucket its own hash names, so removing this record cannot make any of them
+harder to find - that is the whole of why chaining needs no tombstone, and it is
+the point open addressing has to work for (see the tombstone note below).
 
 Deleting a key that isn't present is a silent no-op.
 
-**Time:** O(1) average
+**Time:** O(1) average, O(n) worst case
 
 **Recipe**
 
@@ -334,6 +374,7 @@ Deleting a key that isn't present is a silent no-op.
 3. **The `break` is not an optimisation.** Removing from a list while iterating
    over it makes the loop skip the next element, so continuing after a `pop` walks
    a list that has shifted underneath it.
+4. No match, fall out of the loop and do nothing.
 
 ```python
 def delete_val(self, key):
@@ -350,6 +391,18 @@ def test_chainhash_delete():
     chain_hash.put_val("name", "frodo")
     chain_hash.delete_val("name")
     assert chain_hash.get_val("name") is None
+    chain_hash.delete_val("name")  # deleting a missing key is a no-op
+    assert chain_hash.get_val("name") is None
+    # Deleting from the middle of a shared bucket must leave both neighbours
+    # reachable: 3, 10 and 17 all live in bucket 3.
+    collide = ChainHash()
+    for key, val in ((3, "three"), (10, "ten"), (17, "seventeen")):
+        collide.put_val(key, val)
+    collide.delete_val(10)
+    assert len(collide.buckets[3]) == 2
+    assert collide.get_val(3) == "three"
+    assert collide.get_val(17) == "seventeen"
+    assert collide.get_val(10) is None
 
 test_chainhash_delete()
 ```
@@ -367,22 +420,54 @@ Two sentinels share the array with real values:
 | `-1` | never used - a probe may stop here |
 | `-2` | deleted (tombstone) - a probe must keep going |
 
+Sharing the array has a price that is easy to miss: `-1` and `-2` are **reserved
+values**, so the contract is that this is a set of integers other than those two.
+Nothing enforces it, which is exactly why it has to be stated. `insert(-1)`
+returns `True`, writes a slot that still reads as empty, and increments `size`, so
+the value is unfindable and the count is now wrong; do it `cap` times and the
+table rejects every later insert as full while every slot is in fact free.
+`insert(-2)` writes a slot indistinguishable from a tombstone, and `search(-2)`
+answers `True` for any table carrying a tombstone anywhere in the unbroken run
+that starts at -2's own home slot, whether or not -2 was ever inserted. A
+production table uses two
+distinct marker objects rather than in-band integers, so no stored value can be
+mistaken for one.
+
+The probe path is the rest of the design. `insert` walks the path from `hash(x)`
+and takes the first slot not already holding a value, which fixes one invariant:
+
+> **If `x` is in the table, every slot from `hash(x)` up to the one holding `x`
+> holds something - never `-1`.**
+
+That unbroken run is what "reachable" means here, and it is the only fact the
+other two operations need. Insert cannot break it, because it only ever turns a
+`-1` or a `-2` into a value and never moves a value already placed: a key
+deflected by a collision lands further along its own path, and the run behind it
+is the trail that deflection left. Delete is the operation that *could* break it,
+by putting a `-1` back in the middle of a run, and that is the entire reason for
+the second sentinel.
+
 **Time:** O(1) average, degrading as the load factor approaches 1
 
 **Recipe**
 
-1. `buckets = [-1] * cap` with **two** sentinels: `-1` empty, `-2` deleted. This
-   is a plain list of ints, so `[-1] * cap` is safe here in a way `[[]] * cap`
-   was not.
-2. `hash(x)` is `x % cap`.
-3. `insert`: return early if the table is full, and again if `search(x)` already
-   finds `x`, since this is a set.
-4. Probe from `hash(x)` while the slot is **neither `-1` nor `-2`**, stepping `i
-   = (i + 1) % cap`.
-5. **Insert treats a tombstone as free and reuses it; search must not.** That
+1. `self.buckets = [-1] * cap` and `self.size = 0`. This is a plain list of ints,
+   so `[-1] * cap` is safe here in a way `[[]] * cap` was not.
+2. `hash(x)` is `x % self.cap`.
+3. `insert`: `if self.size == self.cap: return False` first. **Without that guard
+   a full table hangs**, because the probe in step 5 stops only on `-1` or `-2`
+   and a full table has neither.
+4. Then `if self.search(x): return False`. It makes this a set rather than a bag,
+   and it is also **what makes the tombstone reuse in step 5 safe**: step 5 stops
+   at the first `-1` or `-2`, so skipping the pre-search writes a second copy of
+   `x` into a tombstone sitting in front of the copy already there - after which
+   one `remove` clears only one of them and `search` still reports `x` present.
+5. `i = self.hash(x)`, then `while t[i] not in (-1, -2): i = (i + 1) % self.cap`.
+   **Insert treats a tombstone as free and reuses it; search must not.** That
    asymmetry between the two methods is the entire point of having two sentinels
    rather than one, and it is the part to get right cold.
-6. Write `x` into the slot and increment `size`.
+6. `t[i] = x`, `self.size += 1`, `return True`. **Never pass `-1` or `-2` as
+   `x`** - both are reserved and neither fails loudly.
 
 ```python
 class OpenAddressHash:
@@ -413,31 +498,41 @@ class OpenAddressHash:
 Probe forward from the home slot until one of three things happens: the value turns
 up, an **empty** (`-1`) slot appears, or the probe wraps back to where it started.
 
-Stopping on an empty slot is the part that needs justifying, because it is the step
-that gives up. It is safe because `insert` fills slots in probe order: if `x` were
-in the table, insertion would have put it in this slot or an earlier one on the same
-path. A slot that was never touched is proof that `x` was never inserted.
+Stopping on an empty slot is the step that gives up, so it is the one that needs
+justifying, and the invariant is the justification. A `-1` here would contradict
+"every slot from `hash(x)` up to `x` holds something", so `x` cannot be sitting
+further along. A slot that was never written is proof that `x` was never inserted.
 
-A tombstone (`-2`) proves nothing of the kind. It says only "something was here and
-left", and a key that insertion pushed past it is still further along the path. So
-the probe has to walk through tombstones. Treat one as empty and the search declares
-keys missing that are sitting one slot away.
+A tombstone (`-2`) proves nothing of the kind. It holds something, so the
+invariant is still satisfied and the run is still unbroken; all `-2` says is
+"something was here and left", and a key that insertion pushed past it is still
+further along the path. Treat one as empty and the search declares keys missing
+that are sitting one slot away.
 
-The `i == h` check is what stops a full table from spinning forever.
+The `i == h` guard follows from the loop condition, not from anything about
+probing. A `-1` is the loop's only way to finish without a match, so on a table
+holding no `-1` at all - every slot either a value or a tombstone - a failed
+search never leaves the loop, and the probe circles forever. The guard is also not
+giving up early: the step is 1, so the path
+visits all `cap` slots before it can arrive back at `h`, and by then every slot has
+been compared to `x`. Coming full circle is a complete negative answer rather than
+a timeout.
 
 **Time:** O(1) average, O(n) worst case
 
 **Recipe**
 
-1. Start at `h = hash(x)` and probe forward.
-2. Continue while `t[i] != -1`, so only an empty slot ends the search.
-3. **Write `-1` on delete instead of `-2` and the search stops in the hole.**
+1. `h = self.hash(x)`, `t = self.buckets`, `i = h`.
+2. `while t[i] != -1:` - an empty slot is the only content that ends the search.
+   **Write `-1` on delete instead of `-2` and the search stops in the hole.**
    Insert 10, 17 and 24 into a table of 7 and they land in slots 3, 4 and 5.
    Blank slot 4 by removing 17, and `search(24)` returns `False` with 24 sitting
    untouched in slot 5.
-4. Match, return `True`.
-5. `if i == h: return False` after each step, **because on a table with no empty
-   slot the `-1` test never fires** and the probe circles forever.
+3. `if t[i] == x: return True`. **An `x` of `-2` matches any tombstone on its
+   path**, which is the reserved-value contract biting.
+4. `i = (i + 1) % self.cap`, then `if i == h: return False`, **because on a table
+   with no empty slot the `-1` test never fires** and the probe circles forever.
+5. `return False` below the loop, for the empty-slot exit.
 
 ```python
 def search(self, x):
@@ -456,9 +551,29 @@ OpenAddressHash.search = search
 
 def test_open_address_search():
     oa_hash = OpenAddressHash(7)
-    assert not (oa_hash.search(10))
+    assert not oa_hash.search(10)  # empty table, the home slot is already -1
     oa_hash.insert(10)
     assert oa_hash.search(10)
+    # 17 and 24 share 10's home slot, so they are pushed to 4 and 5 and are only
+    # reachable by walking the unbroken run that starts at slot 3.
+    assert oa_hash.insert(17)
+    assert oa_hash.insert(24)
+    assert oa_hash.buckets[3:6] == [10, 17, 24]
+    assert oa_hash.search(24)
+    assert not oa_hash.search(31)  # same home slot, never inserted
+    assert not oa_hash.insert(24)  # already present, so this behaves as a set
+    assert oa_hash.size == 3
+    # A table with no -1 left can only terminate via the i == h guard.
+    full = OpenAddressHash(3)
+    for value in (1, 2, 3):
+        assert full.insert(value)
+    assert -1 not in full.buckets
+    assert not full.search(99)
+    # Reserved value: inserting -1 "succeeds" but stores an invisible phantom.
+    phantom = OpenAddressHash(7)
+    assert phantom.insert(-1)
+    assert phantom.size == 1
+    assert not phantom.search(-1)  # the slot it wrote still reads as empty
 
 test_open_address_search()
 ```
@@ -467,9 +582,10 @@ test_open_address_search()
 
 Same probe as `search`, but on a match the slot is set to `-2` rather than `-1`.
 
-Writing `-1` would be a bug: it would cut every probe chain that runs through this
-slot, hiding keys that are still in the table. The tombstone keeps the chain intact
-while marking the slot as reusable by `insert`.
+Writing `-1` would break the invariant directly: it puts a hole back into a run,
+and every key further along that run becomes unreachable while still sitting in
+the table. `-2` counts as "holds something", so the run stays unbroken, while
+`insert` is still free to reuse the slot.
 
 `size` counts live values, not occupied-looking slots. Deletion must decrement it
 when the value becomes a tombstone. Otherwise a table that was once full stays
@@ -478,15 +594,17 @@ logically full forever, and `insert` rejects the tombstone it is supposed to reu
 The cost is that tombstones accumulate and lengthen probes over time, so a real
 implementation rehashes the table periodically to clear them out.
 
-**Time:** O(1) average
+**Time:** O(1) average, O(n) worst case
 
 **Recipe**
 
-1. Probe exactly like `search`, with the same `-1` stop and the same full-circle
-   guard.
-2. Found: write **`-2`, the tombstone, not `-1`**.
-3. Decrement `size`, because it counts live values. **Leave it unchanged and a
+1. `h = self.hash(x)`, `i = h`, `while t[i] != -1`, step `i = (i + 1) % self.cap`,
+   `if i == h: return False` - identical probe to `search`, same stop condition
+   and same full-circle guard.
+2. Found: `t[i] = -2`, **the tombstone, not `-1`**.
+3. `self.size -= 1`, because it counts live values. **Leave it unchanged and a
    once-full table can never insert again, even though a tombstone is free.**
+4. `return True`; `return False` on both the empty-slot and full-circle exits.
 
 ```python
 def remove(self, x):
@@ -521,6 +639,26 @@ def test_open_address_remove():
     assert oa_hash.insert(10)  # the once-full table reuses that tombstone
     assert oa_hash.size == 3
     assert oa_hash.search(10)
+
+    # Deleting from the middle of a longer cluster: 10, 17, 24 -> slots 3, 4, 5.
+    cluster = OpenAddressHash(7)
+    for value in (10, 17, 24):
+        assert cluster.insert(value)
+    assert cluster.remove(17)
+    assert cluster.buckets[3:6] == [10, -2, 24]  # hole is a tombstone, not -1
+    assert cluster.search(24)  # 24 is still reachable across it
+    # insert's pre-search finds 24 across the tombstone, so the tombstone is not
+    # reused for a second copy of a key that is already present.
+    assert not cluster.insert(24)
+    assert cluster.buckets[3:6] == [10, -2, 24]
+    assert not cluster.remove(17)  # already gone
+    assert not cluster.remove(99)  # never present
+
+    # Reserved value: -2 is answered by any tombstone on its own probe path.
+    reserved = OpenAddressHash(7)
+    assert reserved.insert(5)
+    assert reserved.remove(5)  # leaves -2 in slot 5, which is -2's home slot
+    assert reserved.search(-2)  # never inserted, reported present anyway
 
 test_open_address_remove()
 ```

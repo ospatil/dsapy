@@ -23,19 +23,28 @@ jupyter:
 
 ## Comparison of Basic Sorts
 
-| Algorithm | Time Complexity | Space | Stable | In-place |
-|-----------|----------------|-------|--------|----------|
-| Bubble Sort | O(n²) | O(1) | Yes | Yes |
-| Selection Sort | Θ(n²) | O(1) | No | Yes |
-| Insertion Sort | O(n²), Ω(n) | O(1) | Yes | Yes |
+| Algorithm | Best | Worst | Space | Stable | In-place |
+|-----------|------|-------|-------|--------|----------|
+| Bubble Sort | Θ(n) | Θ(n²) | Θ(1) | Yes | Yes |
+| Selection Sort | Θ(n²) | Θ(n²) | Θ(1) | No | Yes |
+| Insertion Sort | Θ(n) | Θ(n²) | Θ(1) | Yes | Yes |
 
-> **Mental model.** All three cost O(n²) for the same reason: each element ends up compared
-> against many others, and n elements times roughly n comparisons each is n². What separates
-> them is what they *do* with a comparison. Bubble sort swaps the pair on the spot, so a
-> value crawls towards its place one slot at a time. Selection sort refuses to move anything
-> until it has scanned the whole unsorted remainder and knows the true minimum, then puts it
-> straight where it belongs. Insertion sort compares only until it meets something smaller,
-> and stops there.
+Two separate questions get tangled in a table like this, so keep them apart. *Which input*
+is the best/worst split. *Which kind of bound* is the choice of O, Θ or Ω. Naming the input
+answers the second question exactly, which is why every cell above is Θ: on already-sorted
+input bubble sort takes Θ(n), not merely O(n). Writing a single entry as "O(n²), Ω(n)" mixes
+the axes - it looks like two bounds on one quantity when it is really one bound on each of
+two different inputs, and Ω gets read as a synonym for "best case", which it is not.
+Selection sort's two columns being identical is the whole story of that algorithm: no input
+is a fast one.
+
+> **Mental model.** All three cost Θ(n²) in the worst case for the same reason: each element
+> ends up compared against many others, and n elements times roughly n comparisons each is
+> n². What separates them is what they *do* with a comparison. Bubble sort swaps the pair on
+> the spot, so a value crawls towards its place one slot at a time. Selection sort refuses to
+> move anything until it has scanned the whole unsorted remainder and knows the true minimum,
+> then puts it straight where it belongs. Insertion sort compares only until it meets
+> something smaller, and stops there.
 >
 > **Load-bearing:** that "stops there". Insertion sort is the only one of the three that is
 > genuinely fast on nearly-sorted input, because a value that is already close to its place
@@ -52,10 +61,10 @@ Compare each adjacent pair and swap when they are out of order. One pass over th
 drags the largest remaining element all the way to the right - it "bubbles" up - so after
 pass i the last i elements are final and the next pass can stop i short.
 
-The `swapped` flag is what makes the best case O(n): a pass with no swaps proves the array
+The `swapped` flag is what makes the best case Θ(n): a pass with no swaps proves the array
 is already sorted, so there is no point continuing.
 
-**Time:** O(n²), Ω(n) on already-sorted input &nbsp; **Space:** O(1) - in-place, stable
+**Time:** Θ(n²) worst, Θ(n) on already-sorted input &nbsp; **Space:** Θ(1) - in-place, stable
 
 **Recipe**
 
@@ -101,13 +110,24 @@ Two consequences of *scanning* rather than *swapping neighbours*:
 
 - The scan always covers the whole remainder, so there is no early exit and no adaptive
   best case - Θ(n²) even on sorted input, unlike bubble and insertion sort
-- It performs only O(n) swaps total, which is why it is the choice when writes are
-  expensive (flash memory, for instance)
+- It performs exactly n - 1 swaps, one per round, which is why it is the choice when writes
+  are expensive (flash memory, for instance). On reverse-sorted input of 20 elements that is
+  19 swaps against bubble sort's 190.
 
-The long-distance swap is also what breaks stability: it can jump an element past an equal
-one.
+The long-distance swap is also what breaks stability. `[1, 1.0, 0]` is the smallest input
+that shows it: the minimum `0` sits at the end, so it is swapped into slot `0` and the value
+that was there is thrown to the back of the array, behind its own equal twin. The scan is
+not at fault - `l[j] < l[min_idx]` is strict, so it keeps the *earliest* of several equal
+minima.
 
-**Time:** Θ(n²) always &nbsp; **Space:** O(1) - in-place, not stable
+That claim needs care to check, because the obvious way to check it is wrong. Equal integers
+are indistinguishable, so plain `[1, 1, 0]` cannot show a reorder at all. Tagging them,
+`[[1, "a"], [1, "b"], [0, "c"]]`, is worse than useless: list comparison then *sees* the tag,
+and that extra comparison quietly repairs the order, so the test passes and proves nothing.
+`1` and `1.0` are equal to every comparison the sort makes yet still tell apart in the
+output, which is the only reason the assert below is honest.
+
+**Time:** Θ(n²) always &nbsp; **Space:** Θ(1) - in-place, not stable
 
 **Recipe**
 
@@ -139,6 +159,12 @@ def test_selection_sort():
     selection_sort(l)
     assert l == [1, 2, 3, 4, 5]
 
+    # not stable: 1 and 1.0 compare equal, so the sort cannot tell them apart,
+    # but str() can - the later one comes out first
+    l = [1, 1.0, 0]
+    selection_sort(l)
+    assert [str(x) for x in l] == ["0", "1.0", "1"]
+
 test_selection_sort()
 ```
 
@@ -163,7 +189,7 @@ Because the loop stops at the first smaller element, nearly-sorted input costs a
 nothing - Θ(n) in the best case. That adaptiveness is why Timsort (Python's `sorted`)
 uses insertion sort on small runs.
 
-**Time:** Θ(n²) worst, Θ(n) best &nbsp; **Space:** O(1) - in-place, stable, adaptive
+**Time:** Θ(n²) worst, Θ(n) best &nbsp; **Space:** Θ(1) - in-place, stable, adaptive
 
 **Recipe**
 
@@ -174,9 +200,13 @@ uses insertion sort on small runs.
 3. `j = i - 1`, then while `j >= 0 and x < l[j]`, copy `l[j]` up to `l[j + 1]`
    and step `j` back. This shifts, it does not swap: one write per element
    instead of three.
-4. **`j >= 0` has to come first in the `and`.** Python does not raise on `l[-1]`,
-   it wraps to the last element, so a missing guard corrupts data quietly
-   instead of crashing.
+4. **`j >= 0` has to come first in the `and`.** Without it, `j` reaching `-1`
+   does not raise - `l[-1]` wraps to the last element, so the loop carries on
+   comparing against the far end. From there it either walks off the front and
+   raises `IndexError` from a line that looks innocent (`[2, 1]` does this,
+   leaving `[2, 2]` behind), or stops early and writes `x` near the end of the
+   list, returning a wrong answer with no error at all (`[1, 0, 0, 2]` comes back
+   as `[0, 0, 2, 1]`).
 5. Write `x` into `l[j + 1]`. **`j + 1`, because the loop exits one slot past
    where `x` belongs, having stepped `j` back once too far.**
 
@@ -205,6 +235,11 @@ def test_insertion_sort():
     insertion_sort(l)
     assert l == []
 
+    # stable, on the same input that catches selection sort
+    l = [1, 1.0, 0]
+    insertion_sort(l)
+    assert [str(x) for x in l] == ["0", "1", "1.0"]
+
 test_insertion_sort()
 ```
 
@@ -217,7 +252,7 @@ Python uses **Timsort** - a hybrid of merge sort + insertion sort.
 | `sorted(iterable)` | New list | No | Yes |
 | `list.sort()` | None | Yes | Yes |
 
-**Time complexity:** O(n log n) worst case, O(n) on nearly sorted data (adaptive).
+**Time complexity:** Θ(n log n) worst case, Θ(n) on nearly sorted data (adaptive).
 
 Timsort exploits existing order in data - it finds natural "runs" (already sorted subsequences),
 extends them with insertion sort, then merges them. This is why both merge sort and insertion sort

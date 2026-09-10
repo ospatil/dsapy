@@ -29,16 +29,6 @@ function, but the number it returns is the only part that matters. See
 
 **Applications:** Kruskal's MST, cycle detection in undirected graphs, connected components, network connectivity.
 
-## Key Optimizations
-
-Both of these talk about trees, so read them against the representation set out in the card
-below: each set is a tree of parent pointers, and the root of that tree *is* the set's name.
-
-1. **Union by rank** - attach the shorter tree under the taller one → keeps trees flat
-2. **Path compression** - during `find`, point every node directly to the root → flattens on access
-
-Without optimizations: O(n) per operation. With both: O(α(n)) amortized.
-
 > **Mental model.** Each set is represented by one of its own members - the root of a tree
 > of parent pointers. Nothing anywhere stores which set an element belongs to. You find out
 > by walking up the parent pointers until you reach a node that is its own parent, so "are x
@@ -50,7 +40,21 @@ Without optimizations: O(n) per operation. With both: O(α(n)) amortized.
 > node at the root, or hanging one root under another, changes the shape and changes nothing
 > about the answers.
 
-> **Procedural style:** The data structure is just two arrays (`parent` and `rank`). Functions operate on them directly - no wrapper class needed.
+**Procedural style:** the data structure is just two arrays (`parent` and `rank`). Functions
+operate on them directly - no wrapper class needed.
+
+## Key Optimizations
+
+The card fixes the representation, and leaves two things unsaid: which root goes under which
+when two sets merge, and what `find` does with the path it just walked. All of the cost lives
+in those two gaps, and each has one fix. Both fixes work by rearranging the tree, which is
+free for exactly the reason the card gives - only root *identity* is ever read, never shape,
+depth, or which parent got you there.
+
+1. **Union by rank** - attach the shorter tree under the taller one → keeps trees flat
+2. **Path compression** - during `find`, point every node directly to the root → flattens on access
+
+Without optimizations: O(n) per operation. With both: O(α(n)) amortized.
 
 
 ## Naive Union-Find
@@ -94,9 +98,9 @@ second.
 1. `parent = list(range(n))`: every element starts as its own root, so `parent[x]
    == x` is the test for "this is a root".
 2. `find`: walk `parent` until it points at itself.
-3. `union`: find both roots, and if they differ point one at the other.
-4. **Compare roots, never the elements themselves.** Two elements in the same set
-   usually have different parents; only the root identifies the set.
+3. `union`: find both roots, and if they differ point one at the other. **Compare
+   roots, never the elements themselves** - two members of one set usually have
+   different parents, and only the root names the set.
 
 ```python
 def make_set_naive(n):
@@ -155,19 +159,30 @@ Together they give O(α(n)) amortized per operation - effectively O(1).
 Compression means ranks stop being exact heights, which is harmless: they are only used
 as a merge heuristic, never as a measurement.
 
+A `union` whose two arguments already climb to the same root has nothing left to do. It
+writes neither array and returns `False`, so repeating an edge is free and changes no
+answer. That is what lets callers push a stream of edges through without de-duplicating it
+first, and it is why the return value is worth having: `True` means "these were two sets a
+moment ago".
+
 **Time:** O(α(n)) amortized &nbsp; **Space:** O(n)
 
 **Recipe**
 
-1. Track a `rank` array alongside `parent`, all zeros.
-2. **Path compression** in `find`: `parent[x] = find(parent, parent[x])`. That
-   one line both returns the answer and flattens the path behind it.
-3. **Union by rank**: attach the shorter tree under the taller. Equal ranks are
-   the only case where the new root's rank increases by one.
-4. **Attaching the taller under the shorter is what makes trees deep.** Both
-   orderings are correct; only one keeps `find` fast.
-5. `union` returns `False` when the roots already match, which is what makes the
-   cycle detection below a one-liner.
+1. `make_set` returns two arrays now: `parent = list(range(n))` as before and a
+   `rank` array of zeros.
+2. `find`: if `parent[x] != x`, set `parent[x] = find(parent, parent[x])`, then
+   return `parent[x]`. **That one line both returns the answer and flattens the
+   path behind it** - assign the recursive call, don't just return it.
+3. `union`: resolve both roots first, and return `False` if they match. Nothing
+   to merge, and the caller may want to know.
+4. Otherwise point the lower-rank root at the higher-rank one. **The other
+   direction is the bug** - both orderings answer correctly, only this one keeps
+   `find` fast.
+5. Equal ranks are the free case: point either root at the other, then add one to
+   the survivor's rank. That branch is the only place `rank` is written. Return
+   `True`.
+6. `connected(x, y)` is `find(x) == find(y)`, and needs no `rank`.
 
 ```python
 def make_set(n):
@@ -230,9 +245,19 @@ def test_path_compression():
     assert p == [4, 4, 4, 4, 4]
 
 
+def test_repeated_union():
+    p, r = make_set(4)
+    assert union(p, r, 0, 1)  # a real merge
+    settled = (p[:], r[:])
+    assert not union(p, r, 0, 1)  # the same pair again
+    assert not union(p, r, 1, 0)  # and in the other direction
+    assert (p, r) == settled  # neither repeat wrote to either array
+
+
 test_optimized()
 test_union_by_rank()
 test_path_compression()
+test_repeated_union()
 ```
 
 ## Application: Cycle Detection in Undirected Graph
@@ -243,23 +268,23 @@ merge the two sets and move on.
 
 No recursion over the graph and no adjacency list - which makes this the natural choice
 when edges arrive as a stream, and the basis of Kruskal's MST algorithm (take each edge
-unless it would form a cycle).
+unless it would form a cycle). It is undirected-only: union-find tracks connectivity, which
+has no notion of which way an edge points.
 
-**Time:** O(E · α(V)) &nbsp; **Space:** O(V)
+**Time:** O(V + E · α(V)) &nbsp; **Space:** O(V)
 
 **Recipe**
 
-1. One set per vertex, then walk the edges.
-2. **Endpoints already connected means this edge closes a cycle.**
-3. Otherwise `union` them and continue.
-4. **Check before uniting.** Do it the other way round and every edge looks like
-   a cycle, since `union` has just made the endpoints connected.
-5. This is for undirected graphs only. Union-find tracks connectivity, which has
-   no notion of direction.
+1. `make_set(n)`, then walk the edges one at a time.
+2. Endpoints that are already `connected` mean this edge closes a cycle: return
+   `True`. **Test before uniting** - do it the other way round and every edge
+   looks like a cycle, since `union` has just made the endpoints connected.
+3. Otherwise `union` them and carry on. Reaching the end of the edges means no
+   cycle: return `False`.
 
 ```python
 def has_cycle(n, edges):
-    """Detect cycle in undirected graph using Union-Find. Time: O(E × α(V))"""
+    """Detect cycle in undirected graph using Union-Find. Time: O(V + E × α(V))"""
     parent, rank = make_set(n)
     for u, v in edges:
         if connected(parent, u, v):
@@ -285,24 +310,27 @@ The alternative is the BFS/DFS sweep in the [traversal notebook](graph-traversal
 Same answer, different trade-off: traversal needs the adjacency list up front, union-find
 only needs the edges, one at a time.
 
-**Time:** O(V + E · α(V)) &nbsp; **Space:** O(V)
+There is also a way to avoid the final pass: start a counter at `n` and drop it by one every
+time `union` returns `True`. It agrees with the root count because a successful merge turns
+two sets into one, lowering the number of sets by exactly one, and that is the whole reason
+`union` reports whether it merged anything. **Decrement once per edge instead of once per
+successful merge and the count runs low**, since a repeated edge between two vertices already
+in one set merges nothing. The version below counts roots instead, which cannot get that
+wrong: it asks the structure rather than tracking it.
+
+**Time:** O((V + E) · α(V)) &nbsp; **Space:** O(V)
 
 **Recipe**
 
-1. One set per vertex, then `union` every edge, ignoring the return value.
-2. Count the **distinct roots**: `len(set(find(parent, i) for i in range(n)))`.
-3. **Call `find(parent, i)`, never read `parent[i]` directly.** After a merge an
-   interior node still stores a stale parent - union only ever re-points roots -
-   so `parent[i]` can name a node that is no longer a root. Only `find` resolves
-   it, and it compresses the last paths on the way.
-4. The alternative is a running counter: start at `n` and decrement whenever
-   `union` returns `True`, which avoids the final pass. **Decrement per edge
-   rather than per successful merge and it over-counts**, since a repeat edge
-   between two already-joined vertices merges nothing.
+1. `make_set(n)`, then `union` every edge, ignoring the return value.
+2. Return `len(set(find(parent, i) for i in range(n)))`: one root per surviving
+   set. **Call `find(parent, i)`, never read `parent[i]`** - `union` only ever
+   re-points roots, so an interior node keeps a parent that has since stopped
+   being one, and counting raw parents over-counts.
 
 ```python
 def count_components(n, edges):
-    """Count connected components. Time: O(E × α(V))"""
+    """Count connected components. Time: O((V + E) × α(V))"""
     parent, rank = make_set(n)
     for u, v in edges:
         union(parent, rank, u, v)
@@ -316,6 +344,24 @@ def test_components():
     assert count_components(3, [(0, 1), (1, 2)]) == 1
     # no edges
     assert count_components(4, []) == 4
+    # a repeated edge merges nothing, so it must not change the count
+    assert count_components(5, [(0, 1), (0, 1), (1, 2), (3, 4)]) == 2
+    # a self-loop is the degenerate case of the same thing
+    assert count_components(3, [(0, 0)]) == 3
+
+
+def test_components_needs_find():
+    # Merging two two-element sets leaves one node pointing at a former root.
+    parent, rank = make_set(4)
+    union(parent, rank, 0, 1)  # root 0
+    union(parent, rank, 2, 3)  # root 2
+    union(parent, rank, 0, 2)  # root 2 hangs under root 0
+    assert parent == [0, 0, 0, 2]
+    assert parent[3] == 2 and parent[2] != 2  # 3's parent is no longer a root
+    assert len(set(parent)) == 2  # counting raw parents: wrong
+    assert count_components(4, [(0, 1), (2, 3), (0, 2)]) == 1  # via find: right
+
 
 test_components()
+test_components_needs_find()
 ```

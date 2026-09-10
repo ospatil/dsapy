@@ -38,35 +38,44 @@ The constants $c_1, c_2, ...$ used below stand for the real machine-level cost o
 
 Some solutions (Python):
 
-1. ```python
-    def sum1(n):
-      return n * (n + 1) / 2
-   ```
-   \
-   Total work done: $c_{1}$ and it is not dependent on $n$. \
-   One multiplication, one addition, one division - the same three operations whether $n$ is $10$ or $10^9$.
+**1. Closed-form formula**
 
-2. ```python
-   def sum2(n):
-       sum = 0
-       for i in range(n + 1):
-           sum += i
-       return sum
-   ```
-   \
-   Total work done: Some constant work and a loop that executes n times: $c_{2}n + c_{3}$. \
-   Here $c_{2}$ is the cost of one iteration (the addition, the increment, the bounds check) and $c_{3}$ the one-time work outside the loop (initialising `sum`, returning it). The loop strictly runs $n + 1$ times, but that one extra iteration is itself constant work and disappears into $c_{3}$.
+```python
+def sum1(n):
+    return n * (n + 1) / 2
+```
 
-3. ```python
-     def sum3(n):
-         sum = 0
-         for i in range(1, n + 1):
-             for j in range(1, i + 1):
-                 sum += 1
-         return sum
-   ```
-   \
-   The inner loop body is `sum += 1`, not `sum += j` - and `j` appears nowhere in it. So the inner loop is a tally counter rather than a summation: its only job is to repeat $i$ times, which means pass $i$ of the outer loop contributes exactly $i$ increments.
+Total work done: $c_{1}$, independent of $n$. One multiplication, one addition,
+one division - the same three operations whether $n$ is $10$ or $10^9$.
+
+**2. One loop**
+
+```python
+def sum2(n):
+    total = 0
+    for i in range(n + 1):
+        total += i
+    return total
+```
+
+Total work done: some constant work and a loop that executes $n + 1$ times,
+$c_{2}n + c_{3}$. Here $c_{2}$ is the cost of one iteration and $c_{3}$ is the
+one-time work outside the loop. The extra iteration is constant work and is
+absorbed into $c_{3}$.
+
+**3. Nested loops**
+
+```python
+def sum3(n):
+    total = 0
+    for i in range(1, n + 1):
+        for _ in range(1, i + 1):
+            total += 1
+    return total
+```
+
+The inner loop body is a tally counter. Its only job is to repeat $i$ times, so
+pass $i$ of the outer loop contributes exactly $i$ increments.
 
    The inner loop executes:
 
@@ -127,9 +136,10 @@ Two observations from this:
 
 ## Order of growth
 
-A function $f(n)$ is said to be growing faster than $g(n)$ if
+A function $f(n)$ is said to be growing faster than $g(n)$ when, taking both to be non-negative for
+all $n \geqslant 0$,
 
-$\text {for $n \geqslant 0, f(n), g(n) \geqslant 0 $}, \lim\limits_{n \to \infty} \frac{g(n)}{f(n)} = 0$
+$$\lim_{n \to \infty} \frac{g(n)}{f(n)} = 0$$
 
 The ratio carries the intuition: if $g(n)$ becomes an ever-shrinking fraction of $f(n)$, then $f$ eventually dwarfs $g$ regardless of how the two compare at the start.
 
@@ -160,7 +170,8 @@ Both shortcuts follow from the ratio test: lower-order terms vanish in the limit
 
 **Faster growing function dominates a slower growing one.**
 
-Common dominance relations:
+Common dominance relations, reading $<$ as "grows strictly slower than" (by the limit test above) and
+$C$ as any constant:
 $C < \text {loglog } n < \text {log } n < n^{1/3}< n^{1/2} < n < n^2 < n^3 < 2^n < n^n$
 
 Three rules of thumb place almost any function in this chain:
@@ -175,31 +186,42 @@ Three rules of thumb place almost any function in this chain:
 
 ### Best, Average and Worst Cases
 
-Let's Consider some examples:
+Two inputs illustrate why cases and notation are independent.
 
-1. ```python
-   def nsum(arr, n):
-     sum = 0
-     for i in range(n):
-       sum += arr[i]
-     return sum
-   ```
-   \
-   This function is _linear_. The loop runs exactly $n$ times for every possible input, so best, average and worst case all coincide. Most straight-line code behaves this way, which makes the distinction moot.
+**1. Input-independent loop**
 
-2. ```python
-    def nsum(arr, n):
-      if n % 2 != 0:
+```python
+def nsum(arr, n):
+    total = 0
+    for i in range(n):
+        total += arr[i]
+    return total
+```
+
+This function is _linear_. The loop runs exactly $n$ times for every possible
+input, so best, average and worst case all coincide. Most straight-line code
+behaves this way, which makes the distinction moot.
+
+**2. Input-dependent early return**
+
+```python
+def nsum(arr, n):
+    if n % 2 != 0:
         return 0
-      sum = 0
-      for i in range(n):
-        sum += arr[i]
-      return sum
-   ```
-    \
-   _Best Case_: When _n_ is odd, it's going to take _constant_ time. \
-   _Average Case_: Often it's impractical to calculate unless you know all the inputs that will be provided to the algorithm all the time. This example is tractable though - if odd and even $n$ are equally likely, the average is $\frac{1}{2}c + \frac{1}{2}(c_{1}n + c_{2})$, still linear. The catch is that averaging always requires assuming a probability distribution over inputs, and that assumption is usually the part you cannot justify. \
-   _Worst Case_: When _n_ is even it will be _linear_.
+    total = 0
+    for i in range(n):
+        total += arr[i]
+    return total
+```
+
+_Best case_: odd $n$ returns in constant time.
+
+_Average case_: this requires a probability distribution over inputs. If odd and
+even $n$ are equally likely, the average is
+$\frac{1}{2}c + \frac{1}{2}(c_{1}n + c_{2})$, still linear. The assumption about
+which inputs occur is the part that is usually hard to justify.
+
+_Worst case_: even $n$ runs the loop and takes linear time.
 
 **Worst Case** is considered the most important case for algorithm analysis. It is the only one that yields a guarantee - the algorithm will never be slower than this, whatever the input. Best case is easy to arrange and tells you little; average case needs an input distribution you rarely have.
 
@@ -217,7 +239,7 @@ _Big Omega (Ω)_: Represents a **lower bound** on the order of growth.
 
 #### Big O Notation
 
-> $f(n) = O(g(n))$ if and only if there are positive constants $c$and $n_0$ such that $f(n) \leqslant cg(n)$ for all $n \geqslant n_0$.
+> $f(n) = O(g(n))$ if and only if there are positive constants $c$ and $n_0$ such that $f(n) \leqslant cg(n)$ for all $n \geqslant n_0$.
 
 
 In simple terms, _we want to find a function $g(n)$ that is always going to be equal to or greater than $f(n)$ when multiplied by a constant for large values of $n$_.
@@ -226,13 +248,18 @@ In simple terms, _we want to find a function $g(n)$ that is always going to be e
 
 The figure shows the two allowances the definition grants us. $c$ scales $g(n)$ upward until it clears $f(n)$, and $n_0$ lets us disregard everything to the left of the crossing - where, as the plot shows, $f(n)$ may well be the larger of the two. Neither allowance is a loophole; both encode the same idea from the crossover discussion, that only large-$n$ behaviour is a property of the algorithm.
 
-Example:
+Example: $f(n) = 2n + 3$.
 
-$f(n) = 2n + 3$can be written as $O(n)$ after ignoring co-efficient of highest-growing term and lower-order terms.
+Dropping the leading constant and the lower-order term leaves $n$, so the claim to test is
+$g(n) = n$, i.e. $f(n) = O(n)$.
 
-Since $f(n) \leqslant O(g(n)$, equating it to above gives us $g(n) = n$.
+Mind the shape of that claim before proving it. $f(n) = O(g(n))$ is a single statement *about the
+pair* $f$ and $g$, and the $\leqslant$ lives inside it, between $f(n)$ and $c\,g(n)$. So writing
+"$f(n) \leqslant O(g(n))$" says nothing: $O(g(n))$ is a set of functions, not a quantity you can sit
+on the right of an inequality. What you compare $f(n)$ against is $c\,g(n)$, for constants you get
+to choose.
 
-Let's prove it mathematically:
+Proving the claim therefore means producing one pair $(c, n_0)$ that satisfies the definition:
 
 $f(n) \leqslant cg(n) \space \forall \space n \geqslant n_0$
 
@@ -268,7 +295,10 @@ Set 1 includes functions such as $100$ and $\log n$ that grow strictly *slower* 
 
 Since Big O is upper bound, all functions in 1 can be said to belong to 2, but it helps to use _tight bounds_. Formally the classes nest, $O(n) \subset O(n^2)$, so "$2n + 3$ is $O(n^2)$" is true but uninformative - like promising a task will take under a week when it takes an hour.
 
-> Big O gives the **upper bound**. If we say an algorithm is linear, then the algorithm in question is $ \leqslant O(n)$. So, it's going to perform linearly in worst case scenario or better. Therefore Big O is the upper bound of the algorithm.
+> Big O gives the **upper bound**. If we say an algorithm is linear, we mean its running time is
+> $O(n)$: at most a constant multiple of $n$ once $n$ is large enough. Note what that does *not*
+> say - it fixes a ceiling, not a floor, so the algorithm may well do better on some inputs. For
+> whichever case is being analysed, $O$ is the promise it will be no worse.
 
 #### Big Ω Notation
 
@@ -337,23 +367,28 @@ In 1928, Wilhelm Ackermann defined a function A(m, n) that grows faster than any
 
 The inverse Ackermann function α(n) asks: *what is the smallest m such that A(m, m) >= n?*
 
-Since A grows so absurdly fast, its inverse grows absurdly slowly:
+Since A grows so absurdly fast, its inverse grows absurdly slowly. Reading the steps off the
+simplified A above - A(1,1) = 2, A(2,2) = 4, A(3,3) = 16, A(4,4) beyond comprehension:
 
 | n | α(n) |
 |---|------|
-| 1 | 0 |
+| 2 | 1 |
 | 4 | 2 |
-| 65536 | 3 |
-| 2^65536 | 4 |
+| 16 | 3 |
+| 65536 | 4 |
 | 10^80 (atoms in universe) | 4 |
+| 2^65536 | 4 |
 
-For any input size you will ever encounter, α(n) <= 4.
+The precise Ackermann-Péter function pushes every one of those steps much further out, so the real
+α is flatter still. Either way the practical fact is the same: for any input size you will ever
+encounter, α(n) <= 4.
 
 ### Why It Matters in Algorithm Analysis
 
 α(n) appears in the analysis of [Union-Find](../graphs/union-find.md). In 1975, Robert Tarjan proved that Union-Find with path compression and union by rank takes O(m × α(n)) time for m operations on n elements. This was significant because:
 
-1. **It's the tightest possible bound** - Tarjan also proved no Union-Find implementation can do better
+1. **It's the tightest bound available** - a matching lower bound is known for this class of
+   pointer-based algorithms, so no cleverer Union-Find of that kind can beat it
 2. **It's almost O(1) but not quite** - a rare example of a practical algorithm whose complexity lies between O(1) and O(log n)
 3. **It demonstrated the power of [amortized analysis](05-amortized-analysis.md)** - individual operations may cost more, but averaged over a sequence, each costs O(α(n))
 

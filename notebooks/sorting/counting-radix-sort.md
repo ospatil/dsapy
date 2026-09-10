@@ -15,25 +15,30 @@ jupyter:
 
 # Non-Comparison Sorts
 
-Comparison-based sorts (merge, quick, heap) have a lower bound of **O(n log n)**.
+Comparison-based sorts (merge, quick, heap) cannot do better than **Ω(n log n)**. The symbol
+carries the claim: a *lower* bound is Ω. Writing O(n log n) here would say they are never
+*slower* than n log n, which is a different statement and not the one being made.
 
 Non-comparison sorts break this barrier by exploiting properties of the data (e.g., integer range).
 
 | Algorithm | Time | Space | Stable | Constraint |
 |-----------|------|-------|--------|------------|
-| Counting Sort | O(n + k) | O(n + k) | Yes | k = range of values |
-| Radix Sort | O(d × (n + b)) | O(n + b) | Yes | d = digits, b = base |
+| Counting Sort | Θ(n + k) | Θ(n + k) | Yes | non-negative ints, k = max value |
+| Radix Sort | Θ(d × (n + b)) | Θ(n + b) | Yes | non-negative ints, d = digits, b = base |
 
 > **Mental model.** Neither of these sorts ever compares two elements. They use the value
 > itself as an index - the value 3 goes to slot 3 of a counting array - so the order falls out
-> of arithmetic instead of out of comparisons. That is how they get under the O(n log n) floor.
+> of arithmetic instead of out of comparisons. That is how they get under the Ω(n log n) floor.
 > The floor was never a law about sorting; it only ever applied to algorithms that decide
 > everything by asking "is a bigger than b?".
 >
-> **Load-bearing:** the values have to be integers in a known and small range. The cost
-> carries a k term, the size of that range, because a slot is reserved and walked for every
-> possible value whether or not anything lands in it. Sort three numbers near a million and
-> counting sort allocates a million slots, which is far worse than just comparing the three.
+> **Load-bearing:** the values have to be non-negative integers in a known and small range,
+> and nothing in the code checks it. The value *is* the index, so a negative one indexes
+> backwards from the end of the count array instead of raising: `counting_sort([2, -1, 1])`
+> returns `[1, 2, -1]`, wrong and silent. The cost also carries a k term, the size of that
+> range, because a slot is reserved and walked for every possible value whether or not
+> anything lands in it. Sort three numbers near a million and counting sort allocates a
+> million slots, which is far worse than just comparing the three.
 > Radix sort is the repair for exactly that: chop each number into digits so the range one
 > pass has to cover is always 10.
 
@@ -41,12 +46,12 @@ Non-comparison sorts break this barrier by exploiting properties of the data (e.
 ## Counting Sort
 
 A comparison answers one yes-or-no question, which is why comparison sorts cannot get below
-O(n log n). Counting sort asks none. It counts how many times each value appears, then adds
+Ω(n log n). Counting sort asks none. It counts how many times each value appears, then adds
 each count to the one before it. Those running totals are the useful part: once `count[x]`
 says "how many elements are <= x", it is also saying where the last x belongs in the output.
 Adding up counts like this is called a *prefix sum*.
 
-**Time:** O(n + k) where k = max value &nbsp; **Space:** O(n + k) &nbsp; **Stable:** yes
+**Time:** Θ(n + k) where k = max(arr) &nbsp; **Space:** Θ(n + k) &nbsp; **Stable:** yes
 
 ![Counting Sort Steps](images/counting-sort-steps.png)
 
@@ -113,6 +118,11 @@ def test_counting_sort():
     assert counting_sort([]) == []
     assert counting_sort([5]) == [5]
 
+    # the non-negative requirement is real and unchecked: a negative value
+    # indexes back from the end of the count array, so this sorts wrongly
+    # rather than raising
+    assert counting_sort([2, -1, 1]) != [-1, 1, 2]
+
 test_counting_sort()
 ```
 
@@ -142,7 +152,7 @@ the 10s pass established is still there at the end.
 `_counting_sort_by_digit` is the counting sort above with `(x // exp) % 10` extracting the
 digit, and a fixed count array of size 10.
 
-**Time:** O(d × (n + 10)) for d digits &nbsp; **Space:** O(n) &nbsp; **Stable:** yes
+**Time:** Θ(d × (n + 10)) for d digits &nbsp; **Space:** Θ(n) &nbsp; **Stable:** yes
 
 **Recipe**
 
@@ -155,11 +165,12 @@ digit, and a fixed count array of size 10.
    pass per digit of the largest number.
 4. **Least significant digit first.** Run the same stable passes most-significant
    first and the last pass simply reorders by the smallest digit, undoing the
-   others: `[12, 21, 30]` comes back as `[30, 21, 12]`.
+   others. Two elements are enough to break it: `[12, 21]` comes back as
+   `[21, 12]`.
 5. **Every pass must be stable, and that is the only reason counting sort is the
    one used here.** Swap the `reversed(arr)` in the helper for a forward loop and
-   radix sort stops sorting, even though counting sort alone looked fine without
-   it.
+   radix sort stops sorting - `[10, 11]` comes back as `[11, 10]` - even though
+   counting sort alone looked fine without it.
 
 ```python
 def _counting_sort_by_digit(arr, exp):
@@ -200,6 +211,10 @@ def test_radix_sort():
     assert radix_sort([170, 45, 75, 90, 802, 24, 2, 66]) == [2, 24, 45, 66, 75, 90, 170, 802]
     assert radix_sort([3, 1, 4, 1, 5, 9]) == [1, 1, 3, 4, 5, 9]
     assert radix_sort([]) == []
+
+    # inherits counting sort's non-negative requirement, equally unchecked:
+    # (x // exp) % 10 on a negative x does not give its digits
+    assert radix_sort([12, -5, 7]) != [-5, 7, 12]
 
 test_radix_sort()
 ```

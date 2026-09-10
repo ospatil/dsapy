@@ -68,14 +68,20 @@ error instead of returning garbage or an `IndexError` from deep inside.
 
 **Recipe**
 
-1. Back the stack with a plain `list`.
-2. `push` is `append`, `pop` is `list.pop()`, `peek` is `items[-1]`.
+1. Back the stack with a plain `list` holding the **values** themselves. There is
+   no second index to maintain: the list's own right end *is* the top.
+2. `push` is `append`; `pop` is `items.pop()` **with no argument**, which defaults
+   to the last index; `peek` is `items[-1]`, the same read without the removal.
 3. **Everything depends on using the *end* of the list.** Python's list is a
    dynamic array: appending and popping at the end are amortized O(1), while the
    same operations at index `0` are O(n) because every other element shifts. A
    stack built on `insert(0, x)` and `pop(0)` is correct and quadratic.
-4. `pop` and `peek` raise on an empty stack rather than returning `None`, so an
-   empty stack cannot be mistaken for one holding `None`.
+4. `pop` and `peek` check `is_empty()` **before** touching the list, and raise
+   rather than returning `None`, so an empty stack cannot be mistaken for one
+   holding `None`. **Skip the guard and `items[-1]` raises `IndexError` from
+   inside the list**, blaming the wrong line.
+5. `is_empty` and `size` both read `len(self.items)`. **Keep no separate counter**
+   - a length that is stored twice is a length that can disagree with itself.
 
 ```python
 class Stack:
@@ -107,12 +113,21 @@ def test_stack():
     s.push(1)
     s.push(2)
     s.push(3)
+    assert s.items[-1] == 3      # the top is the right end of the list
     assert s.peek() == 3
     assert s.pop() == 3
     assert s.pop() == 2
     assert s.size() == 1
     assert s.pop() == 1
     assert s.is_empty()
+    # the guards fire, rather than an IndexError leaking out of the list
+    for op in ('pop', 'peek'):
+        try:
+            getattr(Stack(), op)()
+        except IndexError:
+            pass
+        else:
+            raise AssertionError(f'{op} on an empty stack must raise')
 
 test_stack()
 ```
@@ -126,17 +141,35 @@ The fix is to stop moving the data and move the **indices** instead. Keep `front
 `size`; the rear is wherever `(front + size) % cap` lands. Both ends then wander rightwards
 through a fixed array and wrap around at the end - hence *circular* queue.
 
-```
-cap = 3, front = 0, size = 0
+Be exact about what each end means, because one is stored and the other is computed.
+`front` is the index of the **oldest** live element - the one the next `dequeue`
+returns, and the one `peek` reads. The derived rear is **one past the newest**: an empty
+slot, the one the next `enqueue` writes into. So the queue's live elements are the `size`
+slots starting at `front` and walking rightwards with wraparound.
 
-enqueue 1, 2, 3      arr [1, 2, 3]   front=0 size=3   (full)
-dequeue → 1          arr [_, 2, 3]   front=1 size=2
-enqueue 4            rear = (1 + 2) % 3 = 0 → arr [4, 2, 3]   front=1 size=3
-dequeue → 2, 3, 4    front walks 2 → 0 → 1, wrapping around
+```
+cap = 3.  arr is shown by index, left to right.  `_` is a slot never written;
+`(x)` is a stale slot - dequeued, so no longer part of the queue, but never
+cleared, because dequeue only moves `front`.
+
+                      arr               front  size    live, oldest first
+start                 [_, _, _]         0      0       -
+enqueue 1, 2, 3       [1, 2, 3]         0      3       1 2 3     full: size == cap
+dequeue -> 1          [(1), 2, 3]       1      2       2 3
+enqueue 4             [4, 2, 3]         1      3       2 3 4     full again; wrote (1+2) % 3 = 0
+dequeue -> 2          [4, (2), 3]       2      2       3 4
+dequeue -> 3          [4, (2), (3)]     0      1       4         front wrapped 2 -> 0
+dequeue -> 4          [(4), (2), (3)]   1      0       -         empty: size == 0
 ```
 
 `size` is what distinguishes full from empty - both leave `front` and the computed rear
-pointing at the same slot, so a lone pair of indices could not tell them apart.
+pointing at the same slot. The trace lands on index 1 twice for that reason. After
+`enqueue 4` the queue is full with `front = 1`, and the rear derived from the *new*
+`size` is `(1 + 3) % 3 = 1`; at the last row the queue is empty with `front = 1` and the
+rear is `(1 + 0) % 3 = 1`. A lone pair of indices cannot tell those two states apart.
+(The `% 3 = 0` noted on the `enqueue 4` row is the slot that enqueue *wrote*, derived
+before `size` was bumped - a different moment, and the reason step 3 below insists on the
+order.)
 
 **Time:** O(1) for every operation &nbsp; **Space:** O(capacity), fixed up front
 
@@ -145,11 +178,18 @@ pointing at the same slot, so a lone pair of indices could not tell them apart.
 1. Store `arr`, `cap`, `front`, and `size`. **Store the size, not the rear.**
 2. Derive the rear when you need it: `rear = (front + size) % cap`.
 3. `enqueue`: raise if `size == cap`, write at the derived `rear`, then `size +=
-   1`.
-4. `dequeue`: raise if empty, read `arr[front]`, advance `front = (front + 1) %
-   cap`, then `size -= 1`.
+   1`. **Derive the rear before the increment** - bump `size` first and you write
+   one slot too far, overwriting nothing and losing the element.
+4. `dequeue`: raise if empty, read `arr[front]` into a temporary, advance `front =
+   (front + 1) % cap`, `size -= 1`, then return the temporary. **Read before
+   advancing** - once `front` moves the value is unreachable. `peek` is that same
+   read with neither index touched.
 5. **The `% cap` belongs on every index move**, in both methods - miss one and
    the queue silently stops wrapping.
+6. **`is_empty` tests `size == 0`, never `front == rear`.** Full and empty both
+   leave those two equal - both land on index 1 in the trace above - so comparing
+   them reports an empty queue when it is actually full. Storing `size` is what
+   buys the distinction, so spend it here.
 
 ```python
 class Queue:
@@ -188,13 +228,22 @@ def test_queue():
     q.enqueue(1)
     q.enqueue(2)
     q.enqueue(3)
-    assert q.peek() == 1
+    assert q.peek() == 1         # the front holds the oldest element
     assert q.dequeue() == 1
+    assert q.arr[0] == 1         # dequeue moved front only; the slot is stale
     q.enqueue(4)  # wraps around
     assert q.dequeue() == 2
     assert q.dequeue() == 3
     assert q.dequeue() == 4
     assert q.is_empty()
+    # full and empty both put front and the derived rear on the same slot,
+    # so only size can tell them apart
+    full = Queue(3)
+    for x in (7, 8, 9):
+        full.enqueue(x)
+    assert full.front == (full.front + full.size) % full.cap
+    assert q.front == (q.front + q.size) % q.cap
+    assert q.is_empty() and not full.is_empty()
 
 test_queue()
 ```
@@ -207,6 +256,12 @@ first is the one that opened most recently - last in, first out.
 So push every opener; on a closer, the top of the stack has to be its partner. If it isn't,
 the brackets interleave rather than nest. The `pairs` dict maps each closer to the opener it
 requires, which turns matching into a single lookup.
+
+This stack holds **characters** - the opener itself - not indices, because the answer is a
+single yes or no and nothing has to be located afterwards. The top is `stack[-1]`, the right
+end of the list, and it means "the bracket opened most recently and still unclosed". A
+matching pop is safe because it settles that pair for good: everything opened after it has
+already closed, so nothing left to read can refer to it.
 
 ```
 '({[]})'          stack shown bottom to top, top on the right
@@ -238,9 +293,10 @@ stack), and leftover openers at the end - which is why the return value is
 2. Opener: push it.
 3. Closer: fail if the stack is empty, or if the top is not `pairs[ch]`.
    Otherwise pop.
-4. **Both halves of that test are needed.** The empty check catches `")("`, and
-   the match check catches `"([)]"`. Either one alone accepts a string the other
-   rejects.
+4. **Both halves of that test are needed, and they fail differently.** Drop the
+   match check and `"([)]"` is *accepted* - a silently wrong answer. Drop the empty
+   check and `")("` raises `IndexError` out of `stack[-1]` instead of returning
+   `False`. Neither omission is survivable, but only the first one is quiet.
 5. **Check `not stack` first.** Reversing the `or` reads `stack[-1]` on an empty
    list and raises.
 6. Return `len(stack) == 0`, not `True`. **`"(("` never fails a check and is
@@ -271,9 +327,12 @@ test_balanced()
 
 ## Python Built-in: `collections.deque`
 
-> **Procedural vs class-based:** The `Stack` and `CircularQueue` classes above follow the conventional OOP teaching approach. In practice (and in interviews), you rarely need a wrapper class - Python's `list` already *is* a stack (`append`/`pop`), and `collections.deque` already *is* a queue (`append`/`popleft`). The procedural approach is shown below.
+> **Procedural vs class-based:** The `Stack` and `Queue` classes above follow the conventional OOP teaching approach. In practice (and in interviews), you rarely need a wrapper class - Python's `list` already *is* a stack (`append`/`pop`), and `collections.deque` already *is* a queue (`append`/`popleft`). The procedural approach is shown below.
 
-`deque` serves as both stack and queue with O(1) operations on both ends.
+`deque` serves as both stack and queue with O(1) operations on both ends. Its right end is
+`append`/`pop` and its left end is `appendleft`/`popleft`, so the only thing to decide is
+which end you take from: a stack pushes and pops at the **right**, while a queue appends at
+the right (the rear) and takes from the **left** (the front, `deque[0]`).
 
 | Use as | Push | Pop |
 |--------|------|-----|

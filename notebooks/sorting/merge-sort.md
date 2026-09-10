@@ -21,7 +21,7 @@ merge.
 
 ## Algorithm Properties
 
-- **Time Complexity:** O(n log n) in all cases
+- **Time Complexity:** Θ(n log n) in every case
 - **Space Complexity:** O(n) auxiliary space
 - **Stable:** Yes (maintains relative order of equal elements)
 - **In-place:** No (requires additional space)
@@ -67,6 +67,12 @@ whatever remains. Skipping them silently drops elements - a common bug.
 
 `merge_naive` in the cell below shows what this buys: concatenating and re-sorting throws
 away the sortedness and pays O((m+n) log(m+n)) for information it already had.
+
+The tie rule is the one line here that ordinary tests cannot reach. Swap `<=` for `<` and
+every assert on plain integers still passes, because two equal integers are
+indistinguishable once they are in the output. `1` and `1.0` are not: they compare equal, so
+the merge sees a tie, yet the result still records which one it took first. That is what the
+last assert below pins, and it fails immediately if the `<=` weakens.
 
 **Time:** Θ(m + n) &nbsp; **Space:** Θ(m + n) for the result
 
@@ -116,6 +122,10 @@ def test_merge_lists():
     # Test empty lists
     assert merge_lists([], [1, 2, 3]) == [1, 2, 3]
     assert merge_lists([1, 2, 3], []) == [1, 2, 3]
+
+    # stable: on a tie the left run wins. 1 and 1.0 compare equal, so this
+    # fails the moment `<=` becomes `<`
+    assert [str(x) for x in merge_lists([1], [1.0])] == ["1", "1.0"]
 
 test_merge_lists()
 ```
@@ -197,6 +207,11 @@ def test_merge():
     merge(a, 0, 3, 4)
     assert a == [5, 7, 8, 12, 14]
 
+    # same stability check on the in-place version
+    a = [1, 1.0]
+    merge(a, 0, 0, 1)
+    assert [str(x) for x in a] == ["1", "1.0"]
+
 test_merge()
 ```
 
@@ -211,7 +226,7 @@ Note where the work actually happens - the split is trivial arithmetic
 `if r > l` guard is the base case: a range of one element or none needs no work.
 
 Each level of recursion merges Θ(n) elements in total and there are log n levels. Unlike
-quick sort, no input can unbalance the split, so that O(n log n) holds in *every* case.
+quick sort, no input can unbalance the split, so that Θ(n log n) holds in *every* case.
 
 **Time:** Θ(n log n) always &nbsp; **Space:** O(n) auxiliary + O(log n) stack
 

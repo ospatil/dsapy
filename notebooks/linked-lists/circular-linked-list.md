@@ -70,9 +70,14 @@ wrap-around test has nothing to compare against. Hence the early return.
 
 **Recipe**
 
-1. `first = head.next`. Empty list, return early.
+1. `first = head.next`. Empty list, return early with the empty result - **there is
+   no node to come back to, so the wrap-around test has nothing to compare
+   against.**
 2. Append `first.val`, then start `curr` at `first.next`.
 3. Loop while **`curr is not first`**, appending as you go.
+4. Identity, `is not`, never `!=`. **Two nodes can hold equal values**, and the
+   O(1) inserts below deliberately create exactly that, so a value test would stop
+   the walk early on a duplicate.
 
 ```python
 class ListNode:
@@ -91,6 +96,8 @@ def to_list(head):
         ls.append(curr.val)
         curr = curr.next
     return ls
+
+assert to_list(ListNode(-1)) == []  # no landmark to return to, so the walk never runs
 ```
 
 ## Insert at beginning, the direct way
@@ -103,6 +110,19 @@ search for the predecessor is the O(n).
 `head.next = new` is what makes the node first. The pointers never marked a front, so
 the label is the only place that fact lives.
 
+The dummy sits outside the ring, so `head.next` is the **only** handle the code has on
+the ring, and that fixes where the label may be moved. Hoist `head.next = new` above
+`first = head.next` and the ring is gone before anything has walked it: `first` is then
+the new node, whose `next` is still `None`, and the walk dies on it. Read the landmark
+first, then walk, splice, and move the label.
+
+Be precise about what the saved copy is doing, though, because it is easy to over-read.
+`first` is **not** a rescue from an overwrite: with the label moved last, re-reading
+`head.next` in the loop test behaves identically, and so does hoisting `head.next = new`
+to anywhere *after* the read. Only the read itself has to come first. `first` is worth
+having because it names the role - "the node the walk has to come back to" - not because
+anything would break without it.
+
 **Time:** O(n) for the traversal, O(1) for the splice &nbsp; **Space:** O(1)
 
 **Recipe**
@@ -110,12 +130,17 @@ the label is the only place that fact lives.
 1. `first = head.next`. Empty list: `new.next = new`, a one-node ring pointing at
    itself, and `head.next = new`.
 2. Otherwise walk from `first.next` while `curr.next is not first`, stopping on
-   the **last** node.
+   the **last** node. A one-node ring needs no special case: `first.next` is
+   `first`, the test is false at once, and `curr` is the last node because it is
+   also the only one.
 3. `new.next = curr.next` (which is `first`), then `curr.next = new` - **the same
    order trap as `insert_at` in the [singly linked
    list](singly-linked-list.md)**, since the new node has to point into the ring
    before the last node's pointer is overwritten.
-4. `head.next = new`, since the new node is now the first.
+4. `head.next = new`, and **last of all**, for the reason above. Until this line
+   runs the splice has made `new` the *last* node - it sits just before the old
+   first - and this is the line that renames it the first. `new` is never both:
+   with two or more nodes the first and the last are different nodes.
 
 ```python
 def insert_begin_linear(head, val):
@@ -135,12 +160,25 @@ def insert_begin_linear(head, val):
 
 def test_insert_begin_linear():
     head = ListNode(-1)
+    assert to_list(head) == []
     insert_begin_linear(head, 1)
     assert to_list(head) == [1]
+    assert head.next.next is head.next  # a one-node ring points at itself
     insert_begin_linear(head, 2)
     assert to_list(head) == [2, 1]
     insert_begin_linear(head, 3)
     assert to_list(head) == [3, 2, 1]
+
+    # the ring really closes, and the dummy is not part of it
+    last = head.next
+    while last.next is not head.next:
+        last = last.next
+    assert last.val == 1 and last.next is head.next
+    assert last.next is not head
+
+    # duplicates are safe because every walk stops on node identity, not value
+    insert_begin_linear(head, 1)
+    assert to_list(head) == [1, 3, 2, 1]
 
 test_insert_begin_linear()
 ```
@@ -195,10 +233,18 @@ def test_insert_begin_constant():
     head = ListNode(-1)
     insert_begin_constant(head, 1)
     assert to_list(head) == [1]
+    assert head.next.next is head.next  # one-node ring, same as the linear version
     insert_begin_constant(head, 2)
     assert to_list(head) == [2, 1]
     insert_begin_constant(head, 3)
     assert to_list(head) == [3, 2, 1]
+
+    # what the trick spends: the first *node* never changes, only its contents.
+    tracked = head.next          # a caller holding the node that reads 3
+    insert_begin_constant(head, 9)
+    assert to_list(head) == [9, 3, 2, 1]
+    assert tracked is head.next  # still the first node, and the label never moved
+    assert tracked.val == 9      # but it reads a different value than when handed over
 
 test_insert_begin_constant()
 ```
@@ -246,6 +292,13 @@ def test_insert_end_linear():
     assert to_list(head) == [1, 2]
     insert_end_linear(head, 3)
     assert to_list(head) == [1, 2, 3]
+
+    # the label never moved: the node holding 1 is still the first
+    first = head.next
+    assert first.val == 1
+    insert_end_linear(head, 4)
+    assert head.next is first
+    assert to_list(head) == [1, 2, 3, 4]
 
 test_insert_end_linear()
 ```
@@ -305,6 +358,14 @@ def test_insert_end_constant():
     assert to_list(head) == [1, 2]
     insert_end_constant(head, 3)
     assert to_list(head) == [1, 2, 3]
+
+    # the label moves off the old first node, which now holds the newest value
+    # and reads last: same ring as insert_begin_constant, different label
+    old_first = head.next
+    insert_end_constant(head, 9)
+    assert to_list(head) == [1, 2, 3, 9]
+    assert head.next is not old_first
+    assert old_first.val == 9
 
 test_insert_end_constant()
 ```

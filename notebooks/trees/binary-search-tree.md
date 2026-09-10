@@ -31,7 +31,8 @@ jupyter:
 * Smallest data is always leftmost leaf and largest the rightmost leaf.
 * If keys are in sorted increasing order BST turns into a linked list. Ex: `5, 10, 20, 30` (right-skewed)<br>
 * If keys are sorted in decreasing order the tree turns into left-skewed tree.
-  ```sh
+
+```sh
     5
      \
      10
@@ -39,14 +40,18 @@ jupyter:
       20
        \
        40
-  ```
-  Ideally, we want balanced BST that allow all operations in `O(log n)` time. Examples - AVL tree, Red-black tree. See the [AVL tree notebook](avl-tree.md) for a self-balancing BST with rotations.
+```
+
+Ideally, we want balanced BST that allow all operations in `O(log n)` time. Examples - AVL tree, Red-black tree. See the [AVL tree notebook](avl-tree.md) for a self-balancing BST with rotations.
 
 > **Mental model.** Every key has exactly one legal place in the tree, and a single
 > comparison tells you which way that place lies. So every function below is the same
 > descent: compare with the node you are standing on, commit to one side, and throw the
-> other side away forever. Search, insert, delete, floor and ceil differ only in what
-> they do when the descent ends.
+> other side away forever. What they *do* with that descent is where they part company.
+> Search and insert act only where it ends. Delete acts there too, then reattaches
+> subtrees on the way back up. Floor and ceil are the ones to watch: they bank a
+> candidate answer **while descending**, because a key that is merely allowed can still
+> be beaten further down, and the last one banked is the answer.
 >
 > **Load-bearing:** the ordering rule covers whole subtrees, not just a node's two
 > children - that is what the word *invariant* is doing here. Weaken it to "the left
@@ -83,12 +88,18 @@ def create_test_bst():
 
 ## Inorder traversal
 
-Identical to the plain binary tree version, but on a BST it gains a property:
-`left < root < right` at every node means inorder emits the keys in **sorted
-order**.
+Identical to the plain binary tree version, but on a BST it stops being one way of
+listing the keys and becomes a proof. Inorder emits the whole left subtree, then
+the node, then the whole right subtree, so a sorted output asserts the ordering
+rule at every node at once: everything to my left is below me, everything to my
+right is above me. The check is therefore **complete**, not merely suggestive - a
+tree whose inorder is strictly increasing is a BST, and any violation surfaces as
+one adjacent pair in the wrong order.
 
-That makes it the cheapest validity check available - if inorder is not sorted, the
-tree is not a BST.
+The visit has to sit *between* the two calls. Move `acc.append(root.data)` above
+the left call and you get preorder: `[10, 5, 2, 30, 25, 40]` instead of
+`[2, 5, 10, 25, 30, 40]`. The same six keys either way, so only an order-sensitive
+assert notices.
 
 **Time:** Θ(n) &nbsp; **Space:** Θ(h)
 
@@ -104,6 +115,9 @@ def test_inorder():
         res = []
         inorder(root, res)
         assert res == [2, 5, 10, 25, 30, 40]
+        empty = []
+        inorder(None, empty)
+        assert empty == []
 
 test_inorder()
 
@@ -111,14 +125,14 @@ test_inorder()
 
 ## Search
 
-The whole point of a BST: one comparison *discards half* the remaining tree. Node
-bigger than the target → the answer can only be to the left; smaller → only to the
-right.
+The whole point of a BST: one comparison discards an entire subtree, unexamined.
+Node bigger than the target → the answer can only be to the left; smaller → only to
+the right.
 
-Dropping that half is the irreversible move, and it is safe only because the invariant
-covers whole subtrees. If the node holds 50 and you want 30, nothing anywhere under its
-right child is below 50 - not one level down, not ten - so 30 cannot be hiding there. A
-rule about immediate children would not license that.
+Dropping that side is the irreversible move, and it is safe only because the
+invariant covers whole subtrees. If the node holds 50 and you want 30, nothing
+anywhere under its right child is below 50 - not one level down, not ten - so 30
+cannot be hiding there. A rule about immediate children would not license that.
 
 Binary search with pointers instead of indices, so the cost is the length of one
 root-to-leaf path rather than the node count.
@@ -128,12 +142,13 @@ root-to-leaf path rather than the node count.
 
 **Recipe**
 
-1. Empty, `False`. Match, `True`.
-2. `root.data > data`: recurse **only** left. Otherwise recurse **only** right.
-3. **One recursive call, not two.** The binary tree's `search` needed
-   `search(left) or search(right)`, and writing that here still returns the
-   correct answer - it just quietly costs O(n) instead of O(h), so no test
-   catches it.
+1. Two base cases: `root is None` returns `False`, a match returns `True`.
+   Everything else is one comparison and one call whose value is returned
+   directly - no work on the way back up, which is what the next section exploits.
+2. **One recursive call, not two.** The binary tree's `search` needed
+   `search(left) or search(right)`, and writing that here returns *the same answer
+   on every input* - it just quietly costs O(n) instead of O(h), so no assert can
+   tell the two apart.
 
 ```python
 def search(root, data):
@@ -153,6 +168,7 @@ def test_search():
     root = create_test_bst()
     assert search(root, 30)
     assert not (search(root, 50))
+    assert not search(None, 1)  # empty tree, the recursive base case
 
 test_search()
 ```
@@ -172,11 +188,12 @@ explanation.
 
 **Recipe**
 
-1. Reassign `root` itself as the loop's cursor - no second variable.
-2. Loop while `root is not None`, returning `True` on a match and stepping into
-   the correct child otherwise.
-3. **Return `False` after the loop, not inside it.** Falling out of the bottom
-   is the only thing that tells you the key is absent.
+1. Reassign `root` itself as the cursor - no second variable. A failed search has
+   nothing to attach and nothing to unlink, so it never needs to know what it
+   stood on one step back.
+2. **Return `False` after the loop, not from inside it.** Falling out of the bottom
+   is the only thing that means "absent"; an `else: return False` in the loop body
+   answers after a single comparison.
 
 ```python
 def search_iter(root, data):
@@ -197,6 +214,7 @@ def test_search_iter():
     root = create_test_bst()
     assert search_iter(root, 25)
     assert not (search_iter(root, 50))
+    assert not search_iter(None, 1)  # loop never runs
 
 test_search_iter()
 ```
@@ -204,26 +222,31 @@ test_search_iter()
 ## Insert
 
 Walk exactly as `search` would. Where the search *would have failed* is precisely
-where the key belongs, so insertion always creates a **leaf** and never rearranges
-existing nodes.
+where the key belongs - that empty slot is the only place consistent with every
+comparison above it - so an insert always adds a **leaf** and never rearranges an
+existing node.
 
-`root.left = insert(root.left, data)` then `return root` is the standard shape for
-recursive tree mutation: each call returns its (possibly new) subtree root and the
-parent reattaches it. An equal key returns early, keeping all keys distinct.
+That slot is `None`, and `None` cannot be written to: it has no fields and no
+address. So the new node cannot be attached from below. Each call hands its own
+subtree root back to its caller instead, and the caller stores it in the slot it
+owns. Only one store in the whole descent is a real relink; at every node above
+the insertion point the child stores itself back, so nothing moves.
+
+An equal key returns the existing node untouched, so the tree behaves as a set.
 
 **Time:** O(h) &nbsp; **Space:** O(h)
 
 **Recipe**
 
-1. Empty subtree: **return a new `Node`**. That returned node is how the parent
-   learns what to attach.
-2. Duplicate: return `root` unchanged, so the tree holds a set.
+1. Empty subtree: **return `Node(data)`**. That return value is the only thing
+   carrying the new node up to whoever owns the slot.
+2. Duplicate: `return root` before recursing.
 3. Otherwise recurse into the correct side and **assign the result back**:
    `root.left = insert(root.left, data)`.
-4. **The trap: dropping the assignment and calling `insert(root.left, data)`
-   alone.** Nothing links the new node back in then, since the return value is
-   the only thing carrying it up.
-5. Return `root` at the end, for the caller one level up.
+4. **The trap: calling `insert(root.left, data)` and dropping the assignment.** It
+   builds the node, walks to the correct slot, links nothing, and raises no
+   exception - the tree comes back exactly as it was.
+5. `return root` at the end, so the caller one level up has something to store.
 
 ```python
 def insert(root, data):
@@ -253,6 +276,11 @@ def test_insert():
     res = []
     inorder(root, res)
     assert res == [20, 30, 40, 60, 70, 100, 200]
+    # duplicate is a no-op: same tree, and the existing node comes back
+    assert insert(root, 30) is root
+    res = []
+    inorder(root, res)
+    assert res == [20, 30, 40, 60, 70, 100, 200]
 
 test_insert()
 ```
@@ -278,16 +306,18 @@ itself.
 
 **Recipe**
 
-1. Build the node first. Walk down, setting `parent = curr` before advancing
-   `curr` into `.left` or `.right`. **Set it after moving `curr` instead, and
-   `parent` shadows the same node, always one step too late.**
-2. If `curr.data == data`, return `root` unchanged.
-3. Loop ends with `curr` on `None`. **If `parent is None`, return `new`** -
-   there was no tree to descend into.
-4. Otherwise compare `data` against `parent.data` once more to pick `.left`
-   or `.right`, and attach `new` there.
-5. Return `root`. **The trap: attaching through `curr` instead of `parent` -
-   `curr` is `None` here and holds neither data nor address.**
+1. Build the node first. Then walk down, setting `parent = curr` **before** `curr`
+   advances into `.left` or `.right`. **Set it after the move and `parent` is only
+   another name for `curr`**: it is `None` when the loop exits, so step 3 fires
+   every time and each call returns its own node alone - feeding in 40, 20, 30
+   leaves a one-node tree holding 30.
+2. Duplicate: `return root` from inside the loop.
+3. The loop ends with `curr` on `None`, which owns no slot. **`parent is None`
+   means the loop never ran**, so return `new` as the whole tree.
+4. Otherwise compare `data` against `parent.data` once more to pick `.left` or
+   `.right`, and attach `new` there. It has to go through `parent`: `curr` is
+   `None` here and has no field to set.
+5. Return `root`, never `new`. Step 3 is the only case where the root changes.
 
 ```python
 def insert_iter(root, data):
@@ -325,6 +355,10 @@ def test_insert_iter():
     res = []
     inorder(root, res)
     assert res == [20, 30, 40, 60, 70, 100, 200]
+    assert insert_iter(root, 30) is root  # duplicate exits inside the loop
+    res = []
+    inorder(root, res)
+    assert res == [20, 30, 40, 60, 70, 100, 200]
 
 test_insert_iter()
 ```
@@ -359,16 +393,18 @@ That choice also caps the extra work. The leftmost node of a subtree has no left
 by definition, so removing it lands in case 1 or case 2 - the recursion cannot hit
 another two-child deletion.
 
-**The trap:** case 3 never removes the node the caller searched for. It copies
-`succ.data` into `root.data` and removes `succ`'s node instead. The object at
-`root` stays put but its key changes, so a reference a caller was already
-holding now points at a different key than the one they looked up.
+**The trap:** case 3 never removes the node the caller searched for. It writes
+`succ.data` over `root.data` and unlinks `succ`'s node instead. Delete 10 from the
+tree built by `create_test_bst` and the object that held 10 is still there, still
+the root, now reporting 25 - so a reference a caller was already holding silently
+means a different key than the one they looked up.
 
 **Time:** O(h) &nbsp; **Space:** O(h)
 
 **Recipe**
 
-1. Empty subtree: return `None`.
+1. Empty subtree: return `None`. This is also the absent-key case - the search
+   walks off the bottom and every caller assigns back what it already had.
 2. Target below this node: `root.left = delete(root.left, data)`. Above it:
    the same on the right. Every call returns the new root of the subtree it
    was given, and the caller assigns it back - **that assignment is the only
@@ -377,8 +413,9 @@ holding now points at a different key than the one they looked up.
    `root.left`. The leaf case falls out of these two, since both are `None`.
 4. Two children: walk `root.right` left as far as it goes. That is `succ`.
 5. Copy `succ.data` into `root.data`, then `root.right = delete(root.right,
-   succ.data)`. **Delete from the right subtree, not from the whole tree**, or
-   the search starts above the node you mean. That call cannot re-enter step
+   succ.data)`. **Recurse into `root.right`, not `root`** - `root` now *holds*
+   `succ.data`, so a search starting there matches at once, finds the same
+   successor, and recurses until `RecursionError`. That call cannot re-enter step
    4, since a leftmost node has no left child.
 6. Return `root`, because the caller in step 2 is waiting to assign it.
 
@@ -441,40 +478,77 @@ def test_delete():
     inorder(root, res)
     assert res == [15, 20, 25, 30, 40]
 
-    # delete node with two children (20)
+    # delete node with two children (20). Case 3 rewrites the key at this very
+    # node object instead of unlinking it - see the trap above.
+    held = root
     root = delete(root, 20)
     res = []
     inorder(root, res)
     assert res == [15, 25, 30, 40]
+    assert held is root and held.data == 25
+
+    # absent key walks off the bottom and changes nothing
+    root = delete(root, 99)
+    res = []
+    inorder(root, res)
+    assert res == [15, 25, 30, 40]
+
+    assert delete(None, 5) is None  # empty tree
+    assert delete(Node(7), 7) is None  # last node standing
 
 test_delete()
 ```
 
 ## Floor
 
-Largest key ≤ `val`. The reframe: you are not hunting for one key, you are keeping the
-best legal answer you have seen and letting the descent improve it.
+Largest key ≤ `val`. Read it as **the closest key that does not go above `val`**.
+Two tests hide in that phrase - is this key allowed at all, and could something
+still beat it - and every node the walk stands on is judged on exactly those two.
+The three comparison cases are the three answers.
 
-So `res` is not "a node we walked past", it is **the best answer so far**. You step right
-only when the current node is smaller than `val`, which makes that node a legal answer -
-and it beats everything recorded earlier, because a right step moves into keys larger
-than the node you just left. Each right step therefore overwrites `res`, and the last one
-is the winner.
+`root.data == val`: allowed, and nothing can be closer. Return this node.
 
-Stepping left means the current node is too big to be an answer, so nothing is recorded.
-If the walk never goes right, nothing in the tree is ≤ `val` and the result is `None`.
+`root.data > val`: above `val`, so not allowed, and neither is anything in its
+right subtree, which holds keys larger still. Only the left subtree can hold an
+allowed key. Go left, and record nothing, because nothing here was allowed.
+
+`root.data < val`: allowed. Possibly not the closest, since the right subtree holds
+keys larger than this node and any of those still ≤ `val` would beat it. Possibly
+the closest, since every one of them might overshoot instead. Neither can be ruled
+out from here, and that is exactly what the extra variable is for: **`res` is the
+answer if the search to the right turns up nothing better.** Bank this node in
+`res`, then go right and try to beat it.
+
+Going right throws the left subtree away, and it is safe for a different reason
+than in `search`: those keys are all smaller than the node just banked, so they are
+allowed but strictly worse. Nothing is lost. Each later bank happens inside the
+previous bank's right subtree, so `res` only ever improves - `floor(26)` banks 10,
+then 25.
+
+`res` is still `None` at the end only when the walk never stepped right, meaning
+every node it stood on was above `val`. Each of those steps discarded only keys
+larger still, so nothing anywhere in the tree was ≤ `val` and `val` sits below the
+minimum. An empty tree also returns `None`, having never entered the loop.
+
+Too large, go left. Small enough, save it and go right.
 
 **Time:** O(h) &nbsp; **Space:** O(1)
 
 **Recipe**
 
-1. `res = None`, meaning "no candidate yet".
-2. Walk down. Exact match, return that node immediately.
-3. `root.data > val`: go left, record nothing.
-4. `root.data < val`: **record `res = root` first, then** go right.
-5. **Record on both branches and you get the last node visited, not the floor.**
-   Only the side that is still legal may be remembered.
-6. Return `res` after the loop.
+1. `res = None`, and `res` holds a **node**, not a key - callers read `.data` off
+   the return value.
+2. `root` is the walking pointer, as in `search_iter`. Loop while
+   `root is not None`.
+3. `root.data == val`: `return root`, straight out of the loop.
+4. `root.data > val`: `root = root.left`, **and no write to `res` on this branch.**
+   Writing on both leaves `res` holding the last node visited, which is above `val`
+   whenever the walk's final step was a left step - not only when the answer is
+   `None`. On the test tree `floor(24)` returns 25 instead of 10, and `floor(1)`
+   returns 2 instead of `None`.
+5. `root.data < val`: `res = root` **before** `root = root.right`. `root` is the
+   only handle on that node, and the step overwrites it.
+6. `return res` after the loop.
 
 ```python
 def floor(root, val):
@@ -498,30 +572,44 @@ def test_floor():
     root = create_test_bst()
     assert floor(root, 6).data == 5
     assert floor(root, 10).data == 10
-    assert floor(root, 1) is None
+    assert floor(root, 26).data == 25  # banks 10, then improves to 25
+    assert floor(root, 24).data == 10  # 25 is too big; the bank from 10 stands
+    assert floor(root, 41).data == 40  # above every key
+    assert floor(root, 1) is None  # walk never steps right
+    assert floor(None, 5) is None
 
 test_floor()
 ```
 
 ## Ceil
 
-The mirror image: smallest key ≥ `val`. As in floor, `res` is not a node you
-passed by, it is the best candidate found so far, just mirrored: record it
-every time you step **left** (the node you leave behind is larger than
-`val`), and go right when the current node is too small.
+Smallest key ≥ `val`: the closest key that does not go *below* `val`. Same two
+tests, with "allowed" flipped. A node is allowed when `root.data > val`, and what
+could still beat it lies to its left, among keys smaller than it but possibly still
+≥ `val` - so bank it and go left. A node below `val` is not allowed, and neither is
+its left subtree, holding keys smaller still, so go right and record nothing.
+
+Both functions obey one rule, which is easier to hold than two sets of comparisons:
+**record on the side where the node itself is an allowed answer, then step toward
+`val`.** Floor banks when the node is below `val` and steps up; ceil banks when it
+is above and steps down.
 
 Floor and ceil together answer "nearest neighbours of a key that may not be in the
 tree" - the BST counterpart of `bisect_right(a, x) - 1` and `bisect_left(a, x)`.
+
+Too small, go right. Big enough, save it and go left.
 
 **Time:** O(h) &nbsp; **Space:** O(1)
 
 **Recipe**
 
-1. `floor` with every comparison and direction mirrored.
-2. Too small (`root.data < val`): go right, record nothing.
-3. Big enough: **record `res`, then go left** looking for a closer value.
-4. **Mirror the wrong branch and you get a value on the wrong side of `val`**,
-   which still looks like a plausible answer and survives a careless test.
+1. Same skeleton as `floor`: `res = None` holding a node, `root` as the walking
+   pointer, exact match returns the node, `return res` after the loop.
+2. `root.data < val`: `root = root.right`, recording nothing. Otherwise `res = root`
+   **before** `root = root.left`.
+3. **Bank on the `<` branch instead and the answer comes back below `val`**, which
+   still reads as plausible: `ceil(26)` returns 25, and `ceil(1)` returns `None`
+   even though 2 is sitting in the tree.
 
 ```python
 def ceil(root, val):
@@ -544,8 +632,10 @@ def ceil(root, val):
 def test_ceil():
     root = create_test_bst()
     assert ceil(root, 10).data == 10
-    assert ceil(root, 26).data == 30
-    assert ceil(root, 50) is None
+    assert ceil(root, 26).data == 30  # not 25: banking on `<` returns 25
+    assert ceil(root, 1).data == 2  # below every key
+    assert ceil(root, 50) is None  # walk never steps left
+    assert ceil(None, 5) is None
 
 test_ceil()
 ```

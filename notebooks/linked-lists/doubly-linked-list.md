@@ -43,9 +43,9 @@ reference to the node - no need to walk the list to find its predecessor.
 
 ```python
 class ListNode:
-     def __init__(self, val=0):
-         self.val = val
-         self.prev, self.next = None, None
+    def __init__(self, val=0):
+        self.val = val
+        self.prev, self.next = None, None
 
 def to_list(head):
     ls = []
@@ -53,6 +53,19 @@ def to_list(head):
     while curr:
         ls.append(curr.val)
         curr = curr.next
+    return ls
+
+def to_list_backward(head):
+    # Walk out to the tail on `next`, then home on `prev`. A forward-only check
+    # cannot see a half-repaired list, which is the failure the card warns about:
+    # if the `prev` chain is broken this raises instead of quietly passing.
+    curr = head
+    while curr.next:
+        curr = curr.next
+    ls = []
+    while curr is not head:
+        ls.append(curr.val)
+        curr = curr.prev
     return ls
 ```
 
@@ -102,6 +115,7 @@ def test_insert_front():
     # prev pointers run the other way: 3.prev is dummy, 2.prev is 3, 1.prev is 2
     assert head.next.prev is head
     assert head.next.next.prev is head.next
+    assert to_list_backward(head) == [1, 2, 3]  # the whole prev chain, not spot checks
 
 
 test_insert_front()
@@ -217,12 +231,16 @@ to come first, or that expression reads a field off `None`.
 
 **Recipe**
 
-1. Empty list, return.
+1. Empty list, return. **This guard first**, or `curr.next.next` reads a field
+   off `None`.
 2. Walk while `curr.next.next` to stop on the second-to-last node.
 3. `curr.next = None`.
-4. **Nothing else needs fixing.** The new tail's `prev` already pointed where it
-   should; only the dropped node held pointers that are now stale, and it is
-   unreachable.
+4. **Nothing in the list needs fixing.** The new tail's `prev` already pointed
+   where it should; the only stale pointers left belong to the dropped node.
+5. Those stale pointers are not harmless, though: the dropped node's `prev` still
+   points at the live tail, so a caller holding it can walk straight back into the
+   list. `delete_node` below clears both pointers for exactly that reason, and the
+   inconsistency between the two is worth knowing about rather than trusting.
 
 ```python
 def delete_end(head):
@@ -239,8 +257,12 @@ def test_delete_end():
     insert_end(head, 1)
     insert_end(head, 2)
     insert_end(head, 3)
+    dropped = head.next.next.next  # the node holding 3
     delete_end(head)
     assert to_list(head) == [1, 2]
+    # the list is correct, but the dropped node still points back into it
+    assert dropped.prev is head.next.next
+    assert head.next.next.next is None  # the live tail terminates properly
 
     # down to a single element, then empty, then a no-op
     delete_end(head)
@@ -303,6 +325,7 @@ def test_delete_node():
     assert to_list(head) == [1, 3, 4]
     assert head.next.next.val == 3
     assert head.next.next.prev is head.next  # backward direction repaired too
+    assert to_list_backward(head) == [4, 3, 1]  # both directions fixed as a pair
     assert middle.prev is None and middle.next is None  # detached
 
     tail = head.next.next.next  # the node holding 4
@@ -338,9 +361,15 @@ singly linked list, overwriting `curr.next` destroys the only route to the rest 
 so the route has to be saved first. Here it is not destroyed, only moved: after the swap
 the old `next` is sitting in `curr.prev`.
 
-`prev` in this loop does not mean what it meant in the singly version. It is not the head of
-a reversed region - it is just the last node visited. When the loop ends, the last node
-visited is the old final node, which is the new first node.
+Name the loop's one cursor before reading it. It is **not** the singly version's `prev`:
+there is no reversed region here, because no node ever moves. It is only the last node the
+walk stood on, which is why it is called `last_seen` below. When the loop ends, the last
+node stood on is the old final node, and that is the new first node - which is the only
+reason the cursor exists at all.
+
+Calling it `prev` would put the local and the *field* `curr.prev` in the same two lines
+meaning different things, and `curr = curr.prev` is already the line most likely to be
+misread here.
 
 **Time:** O(n) &nbsp; **Space:** O(1)
 
@@ -350,31 +379,33 @@ visited is the old final node, which is the new first node.
    **The old first node becomes the new tail, and its `prev` still points at the
    dummy. Leave it and the swap turns that into the new tail's `next`, so the
    list runs back into the dummy and `to_list` never terminates.**
-2. `prev = None`, then loop while `curr`.
-3. Set `prev = curr` at the **top** of the body, so the loop leaves `prev`
-   holding the last node visited.
+2. `last_seen = None`, then loop while `curr`.
+3. Set `last_seen = curr` at the **top** of the body, before the swap, so the
+   loop exits holding the last node it stood on rather than `None`.
 4. Swap the node's two pointers: `curr.prev, curr.next = curr.next, curr.prev`.
 5. Advance with `curr = curr.prev`, **not `curr.next`**. The swap already
-   happened, so the node's original `next` now lives in `prev`.
-6. `head.next = prev`, and `prev.prev = head` if the list was not empty.
+   happened, so the node's original `next` now lives in its `prev`.
+6. `head.next = last_seen`, and `last_seen.prev = head` **guarded** on the list
+   being non-empty - on an empty list `last_seen` is still `None` and `head.next`
+   is correctly set to `None`, but the second line would raise.
 
 ```python
 def reverse(head):
     curr = head.next
     if curr:
         curr.prev = None  # detach from dummy so the new tail terminates the list
-    prev = None
+    last_seen = None
     while curr:
-        # remember curr: when the loop ends, prev holds the old last node,
+        # remember curr: when the loop ends, last_seen holds the old last node,
         # which becomes the new first node
-        prev = curr
+        last_seen = curr
         # reversing a DLL node just means swapping its two pointers
         curr.prev, curr.next = curr.next, curr.prev
         # after the swap the old next is reachable through prev
         curr = curr.prev
-    head.next = prev
-    if prev:
-        prev.prev = head
+    head.next = last_seen
+    if last_seen:
+        last_seen.prev = head
 
 
 def test_reverse():
@@ -384,23 +415,37 @@ def test_reverse():
     insert_end(head, 3)
     reverse(head)
     assert to_list(head) == [3, 2, 1]
-    # prev links are consistent in the reversed list
+    # both directions, not just forwards: a half-repaired list passes the first check
+    assert to_list_backward(head) == [1, 2, 3]
     assert head.next.prev is head
     assert head.next.next.prev is head.next
 
     # reversing twice restores the original order
     reverse(head)
     assert to_list(head) == [1, 2, 3]
+    assert to_list_backward(head) == [3, 2, 1]
 
-    # single element and empty list
+    # single element: the swap is a no-op on the values but must still relink the dummy
     head = ListNode(-1)
     insert_end(head, 1)
     reverse(head)
     assert to_list(head) == [1]
+    assert to_list_backward(head) == [1]
+    assert head.next.prev is head and head.next.next is None
 
+    # empty list: last_seen stays None, so the guarded final line is skipped
     head = ListNode(-1)
     reverse(head)
     assert to_list(head) == []
+    assert to_list_backward(head) == []
+
+    # duplicates are reversed as positions, not deduplicated
+    head = ListNode(-1)
+    for v in (1, 2, 2, 3):
+        insert_end(head, v)
+    reverse(head)
+    assert to_list(head) == [3, 2, 2, 1]
+    assert to_list_backward(head) == [1, 2, 2, 3]
 
 
 test_reverse()

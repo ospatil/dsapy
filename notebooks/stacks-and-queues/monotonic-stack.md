@@ -17,6 +17,12 @@ jupyter:
 
 A stack that maintains elements in sorted order (increasing or decreasing). When pushing a new element, pop all elements that violate the monotonic property.
 
+Throughout this notebook the stack is a plain Python `list` whose **top is the right end**,
+`stack[-1]`, and it holds **indices** into the input rather than values - so the top's value
+is `arr[stack[-1]]`, one indirection away. Indices cost nothing extra and two of the four
+cells below cannot work without them, because their answer is a distance or a width rather
+than a value.
+
 **Key insight:** Each element is pushed and popped at most once → O(n) total despite the inner while loop.
 
 **When to use:** Problems asking for the **next greater/smaller element**, or **nearest larger/smaller** to the left or right.
@@ -25,6 +31,14 @@ A stack that maintains elements in sorted order (increasing or decreasing). When
 |---------|-----------|----------|
 | Next greater element | Decreasing | top <= current |
 | Next smaller element | Increasing | top >= current |
+
+Equal values are the standard trap, and the two forms in this notebook encode the same rule
+from opposite sides. Where the answer is read **at push** (the table above), the test is
+non-strict, so an arriving element pops an equal top and throws it away: `[2, 2, 3]` gives
+`[3, 3, -1]`, because the second `2` is not *greater* than the first. Where the answer is
+written **at pop** (`daily_temperatures`), the test is strict, so an equal arrival does
+*not* pop and the waiting element stays waiting: `[70, 70]` gives `[0, 0]`. Both say "equal
+is not an answer" - one by discarding the candidate, the other by declining to settle it.
 
 Which *side* the answer comes from is a separate choice from the comparison, and it is set by
 where you record the answer rather than by the scan direction alone. The Next Smaller section
@@ -152,12 +166,19 @@ The mirror image: the same scan with the comparison reversed. An arriving elemen
 discards tops that are greater than or equal to it, so the survivors *increase* as you go up
 instead of decreasing, and the top is the largest thing still in play.
 
+The pop is safe for the mirror reason. A discarded top lies further right than the arriving
+element, so every position left to scan meets the arrival first; and the arrival is no
+larger than the top, so whenever the top would have qualified as somebody's smaller
+element, the arrival qualifies too and is nearer. Nothing can see past it to the top again.
+Equal goes in the discard pile because an answer has to be strictly smaller.
+
 That symmetry is the useful takeaway, but only half of it. Flipping the comparison swaps
 "larger" for "smaller", and that much is free. Flipping *sides* - "next" for "previous" - is
 not just a matter of reversing the scan, and assuming it is will cost you.
 
-There are two independent choices, and the four cells in this notebook use three of the four
-combinations:
+There are two independent choices, so four combinations exist - but the four cells in this
+notebook only ever use **two** of them, which is exactly why the axes are worth separating
+here rather than pattern-matching off the examples:
 
 - **The comparison** decides larger or smaller. Independent of everything else.
 - **Where the answer is recorded** decides which side it comes from:
@@ -230,6 +251,13 @@ arriving day is the answer for every colder day still waiting on the stack, and 
 stack holds positions rather than temperatures, the wait is simply the gap between the two
 positions. Days still waiting when the scan ends never found a warmer day and keep their 0.
 
+The stack still holds exactly the unresolved days - the ones with no warmer day found yet -
+with temperatures decreasing upward. The step worth justifying is that day `i` is `j`'s
+**first** warmer day and not merely some warmer day. Day `j` sat on the stack through every
+day between them, and any day warmer than `j` would have popped it on arrival, so everything
+strictly between `j` and `i` was no warmer than `j`. That makes `result[j]` final the moment
+it is written, which is what lets `j` leave for good.
+
 ```
 temps = [73, 74, 75, 71, 69, 72, 76, 73]
                                           stack holds indices, top on the right
@@ -262,10 +290,14 @@ result: [1, 1, 4, 2, 1, 1, 0, 0]
 2. Iterate **left to right**, **writing answers at pop** - the third row of the
    table above, not the first.
 3. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
-   everything it pops.
-4. `result[j] = i - j` for each popped `j`. **This is why the stack stores
-   indices**; values could not tell you how far apart the two days are.
-5. Push `i` and continue.
+   everything it pops. **Strict `>`.** An equally warm day is not warmer, so a tie
+   must leave the waiting day alone - `[70, 70]` has to give `[0, 0]`, and `>=`
+   gives `[1, 0]`.
+4. Pop into a named index first, `j = stack.pop()`, **then** write `result[j] = i -
+   j`. Both indices have to be in hand at the same moment, and `j` is gone from
+   the stack by then. **This is why the stack stores indices**; values could not
+   tell you how far apart the two days are.
+5. Push `i` and continue - unconditionally, including after a run of pops.
 
 ```python
 def daily_temperatures(temps):
@@ -306,6 +338,12 @@ boundary has been found, so pop it and settle its rectangle: the height is the p
 and the width runs between its left boundary - the bar now exposed underneath - and the
 shorter bar that stopped it.
 
+So the stack again holds only unresolved candidates: bars whose right boundary is still
+unknown. The pop is safe because it settles a bar completely rather than provisionally. At
+that moment *both* of its boundaries are known - the shorter bar `i` on the right, and
+whatever the pop exposes on the left, which is shorter than it because the stack increases
+upward - so its rectangle can never widen, and the bar never has to be looked at again.
+
 ```
 heights = [2, 1, 5, 6, 2, 3] + [0]    the trailing 0 is a sentinel, not real data
                                       stack holds indices, top on the right
@@ -338,7 +376,9 @@ shorter to the left at all, so the width is the whole span up to `i`.
 
 1. Append a sentinel `0` to the input. **It is shorter than every real bar, so it
    forces the stack to drain and every pending bar gets its right boundary. Skip
-   it and any bar still on the stack at the end is never measured.**
+   it and any bar still on the stack at the end is never measured.** Build a new
+   list - `heights = heights + [0]` - rather than `heights.append(0)`, which
+   leaves the sentinel behind in the caller's list.
 2. Left to right, **writing at pop**, as in `daily_temperatures` - except this
    one needs *three* indices at once, the popped bar and both bars flanking it.
 3. Stack holds indices of bars whose right boundary is not yet known, heights
@@ -349,11 +389,17 @@ shorter to the left at all, so the width is the whole span up to `i`.
    `i - stack[-1] - 1` after the pop, or `i` if the stack is now empty.
 6. **Pop before reading `stack[-1]` for the width.** The left boundary is the bar
    the pop exposes, not the bar being measured.
-7. The comparison is strict `>`, so equal bars never pop each other and pile up
-   instead. They then unwind newest first, so the **later** bar still finds its
-   twin sitting underneath it and settles for width 1, while the **earlier** one
-   pops against a genuinely shorter bar and measures the full span. The maximum
-   comes out right either way.
+7. The comparison is strict `>`, so equal bars never pop each other and a run of
+   them piles up, then unwinds newest first. Each one meets its own twin
+   underneath, so all but the deepest measure short: `[3, 3, 3]` settles widths 1,
+   2, 3 in that order. Only the deepest sees a genuinely shorter left boundary and
+   spans the whole run, and since the run shares one height, the maximum is right
+   anyway - `[5, 3, 3, 3, 5]` gives 15 off that one pop. **What you must not do is
+   read a single pop's width as "the largest rectangle on bar `j`".** With equal
+   bars around it is often too small; only the maximum over all pops is
+   meaningful. Switching to `>=` reshuffles which member of the run spans it and
+   still yields the same maximum, so the strictness is not what makes the answer
+   correct - the sentinel drain and the exposed-left-boundary rule are.
 
 ```python
 def largest_rectangle(heights):
@@ -384,9 +430,19 @@ def test_duplicate_tie_handling():
     # Equal values are not strictly greater, smaller, or warmer.
     assert next_greater([2, 2, 3]) == [3, 3, -1]
     assert next_smaller([2, 2, 1]) == [1, 1, -1]
+    assert next_greater([5, 5, 5]) == [-1, -1, -1]  # all equal: no answers
+    assert next_smaller([5, 5, 5]) == [-1, -1, -1]
+    # Written at pop, so a tie declines to settle rather than discarding.
     assert daily_temperatures([70, 70, 71]) == [2, 1, 0]
-    # Equal-height bars still combine into one full-width rectangle.
+    assert daily_temperatures([70, 70]) == [0, 0]
+    # Equal-height bars still combine into one full-width rectangle, settled by
+    # the deepest member of the run.
     assert largest_rectangle([3, 3, 3]) == 9
+    assert largest_rectangle([5, 3, 3, 3, 5]) == 15
+    # `heights + [0]` rebinds, so the caller's list keeps no sentinel.
+    bars = [2, 1, 5, 6, 2, 3]
+    largest_rectangle(bars)
+    assert bars == [2, 1, 5, 6, 2, 3]
 
 
 test_duplicate_tie_handling()

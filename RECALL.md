@@ -217,13 +217,13 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 <details>
 <summary><strong>Basic Sorting Algorithms</strong></summary>
 
-> **Mental model.** All three cost O(n²) for the same reason: each element ends up compared
-> against many others, and n elements times roughly n comparisons each is n². What separates
-> them is what they *do* with a comparison. Bubble sort swaps the pair on the spot, so a
-> value crawls towards its place one slot at a time. Selection sort refuses to move anything
-> until it has scanned the whole unsorted remainder and knows the true minimum, then puts it
-> straight where it belongs. Insertion sort compares only until it meets something smaller,
-> and stops there.
+> **Mental model.** All three cost Θ(n²) in the worst case for the same reason: each element
+> ends up compared against many others, and n elements times roughly n comparisons each is
+> n². What separates them is what they *do* with a comparison. Bubble sort swaps the pair on
+> the spot, so a value crawls towards its place one slot at a time. Selection sort refuses to
+> move anything until it has scanned the whole unsorted remainder and knows the true minimum,
+> then puts it straight where it belongs. Insertion sort compares only until it meets
+> something smaller, and stops there.
 >
 > **Load-bearing:** that "stops there". Insertion sort is the only one of the three that is
 > genuinely fast on nearly-sorted input, because a value that is already close to its place
@@ -267,11 +267,12 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 > sides and the array is sorted. There is no combine step at all.
 >
 > **Load-bearing:** which element you pick as the pivot. The pivot decides how evenly the
-> range splits, and only an even split gives log n levels of recursion. A pivot that turns
-> out to be the smallest or largest value peels off one element and leaves n-1 behind, so the
-> recursion runs n levels deep and the cost climbs to O(n²). The case worth remembering: both
-> schemes below take the pivot from a fixed end of the range, so already-sorted input hits
-> that worst case every single time.
+> range splits. Any fixed fractional split, even 1:9, still gives logarithmic depth;
+> trouble starts when one side stays only a constant number of elements smaller than the
+> whole range. A pivot that is always the minimum or maximum peels off one element and
+> leaves $n-1$, so the recursion runs $n$ levels deep and the cost climbs to Θ(n²). Both
+> schemes below choose a fixed end of the range, so already-sorted input hits that worst
+> case every time.
 
 </details>
 
@@ -282,14 +283,17 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 
 > **Mental model.** Neither of these sorts ever compares two elements. They use the value
 > itself as an index - the value 3 goes to slot 3 of a counting array - so the order falls out
-> of arithmetic instead of out of comparisons. That is how they get under the O(n log n) floor.
+> of arithmetic instead of out of comparisons. That is how they get under the Ω(n log n) floor.
 > The floor was never a law about sorting; it only ever applied to algorithms that decide
 > everything by asking "is a bigger than b?".
 >
-> **Load-bearing:** the values have to be integers in a known and small range. The cost
-> carries a k term, the size of that range, because a slot is reserved and walked for every
-> possible value whether or not anything lands in it. Sort three numbers near a million and
-> counting sort allocates a million slots, which is far worse than just comparing the three.
+> **Load-bearing:** the values have to be non-negative integers in a known and small range,
+> and nothing in the code checks it. The value *is* the index, so a negative one indexes
+> backwards from the end of the count array instead of raising: `counting_sort([2, -1, 1])`
+> returns `[1, 2, -1]`, wrong and silent. The cost also carries a k term, the size of that
+> range, because a slot is reserved and walked for every possible value whether or not
+> anything lands in it. Sort three numbers near a million and counting sort allocates a
+> million slots, which is far worse than just comparing the three.
 > Radix sort is the repair for exactly that: chop each number into digits so the range one
 > pass has to cover is always 10.
 
@@ -342,8 +346,11 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 > **Mental model.** Every key has exactly one legal place in the tree, and a single
 > comparison tells you which way that place lies. So every function below is the same
 > descent: compare with the node you are standing on, commit to one side, and throw the
-> other side away forever. Search, insert, delete, floor and ceil differ only in what
-> they do when the descent ends.
+> other side away forever. What they *do* with that descent is where they part company.
+> Search and insert act only where it ends. Delete acts there too, then reattaches
+> subtrees on the way back up. Floor and ceil are the ones to watch: they bank a
+> candidate answer **while descending**, because a key that is merely allowed can still
+> be beaten further down, and the last one banked is the answer.
 >
 > **Load-bearing:** the ordering rule covers whole subtrees, not just a node's two
 > children - that is what the word *invariant* is doing here. Weaken it to "the left
@@ -366,8 +373,11 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 >
 > **Load-bearing:** heights are *cached* on the node, so any change of shape must recompute
 > them from the bottom up. Skip that and every balance factor above the change is reading a
-> stale number. And fixing the *lowest* unbalanced node is enough: that rotation gives the
-> subtree back the height it had before, so nothing further up ever sees a difference.
+> stale number. And **on an insert** - only on an insert - fixing the *lowest* unbalanced
+> node is enough: that rotation gives the subtree back the height it had before, so nothing
+> further up ever sees a difference. Delete gets no such guarantee. Its rotation can leave
+> the subtree a level shorter, and a shorter child is exactly what unbalances a parent, so a
+> delete may have to rebalance again at every level up to the root.
 
 </details>
 
@@ -538,8 +548,6 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 > node at the root, or hanging one root under another, changes the shape and changes nothing
 > about the answers.
 
-> **Procedural style:** The data structure is just two arrays (`parent` and `rank`). Functions operate on them directly - no wrapper class needed.
-
 </details>
 
 ## [two-pointers-sliding-window](notebooks/techniques/two-pointers-sliding-window.md)
@@ -554,8 +562,9 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 >
 > **Load-bearing:** the condition you test has to move in one direction only. Growing the
 > window can push it one way but never back, so once you shrink you never have to reconsider.
-> The word for that is *monotonic*. Positive values make a sum monotonic in the window size;
-> allow one negative value and shrinking could raise the sum, and the argument collapses.
+> The word for that is *monotonic*. Non-negative values make a sum monotonic in the window
+> size; allow one negative value and shrinking could raise the sum, and the argument
+> collapses.
 
 </details>
 
@@ -590,6 +599,21 @@ Generated from the notebooks by `make recall` - edit the cards there, not here.
 > **Load-bearing:** both properties, together. If the subproblems never repeat there is
 > nothing to save, and caching only adds cost. If a bigger answer is not built out of smaller
 > answers, the table holds numbers that cannot be combined into the answer you want.
+
+</details>
+
+<details>
+<summary><strong>Fibonacci</strong></summary>
+
+> **Mental model.** The one problem where the subproblem is handed to you: the question is
+> about a number `n`, and the definition already names the two smaller questions it needs, so
+> `dp[i]` can only mean "the i-th Fibonacci number". Nothing is being chosen and nothing has
+> to be designed, which leaves the bookkeeping alone on show - one recurrence written four
+> times, each version throwing away work the one above it repeated.
+>
+> **Load-bearing:** two seeds, because the recurrence reads two cells back. `fib(0) = 0` and
+> `fib(1) = 1` are the only values it cannot produce for itself; seed just `dp[0]` and every
+> later cell is a sum of zeros, so the whole table stays 0 and nothing complains.
 
 </details>
 

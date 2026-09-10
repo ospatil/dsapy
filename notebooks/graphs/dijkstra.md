@@ -33,12 +33,23 @@ non-negative edges**.
 
 ## Relaxing an edge
 
+Three pieces of state, and only the third is unusual:
+
+- `dist[v]` is **the cost of the cheapest route to `v` found so far**, not the answer yet.
+  It starts at ∞ for every vertex except the source, which starts at 0, and it only ever
+  falls. A vertex no route reaches is never written to and keeps its ∞.
+- a heap entry `(d, v)` is a note saying "`v` can be reached for `d`". The distance sits
+  first in the tuple because that is the key the heap has to order by.
+- `d` is the cost that note carried **when it was pushed**, which need not still be
+  `dist[v]` by the time it surfaces.
+
 The only real work in the loop is **relaxing** an edge: asking whether routing through the
-vertex you just popped beats the best distance already known for its neighbour, which is
-the test `dist[u] + w < dist[v]`. When it wins, write the shorter distance down and push
-that neighbour so its own edges get relaxed later. Every distance starts at ∞ except the
-source's, which starts at 0, so the first time anything is reached at all it counts as an
-improvement.
+vertex you just popped beats the best route already known to its neighbour, which is the
+test `dist[u] + w < dist[v]`. When it wins, write the shorter distance down and push that
+neighbour so its own edges get relaxed later, from the lower cost. Since everything starts
+at ∞, the first time a vertex is reached at all that test compares against ∞ and passes,
+so discovering a vertex and improving it are the same event and there is no separate case
+for either.
 
 The rows worth reading below are the ones where nothing happens. A vertex gets popped and
 no distance improves, because a cheaper route there was already found.
@@ -57,8 +68,43 @@ graph on the left, edge weights on the connectors
 result: [0, 4, 12, 8, 6, 15]
 ```
 
-`heapq` has no decrease-key, so an improvement pushes a *new* entry and leaves the old one
-behind. `if d > dist[u]: continue` discards those stale copies when they surface.
+`heapq` has no decrease-key, so an improvement cannot edit the note already sitting on the
+heap. It pushes a second one and leaves the first behind. That stale copy carries a `d`
+bigger than the `dist[u]` that superseded it, which is exactly what `if d > dist[u]:
+continue` tests when it surfaces.
+
+## Why the first pop is final
+
+Popping is committing: the loop never revisits a vertex, so the distance it pops has to be
+right the first time. It is, and the argument is short enough to rebuild on demand.
+
+Say `(d, u)` comes off the heap and survives the stale test, so `d == dist[u]`. Take any
+route from the source to `u`, however roundabout. Follow it forwards until it first reaches
+a vertex that has not been popped before now, and call that vertex `y`; `u` itself qualifies,
+so there is always one. The step into `y` came from a vertex that *was* already popped, and
+popping a vertex relaxes every one of its edges, so `dist[y]` is already at most the cost of
+this route's prefix ending at `y`.
+
+Two more facts close it. `y` still has an entry on the heap carrying `dist[y]`, because it
+has not been popped and every improvement pushes one. `u` came off the heap first and the
+heap hands back its smallest key, so `dist[u] ≤ dist[y]`. And a prefix of a route costs no
+more than the whole route, **because each remaining edge adds something that is not
+negative**. Chain the three:
+
+```
+dist[u]  ≤  dist[y]  ≤  cost of the prefix up to y  ≤  cost of the whole route
+```
+
+That holds for *every* route to `u`, so nothing beats `dist[u]` and committing to it is safe.
+
+Non-negativity is used in one link of that chain, `prefix ≤ whole route`, and nowhere else.
+Removing that link is all it takes to break the algorithm, which is what the section after
+the code does.
+
+## The loop
+
+That is the whole algorithm: pop the nearest vertex not yet finished, relax its edges,
+discard notes that have been superseded, stop when the heap empties.
 
 **Time:** O((V + E) log V) &nbsp; **Space:** O(V + E)
 
@@ -67,12 +113,12 @@ behind. `if d > dist[u]: continue` discards those stale copies when they surface
 1. `dist = [inf] * n`, `dist[src] = 0`, and a heap seeded with `(0, src)`.
    **Tuples go on the heap distance-first, because `heapq` compares tuples
    left to right and the distance has to be the sort key.**
-2. Pop the smallest `(d, u)`.
+2. Loop while the heap is non-empty, popping the smallest `(d, u)`.
 3. **`if d > dist[u]: continue`.** Drop this line and a vertex is processed
    once per push rather than once in total.
-4. Relax each edge: `dist[u] + w < dist[v]` means a better route, so update
-   `dist[v]` and push `(dist[v], v)`.
-5. Unreachable vertices are never pushed and keep `inf`.
+4. Relax each `(v, w)` in `adj[u]`: `dist[u] + w < dist[v]` means a better
+   route, so set `dist[v] = dist[u] + w` and push `(dist[v], v)`.
+5. Return `dist` once the heap empties.
 
 ```python
 import heapq
@@ -160,15 +206,141 @@ test_dijkstra()
 print("Shortest distances from 0:", dijkstra(WEIGHTED, 0))
 ```
 
+## What one negative edge does to it
+
+Break `prefix ≤ whole route` and a vertex can be popped while a cheaper route to it is
+still unfound. Three edges are enough to do it:
+
+```
+directed edges, weight on the arrow; `dist 1<-2` means dist[1] becomes 2
+
+0 --2--> 1      pop 0  (d=0)   dist 1<-2, 2<-5
+0 --5--> 2      pop 1  (d=2)   dist 3<-3     <-- vertex 1 popped at 2, reachable for 1
+1 --1--> 3      pop 3  (d=3)   nothing improves
+2 -(-4)-> 1     pop 2  (d=5)   dist 1<-1     (5 + -4 = 1 beats 2)
+                pop 1  (d=1)   dist 3<-2     (repairs the 3 that the bad pop produced)
+                pop 3  (d=2)
+
+true distances: [0, 1, 5, 2]
+```
+
+Vertex 1 is popped at 2, and 2 is not its shortest distance: `0 -> 2 -> 1` costs
+`5 + -4 = 1`. The prefix `0 -> 2` costs 5, more than the 1 the whole route costs, which is
+the broken link made concrete.
+
+The answer still comes out right here, and that is worth being precise about. Because an
+improvement pushes a fresh entry rather than skipping an already-popped vertex, the wrong
+commitment gets overwritten and re-processed, and the damage it did downstream (vertex 3 at
+3) gets repaired on the second pass. What is lost is the bound: vertices 1 and 3 are each
+scanned twice below, and on a larger graph that re-processing compounds, up to exponentially.
+
+The usual optimization is the one that turns this from slow into wrong. Track which
+vertices are settled and skip them on arrival, `if done[u]: continue`, and there is no
+second pass: vertex 3 keeps the 3 it computed from vertex 1's superseded 2, even though
+`dist[1]` was later corrected to 1. The array ends up disagreeing with itself.
+
+A negative *cycle* is worse than either. Each lap around it lowers every distance on it, so
+there is no shortest route to converge on and the loop never ends. Bellman-Ford is the
+algorithm for negative weights: it relaxes every edge V-1 times instead of trusting an
+order of pops, and a V-th round that still improves something is how it reports the cycle
+rather than spinning on it.
+
+**Time:** exponential in the worst case, and non-terminating on a negative cycle &nbsp;
+**Space:** O(V + E)
+
+```python
+def dijkstra_scans(adj, src):
+    """dijkstra, plus how many times each vertex's edges were scanned."""
+    n = len(adj)
+    dist = [math.inf] * n
+    scans = [0] * n
+    dist[src] = 0
+    heap = [(0, src)]
+
+    while heap:
+        d, u = heapq.heappop(heap)
+        if d > dist[u]:
+            continue
+        scans[u] += 1
+        for v, w in adj[u]:
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                heapq.heappush(heap, (dist[v], v))
+    return dist, scans
+
+
+def dijkstra_settled(adj, src):
+    """Dijkstra with the usual 'a popped vertex is done' shortcut."""
+    n = len(adj)
+    dist = [math.inf] * n
+    done = [False] * n
+    dist[src] = 0
+    heap = [(0, src)]
+
+    while heap:
+        d, u = heapq.heappop(heap)
+        if done[u]:  # settled, so never looked at again
+            continue
+        done[u] = True
+        for v, w in adj[u]:
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                heapq.heappush(heap, (dist[v], v))
+    return dist
+
+
+# 0 --2--> 1 --1--> 3, plus 0 --5--> 2 --(-4)--> 1
+NEGATIVE = [
+    [(1, 2), (2, 5)],  # 0
+    [(3, 1)],          # 1
+    [(1, -4)],         # 2
+    [],                # 3
+]
+
+
+def test_negative_edge():
+    # by hand: 0 -> 2 -> 1 costs 1, so 0 -> 2 -> 1 -> 3 costs 2
+    truth = [0, 1, 5, 2]
+
+    # non-negative weights: every vertex is final when popped, so one scan each
+    dist, scans = dijkstra_scans(WEIGHTED, 0)
+    assert dist == [0, 4, 12, 8, 6, 15]
+    assert scans == [1, 1, 1, 1, 1, 1]
+
+    # one negative edge: the re-push repairs the answer...
+    dist, scans = dijkstra_scans(NEGATIVE, 0)
+    assert dist == truth
+    # ...by popping vertices 1 and 3 a second time, which is the lost bound
+    assert scans == [1, 2, 1, 2]
+
+    # skipping settled vertices removes the repair, so vertex 3 keeps a
+    # distance built on vertex 1's superseded 2 while dist[1] itself is fixed
+    assert dijkstra_settled(NEGATIVE, 0) == [0, 1, 5, 3] != truth
+    # the same shortcut is correct, and normal, when no weight is negative
+    assert dijkstra_settled(WEIGHTED, 0) == dijkstra(WEIGHTED, 0)
+
+
+test_negative_edge()
+
+print("negative edge, distances:", dijkstra_scans(NEGATIVE, 0)[0])
+print("negative edge, scans per vertex:", dijkstra_scans(NEGATIVE, 0)[1])
+print("negative edge, settling too early:", dijkstra_settled(NEGATIVE, 0))
+```
+
 ## Tracking the Path
 
-Distances alone don't say *which* route achieved them. Record a `parent` at the moment a
-distance improves - the edge that produced the best known cost - and those parents form
-a shortest-path **tree** rooted at the source.
+Distances alone don't say *which* route achieved them. `parent[v]` is **the vertex that
+`v`'s current best distance came through**: written at the moment that distance improves,
+overwritten if a better route turns up later. Every reachable vertex other than the source
+has one, no parent is further from the source than its child is, and together they form a
+shortest-path **tree** rooted at the source.
 
-Walk `parent` backwards from the destination to the source, then reverse. `parent` is
-`None` at the source, which is the loop's stopping condition, and an unreachable
-destination is caught up front by its infinite distance.
+One back-pointer per vertex is what makes this free. Storing whole paths would copy up to V
+vertices on every improvement; a predecessor is a single write, and the route is rebuilt
+once, at the end, by walking backwards from the destination and reversing.
+
+`parent[src]` is never written, so it stays `None` and that is what stops the walk. An
+unreachable destination is caught before the walk starts, by its infinite distance.
 
 **Time:** O((V + E) log V) &nbsp; **Space:** O(V)
 
@@ -178,11 +350,10 @@ destination is caught up front by its infinite distance.
 2. Inside the relaxation, alongside `dist[v] = dist[u] + w`, record
    `parent[v] = u`. **Inside the `if`, not beside it** - recording on every
    examined edge rather than every improving one corrupts the tree.
-3. Rebuild by walking `parent` back from `dst` until `None`, then reverse.
-4. **Store the predecessor, not the whole path.** Copying a path per vertex would
-   be O(V) per update; one back-pointer is O(1) and the path is reconstructed
-   once at the end.
-5. `dist[dst]` still `inf` means unreachable, so there is no path to rebuild.
+3. After the loop, `dist[dst] == inf` means unreachable: return `[]` before
+   trying to walk anything.
+4. Otherwise start at `node = dst`, append and follow `parent[node]` until it
+   is `None`, then return the list reversed.
 
 ```python
 def dijkstra_path(adj, src, dst):
@@ -219,11 +390,14 @@ def test_dijkstra_path():
     assert dijkstra_path(WEIGHTED, 0, 5) == [0, 1, 4, 5]
     assert dijkstra_path(WEIGHTED, 2, 2) == [2]
     assert dijkstra_path([[(1, 1)], [(0, 1)], []], 0, 2) == []
-    # the returned path's total weight matches the computed distance
-    path = dijkstra_path(WEIGHTED, 0, 5)
+    # every reconstructed path starts at the source, ends at the destination,
+    # uses only real edges, and costs exactly the distance computed for it
     weights = {(u, v): w for u in range(len(WEIGHTED)) for v, w in WEIGHTED[u]}
-    total = sum(weights[edge] for edge in pairwise(path))
-    assert total == dijkstra(WEIGHTED, 0)[5]
+    dist = dijkstra(WEIGHTED, 0)
+    for dst in range(len(WEIGHTED)):
+        path = dijkstra_path(WEIGHTED, 0, dst)
+        assert path[0] == 0 and path[-1] == dst
+        assert sum(weights[edge] for edge in pairwise(path)) == dist[dst]
 
 
 test_dijkstra_path()

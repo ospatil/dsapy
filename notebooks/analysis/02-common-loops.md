@@ -53,14 +53,16 @@ for (let i = 0; i < n; i += c) {
 </details>
 
 - Example: for `n = 10` and `c = 2`, it will run `5` times `(0, 2, 4, 6, 8)`.
-- Time complexity for this loop is $\Theta(\lfloor \frac{n}{c} \rfloor)$. Ignoring constants, it's $\Theta(n)$.
+- The counter takes the values $0, c, 2c, \dots$ while staying below $n$, so the loop runs
+  $\lceil \frac{n}{c} \rceil$ times - ceiling, not floor: `n = 11, c = 2` runs `6` times, the last
+  pass being `i = 10`. Ignoring constants, it's $\Theta(n)$.
 
 ## Decreasing counter
 
 **Python**
 
 ```python
-for i in range(n, 0, c) # where c is negative value
+for i in range(n, 0, -c):   # c is a positive constant; the step is -c
     # some constant work
 ```
 
@@ -77,8 +79,8 @@ for (let i = n; i > 0; i -= c) {
 </details>
 
 - Example: for `n = 10` and `c = 2`, it will run `5` times `(10, 8, 6, 4, 2)`.
-- Time complexity for this loop is $\Theta(\lceil \frac{n}{c} \rceil)$.
-  Ignoring constants, it's $\Theta(n)$.
+- Same count as the increasing case, $\lceil \frac{n}{c} \rceil$ - the counter covers the same
+  distance, only from the other end. Ignoring constants, it's $\Theta(n)$.
 
 ## Counter getting multiplied in each iteration
 
@@ -86,9 +88,9 @@ for (let i = n; i > 0; i -= c) {
 
 ```python
 i = 1
-    while i < n:
-        # some constant work
-        i *= c
+while i < n:
+    # some constant work
+    i *= c
 ```
 
 **JavaScript**
@@ -106,7 +108,10 @@ for (let i = 1; i < n; i *= c) {
 - Example: \
   For `n = 32` and `c = 2`, it will be executed `5` times `1, 2, 4, 8, 16`. \
   For `n = 33` and `c = 2`, it will be executed `6` times `1, 2, 4, 8, 16, 32`. \
-  Generalizing, it runs for $1, c, c^2, c^3, ..., c^{k-1}$ i.e. it runs $k$ times from $1$ to $k-1$.
+  Generalizing, the counter takes the values $1, c, c^2, c^3, ..., c^{k-1}$, so if the loop runs $k$
+  times the last pass is the one entered with $i = c^{k-1}$.
+
+  The condition for that last pass to happen at all is:
 
   $$
   \begin{align}
@@ -123,8 +128,13 @@ for (let i = 1; i < n; i *= c) {
   \end{align}
   $$
 
-  So, the loop is going to run $\log_c n + 1$ times.
-- Time complexity for this loop is $\Theta(\log n)$.
+  What that derives is a strict **bound** on the count, $k < \log_c n + 1$, and not the count
+  itself. Reading the expression $\log_c n + 1$ off as the count is the trap, and it misfires
+  exactly on the powers of $c$: for `n = 32, c = 2` it reads off $6$ where the loop runs $5$ times.
+  The exact count is $\lceil \log_c n \rceil$, which is $5$ for `n = 32` and $6$ for `n = 33`,
+  matching the two examples above.
+- Time complexity for this loop is $\Theta(\log n)$ - the slack between $\lceil \log_c n \rceil$ and
+  $\log_c n + 1$ is under one iteration, so it cannot change the growth rate.
 - Note that base of the log doesn't matter, since bases can be  converted by simple multiplication or division operations and in asymptotic analysis constants are ignored.
 
 ## Counter getting divided in each iteration
@@ -133,9 +143,9 @@ for (let i = 1; i < n; i *= c) {
 
 ```python
 i = n
-    while i > 1:
-        # some constant work
-        i //= c # // is integer division
+while i > 1:
+    # some constant work
+    i //= c # // is integer division
 ```
 
 **JavaScript**
@@ -163,9 +173,9 @@ for (let i = n; i > 1; i /= c) {
 
 ```python
 i = 2
-    while i < n:
-        # some constant work
-        i = pow(i, c)
+while i < n:
+    # some constant work
+    i = pow(i, c)
 ```
 
 **JavaScript**
@@ -182,7 +192,8 @@ for (let i = 2; i < n; i = Math.pow(i, c)) {
 
 - Example: For `c = 2` and `n = 32` it's going to run for $2, 2^2, {(2^2)}^2$ i.e. `2, 4, 16`.
 
-  Let's find out the number of times the loop runs:
+  Let's find out the number of times the loop runs. Writing the counter as a power of 2 keeps the
+  pattern visible - each pass raises the exponent to the power $c$:
 
   $$
   \begin{align}
@@ -192,7 +203,8 @@ for (let i = 2; i < n; i = Math.pow(i, c)) {
   \end{align}
   $$
 
-  Taking log base 2 of both sides (valid because log is a monotonically increasing function for c > 1):
+  Taking log base 2 of both sides (base 2 > 1, so $\log_2$ is increasing and preserves the
+  inequality):
 
   $$
   \begin{align}
@@ -208,6 +220,9 @@ for (let i = 2; i < n; i = Math.pow(i, c)) {
   k < \log_2 \log_2 n + 1
   \end{align}
   $$
+
+  As with the multiplying loop this is a bound rather than the count; for `c = 2` the loop runs
+  exactly $\lceil \log_2 \log_2 n \rceil$ times, which is $3$ for `n = 32`, matching the example.
 - Time complexity of this loop is $\Theta(\log\log n)$.
 
 ## Sequential loops

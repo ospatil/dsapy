@@ -22,9 +22,9 @@ sorts each side the same way.
 ## Algorithm Properties
 
 - **Time Complexity:**
-  - Best/Average case: O(n log n)
-  - Worst case: O(n²)
-- **Space Complexity:** O(log n) average, O(n) worst case
+  - Best/Average case: Θ(n log n)
+  - Worst case: Θ(n²)
+- **Space Complexity:** Θ(log n) average, Θ(n) worst case
 - **In-place:** Yes (no auxiliary space for partitioning)
 - **Stable:** No
 
@@ -36,11 +36,12 @@ sorts each side the same way.
 > sides and the array is sorted. There is no combine step at all.
 >
 > **Load-bearing:** which element you pick as the pivot. The pivot decides how evenly the
-> range splits, and only an even split gives log n levels of recursion. A pivot that turns
-> out to be the smallest or largest value peels off one element and leaves n-1 behind, so the
-> recursion runs n levels deep and the cost climbs to O(n²). The case worth remembering: both
-> schemes below take the pivot from a fixed end of the range, so already-sorted input hits
-> that worst case every single time.
+> range splits. Any fixed fractional split, even 1:9, still gives logarithmic depth;
+> trouble starts when one side stays only a constant number of elements smaller than the
+> whole range. A pivot that is always the minimum or maximum peels off one element and
+> leaves $n-1$, so the recursion runs $n$ levels deep and the cost climbs to Θ(n²). Both
+> schemes below choose a fixed end of the range, so already-sorted input hits that worst
+> case every time.
 
 ## Why Quick Sort is Popular
 
@@ -48,7 +49,10 @@ Despite quadratic worst case, it's considered faster because:
 - **In-place:** No auxiliary space for partitioning
 - **Cache friendly:** Good locality of reference
 - **Average case:** O(n log n)
-- **Tail recursive:** Can be optimized
+- **Second call is in tail position:** it can be rewritten as a loop. Recursing into the
+  smaller side and looping on the larger one caps the stack at O(log n) even in the worst
+  case. CPython does not eliminate tail calls, so this is a rewrite you perform, not
+  something the language hands you.
 
 ## Comparison with Merge Sort
 
@@ -57,17 +61,23 @@ Despite quadratic worst case, it's considered faster because:
 
 ## Partition Schemes
 
-1. **Naive:** Stable, Θ(n) space, 3 passes
+1. **Naive:** Θ(n) space, 3 passes, stable only when the pivot already sits last
 2. **Lomuto:** Not stable, Θ(1) space, 1 pass
 3. **Hoare:** Not stable, Θ(1) space, 1 pass, faster constants
 
-## Worst-Case Derivation - O(n²)
+## Worst-Case Derivation - Θ(n²)
 
 When pivot is always min/max, recurrence is T(n) = T(n-1) + Θ(n). Expanding: T(n) = n + (n-1) + ... + 1 = n(n+1)/2 = **Θ(n²)**.
 
-## Average-Case Intuition - O(n log n)
+## Average-Case Intuition - Θ(n log n)
 
-On average, pivot splits array into roughly balanced parts, giving same recurrence as merge sort: T(n) = 2T(n/2) + Θ(n) → **O(n log n)**.
+The bound does not need balanced splits, which is the part worth remembering. Fix the split
+at a lopsided 1:9 forever and the recurrence is T(n) = T(n/10) + T(9n/10) + Θ(n); the deepest
+path shrinks by a tenth each time, so it still reaches 1 in Θ(log n) steps and the total is
+still Θ(n log n), only with a larger constant. A level costs at most Θ(n) however the split
+falls, and the upper levels cost exactly that, so the depth is the only thing at stake.
+Degrading to Θ(n²) takes a split that leaves a *constant* number of elements on one side, which
+is exactly what a min or max pivot does.
 
 
 ## Partition Algorithms
@@ -79,11 +89,22 @@ sides can then be sorted independently - there is no merge step to pay for.
 **Input:** `a = [3, 8, 6, 12, 10, 7]`, pivot index 5 (value 7)
 
 The naive scheme below does it in the obvious way: two passes collecting the small and
-large elements into a temporary list, then copy back. That is easy to read, stable, and
-costs Θ(n) extra space - which defeats the main reason to choose quick sort. The Lomuto
+large elements into a temporary list, then copy back. That is easy to read and costs Θ(n)
+extra space - which defeats the main reason to choose quick sort. The Lomuto
 and Hoare schemes that follow do the same job in place, with a single pass.
 
-**Time:** O(n) for all three schemes &nbsp; **Space:** Θ(n) naive, O(1) for the others
+It is often called the stable scheme, and that needs one qualification. The two collecting
+passes do preserve order, but the swap in front of them does not: moving the pivot to the end
+throws whatever was there back into the pivot's old slot, across the whole array. So the
+scheme is stable only when the pivot already sits last, which is the case in the test below
+and is why it looks stable there. Pick an interior pivot and plain integers show the damage -
+`partition_naive([1, 2, 3], 0)` returns `[1, 3, 2]`, correctly partitioned around 1 and with
+`2` and `3` reversed.
+
+Note also that this one takes `(a, p)` and partitions the entire list, so it is a
+demonstration of the idea rather than something the drivers further down can call.
+
+**Time:** Θ(n) for all three schemes &nbsp; **Space:** Θ(n) naive, O(1) for the others
 
 **Recipe**
 
@@ -137,9 +158,15 @@ def test_partition_naive():
     partition_naive(a, 5)  # pivot is 7
     assert a == [3, 6, 7, 8, 12, 10]
     assert is_partitioned(a, 7)
-    # relative order within each side is preserved - the scheme is stable
+    # order inside each side survives, but only because the pivot was already
+    # last, so the opening swap was a no-op
     assert a[:3] == [3, 6, 7]
     assert a[3:] == [8, 12, 10]
+    # an interior pivot makes that swap real, and the order inside a side breaks
+    a = [1, 2, 3]
+    partition_naive(a, 0)  # pivot is 1
+    assert a == [1, 3, 2]
+    assert is_partitioned(a, 1)
     # the helper actually rejects an unpartitioned array
     assert is_partitioned([3, 8, 6], 7) is False
 
@@ -164,7 +191,7 @@ element smaller than the pivot, the small region grows by one and the newcomer i
 into it. The test is strict (`a[j] < pivot`), so elements *equal* to the pivot stay in the
 right-hand region. On an all-equal array, `i` never moves: the pivot lands at the first
 position and leaves the other `n - 1` elements on the right. The partition is correct but
-maximally unbalanced, so repeated equal values can drive this version to O(n squared).
+maximally unbalanced, so repeated equal values can drive this version to Θ(n²).
 The pivot itself waits at `h`, outside the scanned range, until the end. When the scan ends,
 swapping the pivot into `i + 1` puts it exactly between the two regions - its final sorted
 position.
@@ -172,7 +199,7 @@ position.
 Returning the pivot's true index is what lets `qsort_lomuto` recurse on `[l, p-1]` and
 `[p+1, h]` and leave the pivot out of both.
 
-**Time:** O(n) &nbsp; **Space:** O(1) - in place, not stable
+**Time:** Θ(n) &nbsp; **Space:** Θ(1) - in place, not stable
 
 **Recipe**
 
@@ -255,10 +282,23 @@ be anywhere - here it finished on the right side. So the recursion has to be `[l
 `[p+1, h]` - including `p` - rather than excluding it. Using Lomuto's `[l, p-1]` here would
 drop an element.
 
+Including `p` looks like it might not shrink the range, and that is worth settling, since it
+is the only thing between this and infinite recursion. `j` starts at `h + 1` and never
+increases, so `j == h` is reachable only on the very first iteration - and returning there
+would need `i >= j`, that is `l >= h`, which the driver's `if l < h` has already excluded. So
+the returned `j` is always strictly below `h`, and `(l, p)` is a strictly smaller range than
+`(l, h)`.
+
+The strict comparisons pay off on duplicates, and this is where the two schemes part company.
+Equal values stop both pointers, so they get swapped past each other and the split lands near
+the middle. On an all-equal array of 16 elements Hoare recurses 5 levels deep; Lomuto, which
+sweeps every equal element into the right-hand region, recurses 16. The two all-equal asserts
+below and in the Lomuto tests pin exactly that difference.
+
 Fewer swaps and better constants than Lomuto, which is why library implementations tend to
 prefer it.
 
-**Time:** O(n) &nbsp; **Space:** O(1) - in place, not stable
+**Time:** Θ(n) &nbsp; **Space:** Θ(1) - in place, not stable
 
 **Recipe**
 
@@ -410,8 +450,9 @@ The same shape with the boundary difference carried through: `qsort_hoare(a, l, 
 index `p` in the left call, because Hoare's return value is a partition boundary and not a
 finished pivot position.
 
-Getting this wrong is the classic Hoare bug - write `p - 1` here and elements silently
-never get sorted, or the recursion fails to shrink and overflows the stack.
+Getting this wrong is the classic Hoare bug, and its danger is how quiet it is. Write `p - 1`
+here and both ranges still shrink, so nothing hangs and no stack overflows - the sort simply
+returns arrays that are not sorted, on some inputs and not others.
 
 **Time:** O(n log n) average, O(n²) worst &nbsp; **Space:** O(log n) stack average
 
@@ -419,9 +460,10 @@ never get sorted, or the recursion fails to shrink and overflows the stack.
 
 1. `p = partition_hoare(a, l, h)`, then recurse on `(l, p)` and `(p + 1, h)` -
    **`p` included in the left half**, unlike Lomuto.
-2. **Copying Lomuto's `(l, p - 1)` here silently drops elements.** It does not
-   crash and it passes on plenty of inputs; `[2, 0, 1]` is the smallest array
-   that comes back unsorted.
+2. **Copying Lomuto's `(l, p - 1)` here silently drops elements.** It terminates
+   on every input, so nothing crashes or hangs; it just returns some arrays
+   unsorted. No two-element input catches it, and three is the shortest that
+   does: `[2, 0, 1]` comes back as `[1, 0, 2]`.
 
 ```python
 def qsort_hoare(a, l, h):

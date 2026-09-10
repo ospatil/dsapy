@@ -14,23 +14,6 @@ That is everything below.
 
 ## Open threads
 
-- **The clarity audit found ~80 issues; roughly 25 are fixed.** The remainder are mostly low
-  severity and were left deliberately rather than missed. Named examples so they are not
-  rediscovered from scratch: `01-notation` has a malformed `$f(n) \leqslant O(g(n)$` at the
-  point the notation is being taught; `03-recursion` says "we'll assume this is a full tree"
-  and then computes the exact uneven level total; `00-quick-reference` gives rough sizing
-  thresholds against an unstated time budget and uses $\alpha(n)$ undefined; `heap` relies on
-  an unstated leaves-at-h=0 convention that conflicts with the repo's node-counting one;
-  `hash-tables` uses $\alpha$ before defining it and its -1/-2 sentinels silently restrict keys
-  to non-negative integers; `counting-radix-sort`'s non-negative-input requirement lives only
-  in docstrings and belongs in the card's Load-bearing half; `avl-tree`'s case table is named
-  for the "newly-inserted node" but is reused by delete; `basic-sorts` mixes O, Θ and Ω in one
-  table with no gloss. The audit method that found these is in Decisions below.
-- **The six analysis notebooks have no recipes.** The recipe pass never reached
-  `00`-`05`, so they carry prose and cards only. Plausibly correct, since they teach analysis
-  rather than implementations and most have little to type from. Left as it stands rather
-  than decided: if it is deliberate, say so here and the question stops recurring. Note they
-  are not exempt from scrutiny either way - the `2^k` resize-index error above was in `05`.
 - **Pin black's target version, or don't.** `black --check` warns that Python
   3.14 cannot parse code formatted for 3.15, because `requires-python` is
   `>=3.14` while black assumes a newer target. Setting
@@ -52,6 +35,35 @@ That is everything below.
   `is_balanced`.
 
 ## Decisions and traps
+
+### Analysis lessons do not get recipes by default
+
+The six `analysis/00`-`05` notebooks deliberately carry no recipes. A recipe is
+for reconstructing an implementation: exact guards, assignments, saved state and
+return plumbing. These lessons mostly derive bounds and conventions, so adding
+numbered implementation steps would restate the prose rather than help the reader
+type code. They are still subject to the same factual audit. The resize-index and
+recursion-level errors found there are why "no recipe" must never mean "no
+verification."
+
+### Verify the claimed wrong variant too
+
+Executing the published implementation proves that it works; it does not prove a
+sentence of the form "if you change X, Y breaks." Several confident recipe traps
+were false: including `mid` in a rotated-search range still shrank, `<= 0` behaved
+identically to `== 0` in Kahn's algorithm, both strictness choices produced the
+same largest-rectangle maximum, and a circular-list pointer hoist was only wrong
+when moved above the read it depended on. For every trap, run the smallest mutated
+variant and pin the actual consequence. If the mutation still works, the prose is
+teaching a superstition and should be removed.
+
+### Recall cards are contiguous blockquotes
+
+`build-recall.py` extracts the whole contiguous blockquote around a card, not only
+the two labelled paragraphs. A second `> ...` note immediately below
+`**Load-bearing:**` silently becomes part of the card and appears in `RECALL.md`.
+End the blockquote before follow-up prose, then run `make recall`; checking only
+that both required labels exist will not catch accidental extra content.
 
 ### Animated visualisations were tried once and dropped on purpose
 

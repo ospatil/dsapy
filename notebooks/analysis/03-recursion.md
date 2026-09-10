@@ -165,6 +165,10 @@ half the work gives $r = 1$, two children each doing the same work as their pare
 $r = 2$, and that difference is the whole difference between $\Theta(n \log n)$ and
 $\Theta(n)$.
 
+One notation point before the trees: $C$ is the constant cost of the non-recursive part, and the
+hand-drawn diagrams label that same constant lowercase $c$. $Cn$ in the text and $cn$ in a picture
+are the same quantity.
+
 ### Example 1
 
 $$
@@ -176,9 +180,10 @@ $$
 
 ![Recursion1](images/recursion-recursion1.png)
 
-$cn$ work is being done at every level.\
-The work is getting reduced by half in each recursion. Therefore the height of tree is $\log_2 n$.\
-Total work done: $cn + cn + cn + \dots \space \log n \space \text{times i.e.} \space cn \log n$.\
+$Cn$ work is being done at every level, the bottom one included: its $n$ leaves each cost $C$.\
+The *argument* halves at each step, so the base case arrives after $\log_2 n$ halvings, giving
+levels $0$ through $\log_2 n$.\
+Total work done: $Cn + Cn + Cn + \dots$ once per level i.e. $\approx Cn \log n$.\
 Therefore, the time complexity is $\Theta(n \log n)$.
 
 ### Example 2
@@ -219,7 +224,7 @@ $$
 
 ![Recursion3](images/recursion-recursion3.png)
 
-Total work done: $C + C + \dots \space \log n$ times.\
+Total work done: $C + C + \dots$ once per level, for the levels $0$ through $\log_2 n$.\
 Therefore, the time complexity is $\Theta(\log n)$.
 
 ### Example 4
@@ -233,17 +238,22 @@ $$
 
 ![Recursion4](images/recursion-recursion4.png)
 
-Total work done: $C + 2C + 4C + \dots$ for $\log_2 n$ terms (levels $0$ through $\log_2 n - 1$).\
+Total work done: $C + 2C + 4C + \dots$ for the levels $0$ through $\log_2 n$. Level $j$ holds $2^j$
+nodes, and the bottom level is the base case $T(1) = C$ - it must be counted, because with $r = 2$ it
+is the level that decides the answer.
 
 $$
 \begin{align}
-C(1 + 2 + 4 + \dots + 2^{\log_2 n - 1}) \\
-a = 1, r = 2, k = \log_2 n \\
+C(1 + 2 + 4 + \dots + 2^{\log_2 n}) \\
+a = 1, r = 2, k = \log_2 n + 1 \text{\small \space terms} \\
 \text {\small applying geometric progression formula } \frac{a(r^k - 1)}{r - 1} \\
-\frac {2^{\log_2 n} - 1}{2-1} \\
-2^{\log_2 n } = n
+\frac {2^{\log_2 n + 1} - 1}{2-1} = 2n - 1 \\
+\text {\small since } 2^{\log_2 n } = n
 \end{align}
 $$
+
+So the total is $C(2n - 1)$, of which the bottom level alone contributes $Cn$ - more than every level
+above it put together ($C(n-1)$). That is the $r > 1$ row of the table: the leaves dominate.
 
 Therefore, the time complexity is $\Theta(n)$.
 
@@ -262,17 +272,30 @@ $$
 
 ![Incomplete1](images/recursion-incomplete1.png)
 
-In this example, the left subtree will reduce faster than the right one.\
-We'll assume this is a full tree and therefore will get upper bound $O$ instead of the exact bound $\Theta$.
+In this example the left child shrinks faster than the right, so the two branches do not bottom out
+together: following $n/4$ reaches the base case in $\log_4 n$ steps while following $n/2$ takes
+$\log_2 n$. The tree is lopsided, and the deepest level is $\log_2 n$ because the longest path is the
+one that only halves.
 
-At level 1, the left child contributes $Cn/4$ work and the right child contributes $Cn/2$ work, so total at level 1 is $3Cn/4$.\
-Ratio between levels: $\frac{3Cn/4}{Cn} = 3/4$.
+The level totals themselves are exact while every node still has both children. Each node hands
+$\frac{1}{4}$ of its work to one child and $\frac{1}{2}$ to the other, so a level costs
+$\frac{3}{4}$ of the level above it:
 
-Total work done: $Cn + 3Cn/4 + 9Cn/16$ and height of tree is $\log n$.
+- Level 0: $Cn$
+- Level 1: $\frac{Cn}{4} + \frac{Cn}{2} = \frac{3Cn}{4}$
+- Level 2: $\frac{9Cn}{16}$
+
+Ratio between levels: $r = \frac{3Cn/4}{Cn} = \frac{3}{4}$.
+
+The over-estimate enters *after* that. Once the left branch has bottomed out its subtrees stop
+contributing, so the real lower levels are smaller than $\frac{3}{4}$ of the one above - yet we
+carry on applying the ratio for every level, and in fact sum it all the way to infinity. That prices
+work which is not there, which is exactly why this yields an upper bound and not a tight one.
 
 It's a geometric progression with ratio less than 1.
 
-> Formula for geometric progression with ratio < 1:
+> Formula for the sum of an *infinite* geometric progression with ratio < 1, which therefore bounds
+> any finite prefix of the same series from above:
 $$
 \begin{align}
 \frac{a}{1-r} \\
@@ -284,7 +307,7 @@ $$
 
 $a = Cn, r = 3/4$\
 applying geometric progression formula
-$\frac {Cn}{1-3/4}$\
+$\frac {Cn}{1-3/4} = 4Cn$\
 ignoring constants, the complexity is $n$
 
 The time complexity is $O(n)$.
@@ -300,10 +323,18 @@ $$
 
 ![Incomplete2](images/recursion-incomplete2.png)
 
-It's not a full tree with height $n$.
-Total work done: $C + 2C + 4C + \dots \space \text{for} \space n \space \text{times}$.\
+The two children shrink by different amounts, $n-1$ and $n-2$, so the $n-2$ side bottoms out first
+and the tree is not full - the level totals fall short of doubling. Round it up to a full binary tree
+of height $n$ and every level doubles exactly, which prices calls that were never made, so what comes
+out is an upper bound.
+
+Total work done on that rounded-up tree: $C + 2C + 4C + \dots \space \text{for} \space n \space \text{levels}$.\
 It's a geometric progression: $C(1 + 2 + 4 + \dots + 2^{n-1})$.\
 Applying the formula with $a = 1, r = 2, k = n$: $C \cdot \frac{2^n - 1}{2 - 1} = C(2^n - 1)$.\
 Therefore, the time complexity is $O(2^n)$.
+
+How much the rounding up costs is measurable here: the tight bound is $\Theta(\varphi^n)$ with
+$\varphi = \frac{1 + \sqrt 5}{2} \approx 1.618$, and the gap between $\varphi^n$ and $2^n$ is
+precisely the calls the full tree charged for but never made.
 
 <!-- #endregion -->

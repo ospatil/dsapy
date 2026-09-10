@@ -25,15 +25,21 @@ comes before v.
 
 ## Two approaches
 
-1. **DFS-based:** [depth-first search](graph-traversal.md), appending each vertex the
-   moment it finishes, then reversing the result.
-2. **BFS-based (Kahn's algorithm):** repeatedly take a vertex with in-degree 0
-   and remove its outgoing edges.
+The definition is a constraint on pairs, not a formula for a list: for every edge `u → v`,
+`u` sits somewhere before `v`. Turning a constraint into a procedure means picking an end to
+work from, and the two ends give the two algorithms.
+
+Work from the **front** of the output and the question is "who can go next?". A vertex is
+ready when nothing still unplaced points at it. Count how many edges arrive at each vertex,
+emit the zeros, and each emission releases whatever it pointed at. That is **Kahn's
+algorithm**: readiness is the whole idea, and the in-degree count is the whole state.
+
+Work from the **back** and the question inverts to "when am I allowed to be placed?". A
+vertex can be placed only once everything reachable from it is placed. DFS already computes
+that instant and calls it *finishing*, so the answer needs no separate bookkeeping - record
+the order vertices finish in, then reverse it. That is the **DFS-based** version.
 
 **Time:** O(V + E) for both.
-
-A valid order is usually not unique, so the tests below check the defining
-property rather than one specific permutation.
 
 > **Mental model.** An ordering exists only because the graph has no cycles, so "sort this
 > DAG" and "does this graph have a cycle?" are one question asked twice. Kahn's algorithm
@@ -49,21 +55,34 @@ property rather than one specific permutation.
 
 ## Checking an order
 
-A DAG usually has many valid topological orders, so asserting one exact list would
-make the tests brittle and would not really check the property.
+The constraint orders pairs joined by an edge and says nothing about any other pair, so a DAG
+usually admits many valid orders. The two implementations below demonstrate this on the same
+six-vertex graph: DFS returns `[5, 4, 2, 3, 1, 0]` and Kahn returns `[4, 5, 0, 2, 3, 1]`, and
+both are correct. Which one you get depends on iteration order and, for Kahn, on the queue
+discipline - swap the deque for a heap and you get the lexicographically smallest valid order
+instead. **Asserting one exact list therefore pins an implementation detail rather than
+correctness**, so what the tests check is the defining property.
 
-This helper checks the definition directly: every vertex appears exactly once, and for
-every edge (u, v) the position of u precedes the position of v. Building a
-`position` map first makes each edge check O(1).
+The exception is a DAG whose edges already order every pair, which happens exactly when its
+edges include a path running through all V vertices. Then there is one valid order and
+asserting the list is fair; `[[1], [2], [3], []]` below is that case, and the six-vertex DAG
+is not.
+
+The helper checks the definition directly: every vertex appears exactly once, and for every
+edge (u, v) the position of u precedes the position of v. Building a `position` map first
+makes each edge check O(1).
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
 **Recipe**
 
-1. First check `order` is a permutation of all vertices, so a short or repeated
-   result cannot pass.
+1. Check `order` is a permutation of `range(len(adj))` **before touching
+   positions**, because it is guarding two different failures. A short order,
+   which is what a cyclic graph produces, would otherwise raise `KeyError` from
+   the lookup in step 3 rather than returning `False`; and a repeated vertex such
+   as `[0, 0, 1]` satisfies every edge test while listing only two vertices.
 2. Build `position`, mapping vertex to its index in the order.
-3. Assert `position[u] < position[v]` for **every** edge `u -> v`.
+3. Assert `position[u] < position[v]` for every edge `u → v`.
 
 ```python
 def is_topological(adj, order):
@@ -85,13 +104,21 @@ DAG = [
     [0, 2],  # 5 -> 0, 5 -> 2
 ]
 
+# Two components, edges in both: 0 -> 1 and 2 -> 3.
+DISCONNECTED = [[1], [], [3], []]
+
 
 def test_is_topological():
     assert is_topological(DAG, [5, 4, 2, 3, 1, 0]) is True
     assert is_topological(DAG, [4, 5, 2, 3, 1, 0]) is True  # also valid
+    assert is_topological(DAG, [4, 5, 0, 2, 3, 1]) is True  # what Kahn returns
     # 2 -> 3 is respected here but 3 -> 1 is not
     assert is_topological(DAG, [0, 1, 2, 3, 4, 5]) is False
     assert is_topological(DAG, [5, 4, 2, 3, 1]) is False  # missing a vertex
+    # a repeated vertex: the edge checks pass, the permutation check does not
+    assert is_topological([[1], []], [0, 0, 1]) is False
+    # a cyclic graph produces no order at all, and that must not raise
+    assert is_topological([[1], [2], [0]], []) is False
 
 
 test_is_topological()
@@ -104,8 +131,11 @@ it can start. DFS needs no such preparation, because the recursion already compu
 the ordering wants: the moment a vertex *finishes* is the moment everything below it is done.
 The order is a by-product of the walk rather than something maintained alongside it.
 
-The catch is that a by-product arrives backwards - descendants finish first - so the finish
-order has to be reversed before it reads as a topological order.
+The catch is that a by-product arrives backwards. A vertex finishes strictly after every
+vertex reachable from it, so in finish order every edge points from a later entry to an
+earlier one - a valid ordering with all its arrows the wrong way round. Reversing turns all of
+them at once, which is why the reverse is not a tidying step but the step that makes the
+output a topological order.
 
 ```
 DAG:  2→3, 3→1, 4→0, 4→1, 5→0, 5→2
@@ -114,20 +144,36 @@ finish order pushed on the stack:  0, 1, 3, 2, 4, 5
 reversed:                          5, 4, 2, 3, 1, 0
 ```
 
-Note this is *not* the same as preorder - appending on entry instead of on exit would
-place a vertex before its descendants are known and can produce an invalid order.
+Appending on *entry* instead of on exit produces preorder, which places a vertex before its
+descendants are known. On this DAG that gives `[0, 1, 2, 3, 4, 5]`, the exact list the checker
+above rejects, and reversing it to `[5, 4, 3, 2, 1, 0]` does not rescue it either. Preorder
+only ever orders a vertex against its own descendants; it says nothing about a vertex sitting
+in a branch that was walked earlier, and `3 → 1` is exactly that, with 1 already emitted from
+an earlier root by the time 3 is reached.
+
+This version also cannot detect a cycle, and the reason is worth holding on to: it appends
+every vertex exactly once, so **the output is always a full permutation of all V vertices**,
+cyclic graph or not. There is no short answer to notice. `[[0]]`, a single self loop, returns
+`[0]` with a straight face. Making it safe means adding the ancestry state from
+[Cycle Detection](cycle-detection.md), where colour 2 is set at precisely the moment this
+version appends: a neighbour still at colour 1 is a back edge, and that is the cycle.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
 **Recipe**
 
-1. Plain DFS with a `visited` list and an outer loop over every vertex.
-2. `stack.append(u)` **after** the neighbour loop, never before.
-3. **Move that append above the loop and you get preorder**, which is not a
-   topological order.
-4. Return `stack[::-1]`.
+1. Plain DFS. `visited` is history, set on entry and never cleared; `stack` is
+   the finish order and is append-only.
+2. Outer loop over every vertex, so a second component is not left out - on
+   `0 → 1, 2 → 3` a single call from vertex 0 returns half the graph.
+3. `stack.append(u)` **after** the neighbour loop, never before, so the append
+   records finishing rather than arriving. **Above the loop it is preorder**,
+   which gives `[0, 1, 2, 3, 4, 5]` here and is not a topological order.
+4. Return `stack[::-1]`, which is a new reversed list. **`return stack.reverse()`
+   returns `None`**, since it reverses in place and hands back nothing.
 5. **This assumes a DAG and cannot tell you otherwise.** Given a cycle it returns
-   a confident, wrong answer. Kahn's algorithm below detects that for free.
+   a confident, full-length, wrong answer. Kahn's algorithm below detects that
+   for free.
 
 ```python
 def topo_sort_dfs(adj):
@@ -149,13 +195,21 @@ def topo_sort_dfs(adj):
 
 
 def test_topo_sort_dfs():
-    order = topo_sort_dfs(DAG)
-    assert is_topological(DAG, order)
-    # a chain has exactly one valid order
+    assert is_topological(DAG, topo_sort_dfs(DAG))
+    # two components, both with edges - the outer loop has to reach the second
+    assert is_topological(DISCONNECTED, topo_sort_dfs(DISCONNECTED))
+    # a chain orders every pair, so it has exactly one valid order
     assert topo_sort_dfs([[1], [2], [3], []]) == [0, 1, 2, 3]
     # no edges - any permutation is valid
     assert is_topological([[], [], []], topo_sort_dfs([[], [], []]))
     assert topo_sort_dfs([]) == []
+    # parallel edges 0 -> 1 twice: the second one finds 1 already visited
+    assert topo_sort_dfs([[1, 1], []]) == [0, 1]
+    # cycle blindness: full-length output, silently not a topological order
+    cycle = [[1], [2], [0]]
+    assert len(topo_sort_dfs(cycle)) == len(cycle)
+    assert is_topological(cycle, topo_sort_dfs(cycle)) is False
+    assert is_topological([[0]], topo_sort_dfs([[0]])) is False  # self loop
 
 
 test_topo_sort_dfs()
@@ -165,28 +219,41 @@ print("DFS topo sort:", topo_sort_dfs(DAG))
 
 ## Kahn's Algorithm
 
-Turn the definition into a rule: a vertex can be emitted as soon as nothing points at it
-any more. Count in-degrees, seed a queue with every zero, and each time you emit a
-vertex, decrement its neighbours - a neighbour dropping to 0 has had all its
-prerequisites satisfied and joins the queue.
+Turn readiness into a number. `in_degree[v]` counts the vertices that still point at `v` and
+have not been emitted yet, so `in_degree[v] == 0` reads directly as "every prerequisite of `v`
+is already in the output". Seed the queue with the vertices that start that way, and each time
+one is emitted, decrement its neighbours: a neighbour hitting 0 has just had its last
+prerequisite satisfied and joins the queue.
 
-It doubles as a cycle detector for free: vertices inside a cycle keep each other's
-in-degree above zero forever, so a result shorter than V proves a cycle exists.
+Cycle detection comes out of the same count rather than being bolted on. A vertex on a cycle
+has a prerequisite that is itself downstream of that vertex, so its count never reaches 0, and
+neither does the count of anything fed by it. The vertices missing from the result are exactly
+those on a cycle or starved by one: `0 → 1, 1 → 2, 2 → 1, 2 → 3` returns `[0]`, holding back
+the cycle `1 → 2 → 1` along with vertex 3 downstream of it. So `len(order) < n` is the cycle
+report, and the gap names the culprits.
 
 **Time:** O(V + E) &nbsp; **Space:** O(V)
 
 **Recipe**
 
-1. Count `in_degree` for every vertex by walking all edges once. **Count
-   arrivals, `in_degree[v] += 1` for each edge `u -> v`, not departures.**
-2. Seed the queue with every vertex of in-degree `0`: the vertices with no
-   prerequisites.
-3. Pop `u`, append it to the order, then for each neighbour `v` decrement
-   `in_degree[v]` and enqueue it **only when it reaches exactly `0`**.
-4. **Decrementing is "remove u from the graph".** A vertex becomes available the
-   moment its last prerequisite is emitted, and testing `== 0` rather than `<= 0`
-   is what enqueues it exactly once.
+1. Build `in_degree` by walking every edge once: `in_degree[v] += 1` for each
+   edge `u → v`. **Count arrivals, not departures.** `len(adj[u])` is out-degree,
+   and seeding from that starts at the sinks and returns `[0, 1]` on the DAG here.
+2. Seed the queue with **every** vertex at `0`, meaning everything ready before
+   anything is emitted. A DAG can have several sources - this one has 4 and 5 -
+   and seeding just the first returns `[4]`.
+3. Pop `u`, append it to the order, then for each neighbour decrement
+   `in_degree[v]`. **The decrement is what "remove `u` from the graph" means**,
+   and it is what keeps the count equal to the number of *unemitted*
+   prerequisites rather than the number of edges.
+4. Enqueue `v` when the decrement leaves it at `0`, **testing after the
+   decrement, not before**: reversing those two lines truncates the answer to
+   `[4, 5]`. Each edge decrements once, so a count can never fall below 0 and
+   `<= 0` behaves identically here; what matters is that a zero test exists at
+   all. Enqueue on every decrement instead and vertices arrive once per incoming
+   edge, giving `[4, 5, 0, 1, 0, 2, 3, 1]` with 1 emitted before 3.
 5. **`len(order) < n` means a cycle** - the free check the DFS version lacks.
+   No separate visited list: reaching 0 happens exactly once per vertex.
 
 ```python
 from collections import deque
@@ -218,14 +285,22 @@ def topo_sort_bfs(adj):
 
 
 def test_topo_sort_bfs():
-    order = topo_sort_bfs(DAG)
-    assert is_topological(DAG, order)
+    assert is_topological(DAG, topo_sort_bfs(DAG))
+    assert is_topological(DISCONNECTED, topo_sort_bfs(DISCONNECTED))
     assert topo_sort_bfs([[1], [2], [3], []]) == [0, 1, 2, 3]
+    assert is_topological([[], [], []], topo_sort_bfs([[], [], []]))
+    assert topo_sort_bfs([]) == []
+    # parallel edges 0 -> 1 twice: in_degree[1] is 2 and reaches 0 on the
+    # second decrement, so 1 is enqueued exactly once
+    assert topo_sort_bfs([[1, 1], []]) == [0, 1]
     # cycle 0 -> 1 -> 2 -> 0: nothing ever reaches in-degree 0
     assert topo_sort_bfs([[1], [2], [0]]) == []
+    assert topo_sort_bfs([[0]]) == []  # self loop starves itself
     # partial order returned when only part of the graph is cyclic
     cyclic = [[1], [2], [1], []]  # 1 -> 2 -> 1 is a cycle, 3 is isolated
-    assert len(topo_sort_bfs(cyclic)) < len(cyclic)
+    assert topo_sort_bfs(cyclic) == [0, 3]
+    # vertex 3 is not on the cycle but is starved by it, so it is held back too
+    assert topo_sort_bfs([[1], [2], [1, 3], []]) == [0]
 
 
 test_topo_sort_bfs()
