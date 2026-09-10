@@ -530,6 +530,25 @@ every node it stood on was above `val`. Each of those steps discarded only keys
 larger still, so nothing anywhere in the tree was ≤ `val` and `val` sits below the
 minimum. An empty tree also returns `None`, having never entered the loop.
 
+The test tree makes the bank useful rather than decorative:
+
+```
+      10
+     /  \
+    5   30
+   /    / \
+  2    25 40
+
+floor(24)
+10 < 24   bank 10, go right
+30 > 24   no bank, go left
+25 > 24   no bank, go left
+None      return the banked 10
+```
+
+The walk ends below 25, but its answer comes from two levels earlier. The bank is
+what lets an allowed ancestor survive later overshoots.
+
 Too large, go left. Small enough, save it and go right.
 
 **Time:** O(h) &nbsp; **Space:** O(1)
@@ -594,22 +613,18 @@ Both functions obey one rule, which is easier to hold than two sets of compariso
 `val`.** Floor banks when the node is below `val` and steps up; ceil banks when it
 is above and steps down.
 
-Both functions walk the same nodes of the test tree, so one trace serves both.
-Each row is a node the walk stands on, and the two right-hand columns are what
-`floor(26)` and `ceil(26)` do with it:
+On the test tree drawn in [Floor](#floor), ceil banks from the opposite side:
 
 ```
-      10             node   floor              ceil
-     /  \            ----   ----------------   ----------------
-    5   30           10     10 < 26  bank 10   10 < 26  no bank
-   /    / \          30     30 > 26  no bank   30 > 26  bank 30
-  2    25 40         25     25 < 26  bank 25   25 < 26  no bank
-                     ----   returns 25         returns 30
+ceil(26)
+10 < 26   no bank, go right
+30 > 26   bank 30, go left
+25 < 26   no bank, go right
+None      return the banked 30
 ```
 
-The descent is the same, `10 -> 30 -> 25`. Only the banking differs because
-"allowed" means opposite things. Floor replaces 10 with the better candidate 25;
-ceil keeps 30 when 25 falls below the target.
+The numerically closer 25 is invalid because it falls below the target. The banked
+30 survives that rejection.
 
 Floor and ceil together answer "nearest neighbours of a key that may not be in the
 tree" - the BST counterpart of `bisect_right(a, x) - 1` and `bisect_left(a, x)`.

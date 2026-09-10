@@ -41,8 +41,8 @@ written **at pop** (`daily_temperatures`), the test is strict, so an equal arriv
 is not an answer" - one by discarding the candidate, the other by declining to settle it.
 
 Which *side* the answer comes from is a separate choice from the comparison, and it is set by
-where you record the answer rather than by the scan direction alone. The Next Smaller section
-below lays out both axes.
+where you record the answer rather than by the scan direction alone. The section below lays
+out both axes.
 
 **Time:** O(n) &nbsp; **Space:** O(n)
 
@@ -57,6 +57,52 @@ below lays out both axes.
 > could come back, or the scan could revisit a position, that argument dies and the bound
 > reverts to quadratic.
 
+
+## Where the answer is recorded
+
+Two choices are independent:
+
+- **The comparison** decides whether the answer must be larger or smaller.
+- **The recording moment** decides which side supplies that answer:
+  - **Read at push:** the arriving element reads a survivor already scanned, so the
+    answer lies behind it.
+  - **Write at pop:** the arriving element answers what it evicts, so the answer lies
+    ahead of each popped element.
+
+Scan direction then decides whether behind or ahead means "next":
+
+| scan direction | answer recorded | gives you |
+|----------------|-----------------|-----------|
+| right to left  | at push         | **next** greater/smaller |
+| left to right  | at push         | **previous** greater/smaller |
+| left to right  | at pop          | **next** greater/smaller |
+| right to left  | at pop          | **previous** greater/smaller |
+
+This notebook uses two of those rows. `next_greater` and `next_smaller` scan right
+to left and read at push. `daily_temperatures` and `largest_rectangle` scan left
+to right and write at pop. Both rows can produce a *next* answer, so direction
+alone settles nothing.
+
+Hold the direction fixed, left to right, on `[2, 5, 3]`. The stack holds indices,
+with its top on the right; the answer rows hold values:
+
+```
+i=0, value 2   push 0                         stack [0]
+i=1, value 5   pop 0, then push 1             stack [1]
+i=2, value 3   keep 1, then push 2            stack [1, 2]
+
+read at push:  [-1, -1, 5]   previous greater
+write at pop:  [ 5, -1, -1]  next greater
+```
+
+At `i=2`, reading the surviving index 1 gives the arriving 3 its previous-greater
+answer, 5. At `i=1`, writing while index 0 is popped gives the earlier 2 its
+next-greater answer, also 5. **The same pop answers a different endpoint depending
+on when the write happens.**
+
+Read at push when the answer is the other element's value. Write at pop when the
+answer needs both endpoints, such as a distance or width, because only then are the
+popped element and the arriving element available together.
 
 ## Next Greater Element
 
@@ -172,57 +218,6 @@ larger than the top, so whenever the top would have qualified as somebody's smal
 element, the arrival qualifies too and is nearer. Nothing can see past it to the top again.
 Equal goes in the discard pile because an answer has to be strictly smaller.
 
-That symmetry is the useful takeaway, but only half of it. Flipping the comparison swaps
-"larger" for "smaller", and that much is free. Flipping *sides* - "next" for "previous" - is
-not just a matter of reversing the scan, and assuming it is will cost you.
-
-There are two independent choices, so four combinations exist - but the four cells in this
-notebook only ever use **two** of them, which is exactly why the axes are worth separating
-here rather than pattern-matching off the examples:
-
-- **The comparison** decides larger or smaller. Independent of everything else.
-- **Where the answer is recorded** decides which side it comes from:
-  - **Read at push** - the arriving element takes whatever survived on top as *its own*
-    answer. The answer is therefore something already scanned, so it lies **behind** the
-    arriving element.
-  - **Write at pop** - the arriving element *is* the answer for everything it evicts, and
-    writes into their slots. The answer lies **ahead** of each element it settles.
-
-Direction then only decides which of those two reads as "next":
-
-| scan direction | answer recorded | gives you |
-|----------------|-----------------|-----------|
-| right to left  | at push         | **next** greater/smaller |
-| left to right  | at push         | **previous** greater/smaller |
-| left to right  | at pop          | **next** greater/smaller |
-| right to left  | at pop          | **previous** greater/smaller |
-
-So `next_greater` (right to left, at push) and `daily_temperatures` (left to right, at pop)
-sit in different rows and both compute *next*. Direction on its own settles nothing.
-
-Hold the direction fixed, left to right, on `[2, 5, 3]`. The stack below holds
-indices, with its top on the right; the two answer rows hold values:
-
-```
-i=0, value 2   push 0                         stack [0]
-i=1, value 5   pop 0, then push 1             stack [1]
-i=2, value 3   keep 1, then push 2            stack [1, 2]
-
-read at push:  [-1, -1, 5]   previous greater
-write at pop:  [ 5, -1, -1]  next greater
-```
-
-At `i=2`, reading the surviving index 1 gives this arrival its previous-greater
-answer, 5. At `i=1`, writing while index 0 is popped gives the earlier 2 its
-next-greater answer, also 5. **The same pop answers a different endpoint depending
-on when the write happens.**
-
-**Which one to reach for:** read at push when the answer is the other element's *value*, since
-you only need the survivor. Switch to write at pop when the answer needs *both* endpoints - a
-distance, or a width - because only then do you hold the popped element and the arriving one
-at the same moment. That is the whole reason the two application cells below are written the
-other way round.
-
 **Time:** O(n) &nbsp; **Space:** O(n)
 
 **Recipe**
@@ -304,8 +299,8 @@ result: [1, 1, 4, 2, 1, 1, 0, 0]
 **Recipe**
 
 1. `result = [0] * n`, since a day that never warms up keeps `0`.
-2. Iterate **left to right**, **writing answers at pop** - the third row of the
-   table above, not the first.
+2. Iterate **left to right**, **writing answers at pop** - the left-to-right,
+   at-pop row in [Where the answer is recorded](#where-the-answer-is-recorded).
 3. Pop while `temps[i] > temps[stack[-1]]`: day `i` is the first warmer day for
    everything it pops. **Strict `>`.** An equally warm day is not warmer, so a tie
    must leave the waiting day alone - `[70, 70]` has to give `[0, 0]`, and `>=`

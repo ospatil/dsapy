@@ -74,7 +74,7 @@ Marking time is not a stylistic choice. It decides three things:
    in the frontier are real, so the loop needs a second guard on the way out
    (`if visited[u]: continue`) or the same vertex is reported more than once.
 3. **Whether BFS's distance guarantee survives at all.** This one is not repairable by
-   a guard, and the next section is about why.
+   a guard. [What a late mark costs](#what-a-late-mark-costs) makes the failure concrete.
 
 
 ## Test graph helper

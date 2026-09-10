@@ -356,13 +356,14 @@ One back-pointer per vertex is what makes this free. Storing whole paths would c
 vertices on every improvement; a predecessor is a single write, and the route is rebuilt
 once, at the end, by walking backwards from the destination and reversing.
 
-On the four-vertex graph above, vertex 1 first gets distance 10 through 0, then
-distance 2 through 2. The same two improvements write `parent[1]` as `0`, then
-replace it with `2`:
+On the stale-note graph from [Relaxing an edge](#relaxing-an-edge),
+`0->1 (10), 0->2 (1), 2->1 (1), 1->3 (1)`, vertex 1 first gets
+distance 10 through 0, then distance 2 through 2. The same two improvements
+write `parent[1]` as `0`, then replace it with `2`:
 
 ```
 parent [None, 2, 0, 1]
-back from 3:  3 <- 1 <- 2 <- 0   reverse to get [0, 2, 1, 3]
+follow parent from 3: [3, 1, 2, 0]   reverse: [0, 2, 1, 3]
 ```
 
 The parent changes exactly when the distance changes, so it always describes the

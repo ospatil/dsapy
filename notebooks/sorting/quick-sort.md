@@ -86,9 +86,11 @@ Partitioning is the whole of quick sort: pick a pivot and rearrange so that ever
 pivot sits left of everything > pivot. The pivot lands in its final position, and the two
 sides can then be sorted independently - there is no merge step to pay for.
 
+### Naive Partition Scheme
+
 **Input:** `a = [3, 8, 6, 12, 10, 7]`, pivot index 5 (value 7)
 
-The naive scheme below does it in the obvious way: two passes collecting the small and
+The naive scheme does it in the obvious way: two passes collecting the small and
 large elements into a temporary list, then copy back. That is easy to read and costs Θ(n)
 extra space - which defeats the main reason to choose quick sort. The Lomuto
 and Hoare schemes that follow do the same job in place, with a single pass.
@@ -104,7 +106,7 @@ and is why it looks stable there. Pick an interior pivot and plain integers show
 Note also that this one takes `(a, p)` and partitions the entire list, so it is a
 demonstration of the idea rather than something the drivers further down can call.
 
-**Time:** Θ(n) for all three schemes &nbsp; **Space:** Θ(n) naive, O(1) for the others
+**Time:** Θ(n) &nbsp; **Space:** Θ(n)
 
 **Recipe**
 
